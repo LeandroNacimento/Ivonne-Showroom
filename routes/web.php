@@ -15,7 +15,12 @@ Route::get('/sobre-ivonne', [ShowroomController::class, 'about'])->name('about')
 
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ClientController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\SettingController;
 
 // Admin Routes
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -29,14 +34,26 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware(['auth', 'admin'])->group(function () {
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
         
-        Route::get('/dashboard', function () {
-            return view('admin.dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // Categories CRUD
         Route::resource('categories', CategoryController::class);
 
         // Products CRUD
         Route::resource('products', ProductController::class);
+
+        // Clients CRUD
+        Route::resource('clients', ClientController::class);
+
+        // Orders CRUD
+        Route::resource('orders', OrderController::class);
+
+        // Reports
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
+
+        // Settings
+        Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
+        Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
     });
 });

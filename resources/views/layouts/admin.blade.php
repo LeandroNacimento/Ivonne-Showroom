@@ -10,11 +10,11 @@
 <body class="font-sans text-gray-900 bg-gray-100 antialiased">
     <div class="min-h-screen flex">
         <!-- Sidebar -->
-        <div class="w-64 bg-white shadow-md min-h-screen flex flex-col">
+        <aside class="w-64 bg-white shadow-md min-h-screen flex flex-col fixed inset-y-0 left-0 z-50">
             <div class="p-6 flex items-center justify-center border-b border-gray-100">
                 <img src="{{ asset('img/Logo.png') }}" alt="Ivonne Showroom" class="h-12 w-auto">
             </div>
-            <nav class="flex-grow p-4 space-y-2">
+            <nav class="flex-grow p-4 space-y-2 overflow-y-auto">
                 <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 rounded-md text-gray-600 hover:bg-brand-blush hover:text-brand-pink transition-colors {{ request()->routeIs('admin.dashboard') ? 'bg-brand-blush text-brand-pink font-medium' : '' }}">
                     Dashboard
                 </a>
@@ -24,7 +24,19 @@
                 <a href="{{ route('admin.products.index') }}" class="block px-4 py-2 rounded-md text-gray-600 hover:bg-brand-blush hover:text-brand-pink transition-colors {{ request()->routeIs('admin.products.*') ? 'bg-brand-blush text-brand-pink font-medium' : '' }}">
                     Productos
                 </a>
-                <a href="{{ route('home') }}" target="_blank" class="block px-4 py-2 rounded-md text-gray-600 hover:bg-brand-blush hover:text-brand-pink transition-colors">
+                <a href="{{ route('admin.clients.index') }}" class="block px-4 py-2 rounded-md text-gray-600 hover:bg-brand-blush hover:text-brand-pink transition-colors {{ request()->routeIs('admin.clients.*') ? 'bg-brand-blush text-brand-pink font-medium' : '' }}">
+                    Clientes
+                </a>
+                <a href="{{ route('admin.orders.index') }}" class="block px-4 py-2 rounded-md text-gray-600 hover:bg-brand-blush hover:text-brand-pink transition-colors {{ request()->routeIs('admin.orders.*') ? 'bg-brand-blush text-brand-pink font-medium' : '' }}">
+                    Pedidos
+                </a>
+                <a href="{{ route('admin.reports.index') }}" class="block px-4 py-2 rounded-md text-gray-600 hover:bg-brand-blush hover:text-brand-pink transition-colors {{ request()->routeIs('admin.reports.*') ? 'bg-brand-blush text-brand-pink font-medium' : '' }}">
+                    Reportes
+                </a>
+                <a href="{{ route('admin.settings.edit') }}" class="block px-4 py-2 rounded-md text-gray-600 hover:bg-brand-blush hover:text-brand-pink transition-colors {{ request()->routeIs('admin.settings.*') ? 'bg-brand-blush text-brand-pink font-medium' : '' }}">
+                    Configuración
+                </a>
+                <a href="{{ route('home') }}" target="_blank" class="block px-4 py-2 rounded-md text-gray-600 hover:bg-brand-blush hover:text-brand-pink transition-colors mt-4 border-t border-gray-100 pt-4">
                     Ver Sitio Web
                 </a>
             </nav>
@@ -36,10 +48,10 @@
                     </button>
                 </form>
             </div>
-        </div>
+        </aside>
 
         <!-- Main Content -->
-        <div class="flex-grow p-8">
+        <div class="flex-grow p-8 ml-64">
             @if(session('success'))
                 <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
                     <span class="block sm:inline">{{ session('success') }}</span>
