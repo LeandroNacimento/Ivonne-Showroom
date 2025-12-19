@@ -29,7 +29,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="bg-white rounded-lg shadow-sm p-6" x-data="productEditForm()">
                     <h2 class="text-lg font-semibold text-gray-900 mb-4">Variaciones Actuales</h2>
                     <div class="space-y-2 mb-6">
                         @foreach($product->variations as $variation)
@@ -41,10 +41,35 @@
                     </div>
 
                     <h3 class="text-md font-medium text-gray-900 mb-2">Agregar Nuevas Variaciones</h3>
-                    <div id="variations-container">
-                        <!-- JS will add inputs here -->
+                    <div class="space-y-2">
+                         <template x-for="(variation, index) in newVariations" :key="index">
+                            <div class="grid grid-cols-12 gap-4 items-center">
+                                <div class="col-span-4">
+                                    <input type="text" :name="`new_variations[${index}][color]`" x-model="variation.color" placeholder="Color" class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50" required>
+                                </div>
+                                <div class="col-span-4">
+                                    <select :name="`new_variations[${index}][size]`" x-model="variation.size" class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50" required>
+                                        <option value="" disabled>Seleccionar</option>
+                                        <option value="XS">XS</option>
+                                        <option value="S">S</option>
+                                        <option value="M">M</option>
+                                        <option value="L">L</option>
+                                        <option value="XL">XL</option>
+                                        <option value="XXL">XXL</option>
+                                    </select>
+                                </div>
+                                <div class="col-span-3">
+                                    <input type="number" :name="`new_variations[${index}][stock]`" x-model="variation.stock" placeholder="Stock" class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50" required>
+                                </div>
+                                <div class="col-span-1 text-center">
+                                    <button type="button" @click="removeVariation(index)" class="text-red-500 hover:text-red-700">
+                                        <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
                     </div>
-                    <button type="button" onclick="addVariation()" class="mt-2 text-sm text-brand-pink hover:text-brand-heart font-medium">+ Agregar talle</button>
+                    <button type="button" @click="addVariation()" class="mt-4 text-sm text-brand-pink hover:text-brand-heart font-medium">+ Agregar Variación</button>
                 </div>
             </div>
 
@@ -92,18 +117,18 @@
 </div>
 
 <script>
-    let variationCount = 0;
-    function addVariation() {
-        const container = document.getElementById('variations-container');
-        const div = document.createElement('div');
-        div.className = 'grid grid-cols-3 gap-4 mb-2';
-        div.innerHTML = `
-            <input type="text" name="new_variations[${variationCount}][color]" placeholder="Color" class="rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50" required>
-            <input type="text" name="new_variations[${variationCount}][size]" placeholder="Talle" class="rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50" required>
-            <input type="number" name="new_variations[${variationCount}][stock]" placeholder="Stock" class="rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50" required>
-        `;
-        container.appendChild(div);
-        variationCount++;
+    function productEditForm() {
+        return {
+            newVariations: [],
+
+            addVariation() {
+                this.newVariations.push({ color: '', size: '', stock: '' });
+            },
+
+            removeVariation(index) {
+                this.newVariations.splice(index, 1);
+            }
+        }
     }
 </script>
 @endsection
