@@ -136,4 +136,19 @@ class ProductController extends Controller
         $product->delete();
         return redirect()->route('admin.products.index')->with('success', 'Producto eliminado con éxito.');
     }
+
+    public function search(Request $request)
+    {
+        $query = $request->get('q');
+        
+        $products = Product::where('name', 'like', "%{$query}%")
+            ->orWhere('id', 'like', "%{$query}%")
+            ->with(['variations' => function($q) {
+                $q->where('stock', '>', 0);
+            }])
+            ->limit(20)
+            ->get();
+            
+        return response()->json($products);
+    }
 }

@@ -36,12 +36,9 @@ class OrderController extends Controller
     public function create()
     {
         $clients = Client::orderBy('name')->get();
-        // Eager load variations for JS selection
-        $products = Product::with('variations')->whereHas('variations', function($q) {
-            $q->where('stock', '>', 0);
-        })->get();
 
-        return view('admin.orders.create', compact('clients', 'products'));
+
+        return view('admin.orders.create', compact('clients'));
     }
 
     public function store(Request $request)
@@ -109,10 +106,9 @@ class OrderController extends Controller
     public function edit(Order $order)
     {
         $clients = Client::orderBy('name')->get();
-        $products = Product::with('variations')->get();
-        $order->load('items');
+        $order->load(['items.product']); // Load product for existing items to show name
 
-        return view('admin.orders.edit', compact('order', 'clients', 'products'));
+        return view('admin.orders.edit', compact('order', 'clients'));
     }
 
     public function update(Request $request, Order $order)

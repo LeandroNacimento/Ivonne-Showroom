@@ -104,30 +104,39 @@
 </div>
 
 <script>
-    const products = @json($products);
     const existingItems = @json($order->items);
     let itemCount = 0;
 
     function addItem(item = null) {
         const index = itemCount++;
         const productId = item ? item.product_id : '';
+        const productName = item && item.product ? item.product.name : '';
         const variationId = item ? item.variation_id : '';
         const quantity = item ? item.quantity : 1;
         const price = item ? item.unit_price : '';
 
         const html = `
             <div class="grid grid-cols-12 gap-4 items-end border-b border-gray-100 pb-4 item-row" id="item-${index}">
-                <div class="col-span-4">
+                <div class="col-span-4 relative">
                     <label class="block text-xs font-medium text-gray-500 mb-1">Producto</label>
-                    <select name="items[${index}][product_id]" class="w-full rounded-md border-gray-300 shadow-sm text-sm" onchange="loadVariations(this, ${index})">
-                        <option value="">Seleccionar...</option>
-                        ${products.map(p => `<option value="${p.id}" data-price="${p.price}" ${p.id == productId ? 'selected' : ''}>${p.name}</option>`).join('')}
-                    </select>
+                    <input type="text" class="w-full rounded-md border-gray-300 shadow-sm text-sm" 
+                           placeholder="Buscar producto..." 
+                           value="${productName}"
+                           oninput="searchProduct(this, ${index})" 
+                           onfocus="searchProduct(this, ${index})"
+                           autocomplete="off">
+                    <input type="hidden" name="items[${index}][product_id]" class="product-id-input" value="${productId}">
+                    
+                    <!-- Results Dropdown -->
+                    <div id="results-${index}" class="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto hidden">
+                        <!-- Results here -->
+                    </div>
                 </div>
                 <div class="col-span-3">
                     <label class="block text-xs font-medium text-gray-500 mb-1">Variación</label>
                     <select name="items[${index}][variation_id]" class="w-full rounded-md border-gray-300 shadow-sm text-sm" ${!productId ? 'disabled' : ''} id="variation-${index}">
                         <option value="">Seleccionar...</option>
+                        <!-- Variations will be loaded here via JS for new items, or we need to fetch them for existing items -->
                     </select>
                 </div>
                 <div class="col-span-2">
@@ -147,35 +156,100 @@
         `;
         document.getElementById('items-container').insertAdjacentHTML('beforeend', html);
 
-        if (productId) {
-            const select = document.querySelector(`#item-${index} select[name*="[product_id]"]`);
-            loadVariations(select, index, variationId);
+        // For existing items, we need to load variations
+        if (productId && item) {
+             // We need to fetch the product details to get variations
+             // Or we could have passed them in the initial load, but to keep it light let's fetch on demand or init
+             fetchProductDetails(productId, index, variationId);
         }
     }
 
-    function removeItem(index) {
-        document.getElementById(`item-${index}`).remove();
+    // Helper to fetch details for existing items
+    function fetchProductDetails(productId, index, preselectedVariationId = null) {
+        fetch(`{{ route('admin.products.search') }}?q=${productId}`) // Ideally we'd have a 'get by id' endpoint or search by ID
+            .then(response => response.json())
+            .then(products => {
+                const product = products.find(p => p.id == productId);
+                if (product) {
+                    const variationSelect = document.getElementById(`variation-${index}`);
+                    variationSelect.innerHTML = '<option value="">Seleccionar...</option>';
+                    
+                    product.variations.forEach(v => {
+                        const selected = (v.id == preselectedVariationId) ? 'selected' : '';
+                        variationSelect.innerHTML += `<option value="${v.id}" ${selected}>${v.color} - ${v.size} (Stock: ${v.stock})</option>`;
+                    });
+                    variationSelect.disabled = false;
+                }
+            });
+    }
+
+
+    let searchTimeout;
+    function searchProduct(input, index) {
+        const query = input.value;
+        const resultsDiv = document.getElementById(`results-${index}`);
+        
+        if (query.length < 2) {
+            resultsDiv.classList.add('hidden');
+            return;
+        }
+
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            fetch(`{{ route('admin.products.search') }}?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(products => {
+                    resultsDiv.innerHTML = '';
+                    if (products.length > 0) {
+                        products.forEach(product => {
+                            const div = document.createElement('div');
+                            div.className = 'p-2 hover:bg-gray-100 cursor-pointer text-sm';
+                            div.textContent = product.name;
+                            div.onclick = () => selectProduct(product, index, input, resultsDiv);
+                            resultsDiv.appendChild(div);
+                        });
+                        resultsDiv.classList.remove('hidden');
+                    } else {
+                        resultsDiv.innerHTML = '<div class="p-2 text-gray-500 text-xs">No se encontraron productos</div>';
+                        resultsDiv.classList.remove('hidden');
+                    }
+                });
+        }, 300);
+    }
+
+    function selectProduct(product, index, input, resultsDiv) {
+        input.value = product.name;
+        document.querySelector(`#item-${index} .product-id-input`).value = product.id;
+        resultsDiv.classList.add('hidden');
+        
+        // Update Price
+        document.getElementById(`price-${index}`).value = product.price;
+
+        // Update Variations
+        const variationSelect = document.getElementById(`variation-${index}`);
+        variationSelect.innerHTML = '<option value="">Seleccionar...</option>';
+        
+        if (product.variations && product.variations.length > 0) {
+            product.variations.forEach(v => {
+                variationSelect.innerHTML += `<option value="${v.id}">${v.color} - ${v.size} (Stock: ${v.stock})</option>`;
+            });
+            variationSelect.disabled = false;
+        } else {
+            variationSelect.disabled = true;
+        }
+
         calculateTotal();
     }
 
-    function loadVariations(select, index, selectedVariationId = null) {
-        const productId = select.value;
-        const product = products.find(p => p.id == productId);
-        const variationSelect = document.getElementById(`variation-${index}`);
-        const priceInput = document.getElementById(`price-${index}`);
-
-        variationSelect.innerHTML = '<option value="">Seleccionar...</option>';
-        variationSelect.disabled = true;
-
-        if (product) {
-            if (!priceInput.value) {
-                priceInput.value = product.price;
-            }
-            product.variations.forEach(v => {
-                variationSelect.innerHTML += `<option value="${v.id}" ${v.id == selectedVariationId ? 'selected' : ''}>${v.color} - ${v.size} (Stock: ${v.stock})</option>`;
-            });
-            variationSelect.disabled = false;
+    // Close results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.relative')) {
+            document.querySelectorAll('[id^="results-"]').forEach(el => el.classList.add('hidden'));
         }
+    });
+
+    function removeItem(index) {
+        document.getElementById(`item-${index}`).remove();
         calculateTotal();
     }
 
