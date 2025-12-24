@@ -9,7 +9,7 @@
                 <div class="sm:text-center lg:text-left">
                     <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
                         <span class="block xl:inline">Estilo y elegancia</span>
-                        <span class="block text-brand-pink font-script xl:inline">para ti</span>
+                        <span class="block text-brand-gold font-script xl:inline">para ti</span>
                     </h1>
                     <p class="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
                         Descubre nuestra colección exclusiva de moda femenina. Prendas seleccionadas para resaltar tu belleza y confianza.
@@ -31,14 +31,14 @@
         </div>
     </div>
     <div class="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2 bg-brand-blush flex items-center justify-center">
-        <img src="{{ asset('img/Logo.png') }}" alt="Ivonne Showroom" class="h-64 w-auto object-contain">
+        <img src="{{ asset('img/Logo.png') }}" alt="Ivonne Showroom" class="h-64 w-auto object-contain mix-blend-multiply">
     </div>
 </div>
 
 <!-- Categories Section -->
 <div class="bg-white py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 text-center mb-8 font-script text-brand-pink">Categorías Destacadas</h2>
+        <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 text-center mb-8 font-script">Categorías Destacadas</h2>
         <div class="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-4 xl:gap-x-8">
             @foreach($categories as $category)
             <a href="{{ route('catalog', ['category' => $category->slug]) }}" class="group relative">
@@ -49,7 +49,7 @@
                         <span class="text-gray-400">{{ $category->name }}</span>
                     @endif
                 </div>
-                <h3 class="mt-4 text-base font-semibold text-gray-900 text-center">
+                <h3 class="mt-4 text-base font-semibold text-gray-900 group-hover:text-brand-gold transition-colors text-center">
                     {{ $category->name }}
                 </h3>
             </a>
@@ -61,7 +61,7 @@
 <!-- Featured Products Section -->
 <div class="bg-brand-blush py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 text-center mb-8 font-script text-brand-pink">Novedades</h2>
+        <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 text-center mb-8 font-script">Novedades</h2>
         <div class="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-4 xl:gap-x-8">
             @foreach($featuredProducts as $product)
             <div class="group relative bg-white rounded-lg shadow-sm overflow-hidden">
@@ -93,7 +93,7 @@
 <!-- Testimonials / Trust Section -->
 <div class="bg-white py-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 class="text-3xl font-extrabold text-gray-900 font-script text-brand-pink mb-8">Lo que dicen nuestras clientas</h2>
+        <h2 class="text-3xl font-extrabold text-gray-900 font-script mb-8">Lo que dicen nuestras clientas</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div class="p-6 bg-brand-blush rounded-lg">
                 <p class="text-gray-600 italic">"La ropa es hermosa y la atención de Ivonne es excelente. Súper recomendado."</p>
