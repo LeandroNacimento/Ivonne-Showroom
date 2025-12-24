@@ -68,7 +68,7 @@
 
         <!-- Pagination -->
         <div class="px-6 py-4 border-t border-gray-200">
-            {{ $products->links('pagination::simple-tailwind') }}
+            {{ $products->links() }}
         </div>
     </div>
 </div>
