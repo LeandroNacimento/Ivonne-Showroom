@@ -3,6 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
     <title>Admin - Ivonne Showroom</title>
     <link rel="icon" href="{{ asset('img/Logo.png') }}" type="image/png">
     
@@ -12,17 +14,37 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
     <style>
         [x-cloak] { display: none !important; }
     </style>
+    @livewireStyles
 </head>
 <body class="h-full font-sans text-gray-900 antialiased" x-data="{ sidebarOpen: false }">
 
     <!-- Mobile Sidebar Backdrop -->
-    <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-900/80 z-40 lg:hidden" @click="sidebarOpen = false" x-cloak></div>
+    <div x-show="sidebarOpen" 
+         x-transition:enter="transition-opacity ease-linear duration-300" 
+         x-transition:enter-start="opacity-0" 
+         x-transition:enter-end="opacity-100" 
+         x-transition:leave="transition-opacity ease-linear duration-300" 
+         x-transition:leave-start="opacity-100" 
+         x-transition:leave-end="opacity-0" 
+         class="fixed inset-0 bg-gray-900/80 z-40 lg:hidden" 
+         @click="sidebarOpen = false" 
+         x-cloak></div>
 
     <!-- Mobile Sidebar -->
-    <div x-show="sidebarOpen" x-transition:enter="transition ease-in-out duration-300 transform" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in-out duration-300 transform" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full" class="fixed inset-0 z-50 flex w-72 lg:hidden" x-cloak>
+    <div x-show="sidebarOpen" 
+         x-transition:enter="transition ease-in-out duration-300 transform" 
+         x-transition:enter-start="-translate-x-full" 
+         x-transition:enter-end="translate-x-0" 
+         x-transition:leave="transition ease-in-out duration-300 transform" 
+         x-transition:leave-start="translate-x-0" 
+         x-transition:leave-end="-translate-x-full" 
+         class="fixed inset-0 z-50 flex w-72 lg:hidden" 
+         x-cloak>
+        
         <div class="relative flex w-full max-w-xs flex-1 flex-col bg-white pt-5 pb-4 shadow-xl">
              <div class="absolute top-0 right-0 -mr-12 pt-2">
                 <button type="button" class="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" @click="sidebarOpen = false">
@@ -62,6 +84,7 @@
 
     <!-- Main Content -->
     <div class="flex flex-1 flex-col lg:pl-72 h-full">
+        <!-- Top Sticky Bar -->
         <div class="sticky top-0 z-10 flex h-16 flex-shrink-0 bg-white shadow-sm border-b border-gray-200">
             <button type="button" class="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-pink lg:hidden" @click="sidebarOpen = true">
                 <span class="sr-only">Open sidebar</span>
@@ -69,17 +92,13 @@
             </button>
             <div class="flex flex-1 justify-between px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-1 items-center">
-                   <!-- Breadcrumbs placeholder or Page Title -->
                    <h2 class="text-lg font-semibold text-gray-800">Panel de Administración</h2>
                 </div>
                 <div class="ml-4 flex items-center md:ml-6">
-                    <!-- Profile dropdown could go here -->
-                    <div class="relative ml-3">
-                        <div class="flex items-center gap-3">
-                            <span class="hidden md:block text-sm font-medium text-gray-700">{{ Auth::user()->name ?? 'Admin' }}</span>
-                            <div class="h-8 w-8 rounded-full bg-brand-blush flex items-center justify-center text-brand-pink font-bold border border-brand-pink/20">
-                                {{ substr(Auth::user()->name ?? 'A', 0, 1) }}
-                            </div>
+                    <div class="flex items-center gap-3">
+                        <span class="hidden md:block text-sm font-medium text-gray-700">{{ Auth::user()->name ?? 'Admin' }}</span>
+                        <div class="h-8 w-8 rounded-full bg-brand-blush flex items-center justify-center text-brand-pink font-bold border border-brand-pink/20">
+                            {{ substr(Auth::user()->name ?? 'A', 0, 1) }}
                         </div>
                     </div>
                 </div>
@@ -88,42 +107,26 @@
 
         <main class="flex-1 py-8">
             <div class="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+                <!-- Flash Messages -->
                 @if(session('success'))
-                    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="mb-6 rounded-md bg-green-50 p-4 border border-green-200 animate-fade-in-down">
+                    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="mb-6 rounded-md bg-green-50 p-4 border border-green-200">
                         <div class="flex">
                             <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" /></svg>
+                                <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" /></svg>
                             </div>
                             <div class="ml-3">
                                 <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
                             </div>
-                             <div class="ml-auto pl-3">
-                                <div class="-mx-1.5 -my-1.5">
-                                    <button type="button" @click="show = false" class="inline-flex rounded-md bg-green-50 p-1.5 text-green-500 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 focus:ring-offset-green-50">
-                                        <span class="sr-only">Dismiss</span>
-                                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" /></svg>
-                                    </button>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 @endif
-                @if(session('error'))
-                    <div class="mb-6 rounded-md bg-red-50 p-4 border border-red-200">
-                        <div class="flex">
-                             <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" /></svg>
-                             </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
-                            </div>
-                        </div>
-                    </div>
-                @endif
-                
+
                 @yield('content')
+                {{ $slot ?? '' }}
             </div>
         </main>
     </div>
+
+    @livewireScripts
 </body>
 </html>

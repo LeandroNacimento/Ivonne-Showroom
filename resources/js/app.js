@@ -1,6 +1,4 @@
 import './bootstrap';
-import Alpine from 'alpinejs';
-
-window.Alpine = Alpine;
-
-Alpine.start();
+// import Alpine from 'alpinejs'; // COMENTADO
+// window.Alpine = Alpine;       // COMENTADO
+// Alpine.start();               // COMENTADO
