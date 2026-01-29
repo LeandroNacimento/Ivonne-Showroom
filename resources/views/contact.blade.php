@@ -50,8 +50,16 @@
             </div>
 
             <!-- Map Placeholder -->
-            <div class="bg-gray-200 rounded-lg min-h-[300px] flex items-center justify-center">
-                <span class="text-gray-400 font-medium">Mapa de Ubicación</span>
+            <!-- Google Map -->
+            <div class="rounded-lg overflow-hidden shadow-lg h-full min-h-[300px]">
+                <iframe 
+                    class="w-full h-full"
+                    frameborder="0" 
+                    scrolling="no" 
+                    marginheight="0" 
+                    marginwidth="0" 
+                    src="https://maps.google.com/maps?q=Napole%C3%B3n+Uriburu+1366%2C+Formosa&t=&z=16&ie=UTF8&iwloc=&output=embed">
+                </iframe>
             </div>
         </div>
     </div>
