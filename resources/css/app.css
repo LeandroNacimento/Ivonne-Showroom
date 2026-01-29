@@ -59,4 +59,33 @@
         opacity: 1;
         transform: translateY(0);
     }
+
+    /* Navbar Visual Feedback (Active State) */
+    .nav-link {
+        position: relative;
+    }
+
+    .nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 0%;
+        height: 2px;
+        background-color: var(--color-brand-pink);
+        transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1), left 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        transform: translateX(-50%);
+        /* Centered scaling */
+    }
+
+    .nav-link.active::after,
+    .nav-link:hover::after {
+        width: 80%;
+        /* Elegant width, not full edge-to-edge */
+    }
+
+    /* Override for current page active state color if needed, or keep uniform */
+    .nav-link.active {
+        color: var(--color-brand-pink);
+    }
 }

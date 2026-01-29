@@ -2,7 +2,7 @@
 
 @section('content')
 <!-- Hero Section -->
-<div class="relative bg-brand-blush overflow-hidden">
+<div id="inicio" class="spy-section relative bg-brand-blush overflow-hidden">
     <div class="max-w-7xl mx-auto">
         <div class="relative z-10 pb-8 bg-brand-blush sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
             <main class="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
@@ -36,7 +36,7 @@
 </div>
 
 <!-- Categories Section -->
-<div class="bg-white py-12">
+<div id="categorias" class="spy-section bg-white py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 text-center mb-8 font-script reveal">Categorías Destacadas</h2>
         <div class="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-4 xl:gap-x-8 reveal-stagger-container">
@@ -59,7 +59,7 @@
 </div>
 
 <!-- Featured Products Section -->
-<div class="bg-brand-blush py-12">
+<div id="novedades" class="spy-section bg-brand-blush py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 text-center mb-8 font-script reveal">Novedades</h2>
         <div class="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-4 xl:gap-x-8 reveal-stagger-container">
@@ -91,7 +91,7 @@
 </div>
 
 <!-- Testimonials / Trust Section -->
-<div class="bg-white py-16">
+<div id="testimonios" class="spy-section bg-white py-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 class="text-3xl font-extrabold text-gray-900 font-script mb-8 reveal">Lo que dicen nuestras clientas</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 reveal-stagger-container">

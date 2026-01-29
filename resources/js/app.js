@@ -1,5 +1,5 @@
 import './bootstrap';
-import { initAnimations } from './animations';
+import { initAnimations, initSmoothScroll, initScrollSpy } from './animations';
 
 // import Alpine from 'alpinejs'; // COMENTADO
 // window.Alpine = Alpine;       // COMENTADO
@@ -7,4 +7,6 @@ import { initAnimations } from './animations';
 
 document.addEventListener('DOMContentLoaded', () => {
     initAnimations();
+    initSmoothScroll();
+    initScrollSpy();
 });

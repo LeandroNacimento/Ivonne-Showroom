@@ -8,10 +8,11 @@
             </div>
             
             <div class="hidden sm:flex sm:items-center sm:space-x-8">
-                <a href="{{ route('home') }}" class="text-gray-600 hover:text-brand-gold px-3 py-2 rounded-md text-sm font-medium transition-colors">Inicio</a>
-                <a href="{{ route('catalog') }}" class="text-gray-600 hover:text-brand-gold px-3 py-2 rounded-md text-sm font-medium transition-colors">Catálogo</a>
-                <a href="{{ route('about') }}" class="text-gray-600 hover:text-brand-gold px-3 py-2 rounded-md text-sm font-medium transition-colors">Sobre Ivonne</a>
-                <a href="{{ route('contact') }}" class="text-gray-600 hover:text-brand-gold px-3 py-2 rounded-md text-sm font-medium transition-colors">Contacto</a>
+                <a href="{{ route('home') }}" data-spy-target="#inicio" class="nav-link text-gray-600 hover:text-brand-gold px-3 py-2 text-sm font-medium transition-colors">Inicio</a>
+                <a href="{{ route('catalog') }}" data-spy-target="/catalogo" class="nav-link text-gray-600 hover:text-brand-gold px-3 py-2 text-sm font-medium transition-colors">Catálogo</a>
+                <a href="{{ route('home') }}#novedades" data-spy-target="#novedades" class="nav-link text-gray-600 hover:text-brand-gold px-3 py-2 text-sm font-medium transition-colors">Novedades</a>
+                <a href="{{ route('about') }}" data-spy-target="/sobre-ivonne" class="nav-link text-gray-600 hover:text-brand-gold px-3 py-2 text-sm font-medium transition-colors">Sobre Ivonne</a>
+                <a href="{{ route('contact') }}" data-spy-target="/contacto" class="nav-link text-gray-600 hover:text-brand-gold px-3 py-2 text-sm font-medium transition-colors">Contacto</a>
             </div>
 
             <div class="flex items-center space-x-4">
