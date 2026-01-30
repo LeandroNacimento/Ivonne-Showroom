@@ -2,13 +2,13 @@
 
 @theme {
     /* Colors */
-    --color-brand-blush: #F7E9ED;
-    --color-brand-pink: #E94F9B;
-    --color-brand-heart: #F59BB4;
-    --color-brand-gold: #D4AF37;
+    --color-brand-blush: #f7e9ed;
+    --color-brand-pink: #e94f9b;
+    --color-brand-heart: #f59bb4;
+    --color-brand-gold: #d4af37;
     --color-text-dark: #333333;
     --color-black: #000000;
-    --color-white: #FFFFFF;
+    --color-white: #ffffff;
 
     /* Fonts */
     --font-script: "Great Vibes", cursive;
@@ -25,7 +25,8 @@
     .reveal {
         opacity: 0;
         transform: translateY(30px);
-        transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        transition:
+            opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
             transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
         will-change: opacity, transform;
     }
@@ -51,12 +52,27 @@
     .reveal-child {
         opacity: 0;
         transform: translateY(20px);
-        transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+        transition:
+            opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
             transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .reveal-child.active {
         opacity: 1;
         transform: translateY(0);
+    }
+
+    /* SPA Transitions */
+    .spa-content {
+        transition:
+            opacity 0.3s ease-in-out,
+            transform 0.3s ease-in-out;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .spa-loading {
+        opacity: 0;
+        transform: translateY(10px);
     }
 }

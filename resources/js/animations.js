@@ -47,3 +47,12 @@ export function initAnimations() {
         containerObserver.observe(container);
     });
 }
+
+// Funciones placeholder para evitar errores de importación en SPA
+export function initSmoothScroll() {
+    // Implementación futura: Scroll suave a anchors
+}
+
+export function initScrollSpy() {
+    // Implementación futura: Active link según scroll
+}

@@ -18,8 +18,10 @@
     <div class="min-h-screen flex flex-col">
         @include('layouts.navigation')
 
-        <main class="flex-grow">
-            @yield('content')
+        <main id="spa-root" class="flex-grow">
+            <div class="spa-content">
+                @yield('content')
+            </div>
         </main>
 
         @include('layouts.footer')
