@@ -2,13 +2,13 @@
 
 @theme {
     /* Colors */
-    --color-brand-blush: #F7E9ED;
-    --color-brand-pink: #E94F9B;
-    --color-brand-heart: #F59BB4;
-    --color-brand-gold: #D4AF37;
+    --color-brand-blush: #f7e9ed;
+    --color-brand-pink: #e94f9b;
+    --color-brand-heart: #f59bb4;
+    --color-brand-gold: #d4af37;
     --color-text-dark: #333333;
     --color-black: #000000;
-    --color-white: #FFFFFF;
+    --color-white: #ffffff;
 
     /* Fonts */
     --font-script: "Great Vibes", cursive;
@@ -25,7 +25,8 @@
     .reveal {
         opacity: 0;
         transform: translateY(30px);
-        transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        transition:
+            opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
             transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
         will-change: opacity, transform;
     }
@@ -51,7 +52,8 @@
     .reveal-child {
         opacity: 0;
         transform: translateY(20px);
-        transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+        transition:
+            opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
             transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
@@ -60,32 +62,17 @@
         transform: translateY(0);
     }
 
-    /* Navbar Visual Feedback (Active State) */
-    .nav-link {
-        position: relative;
+    /* SPA Transitions */
+    .spa-content {
+        transition:
+            opacity 0.3s ease-in-out,
+            transform 0.3s ease-in-out;
+        opacity: 1;
+        transform: translateY(0);
     }
 
-    .nav-link::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 50%;
-        width: 0%;
-        height: 2px;
-        background-color: var(--color-brand-pink);
-        transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1), left 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-        transform: translateX(-50%);
-        /* Centered scaling */
-    }
-
-    .nav-link.active::after,
-    .nav-link:hover::after {
-        width: 80%;
-        /* Elegant width, not full edge-to-edge */
-    }
-
-    /* Override for current page active state color if needed, or keep uniform */
-    .nav-link.active {
-        color: var(--color-brand-pink);
+    .spa-loading {
+        opacity: 0;
+        transform: translateY(10px);
     }
 }

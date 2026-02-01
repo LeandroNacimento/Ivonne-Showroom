@@ -1,12 +1,13 @@
-import './bootstrap';
-import { initAnimations, initSmoothScroll, initScrollSpy } from './animations';
+import "./bootstrap";
+import { initAnimations } from "./animations";
+import { initSpaSimulation } from "./spa-simulation";
 
 // import Alpine from 'alpinejs'; // COMENTADO
 // window.Alpine = Alpine;       // COMENTADO
 // Alpine.start();               // COMENTADO
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
     initAnimations();
-    initSmoothScroll();
-    initScrollSpy();
+    initSpaSimulation();
+    console.log("✨ Ivonne Showroom: SPA & Animations Initialized");
 });

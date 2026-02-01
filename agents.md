@@ -24,7 +24,54 @@ Arquitectura MPA tradicional
 🚫 No frameworks JS
 🚫 No dependencias innecesarias
 
-3. Uso de JavaScript (Principio Rector)
+3. Control de Versiones y Flujo de Trabajo (Git)
+   Gitflow (Obligatorio)
+
+Las ramas se manejan bajo el modelo Gitflow:
+
+main: producción
+
+develop: integración
+
+feature/\*: nuevas funcionalidades
+
+fix/\*: correcciones
+
+hotfix/\*: errores críticos en producción
+
+Reglas del Agente
+
+❌ El agente NUNCA hace commit
+
+❌ El agente NUNCA hace push
+
+✅ Solo prepara cambios locales
+
+✅ Solo se commitea cuando el usuario lo indique explícitamente
+
+4. Convención de Commits
+
+Todos los commits deben cumplir:
+
+Idioma: Español
+
+Formato: Conventional Commits
+
+Ejemplos válidos:
+
+feat: agregar validación de stock por talle
+
+fix: corregir cálculo de total en carrito
+
+refactor: optimizar consulta de productos
+
+chore: ajustar configuración de vite
+
+🚫 Commits genéricos
+🚫 Commits en inglés
+🚫 Commits automáticos
+
+5. Uso de JavaScript (Principio Rector)
 
 JavaScript:
 
@@ -32,12 +79,14 @@ Nunca sostiene el sitio
 
 Solo mejora la experiencia
 
-Puede ser eliminado sin romper nada
+Puede eliminarse sin romper nada
 
-Si algo requiere JS para funcionar → no se implementa así.
+📌 Si algo requiere JS para funcionar, no se implementa así.
 
-4. Simulación de SPA (Web Pública Únicamente)
-Alcance
+6. Simulación de SPA (Web Pública Únicamente)
+   Alcance
+
+La UI debe construirse de forma reutilizable, consistente y mantenible.
 
 Solo frontend público
 
@@ -56,8 +105,8 @@ Estructura Obligatoria
 📌 Solo se reemplaza .spa-content
 📌 Nunca se mueve <main>, <body>, nav o footer
 
-5. Animaciones Globales (UX)
-Tipo
+7. Animaciones Globales (UX)
+   Tipo
 
 Fade-in
 
@@ -75,12 +124,12 @@ Trigger
 
 IntersectionObserver
 
-Agregar .active
+Agregar clase .active
 
 Nunca modificar estilos base
 
-6. Desktop vs Mobile
-Desktop
+8. Desktop vs Mobile
+   Desktop
 
 Animaciones completas
 
@@ -96,10 +145,10 @@ Sin slides
 
 Sin lógica compleja
 
-Prioridad: rapidez
+📌 Prioridad absoluta: rapidez
 
-7. Catálogo (Reglas Especiales)
-Scroll
+9. Catálogo (Reglas Especiales)
+   Scroll
 
 Siempre inicia arriba
 
@@ -111,7 +160,7 @@ Paginación
 ✔ Animación suave
 ✔ Solo dentro del catálogo
 
-📌 Esto es una mejora localizada, no SPA global.
+📌 Mejora localizada, no SPA global
 
 Implementación esperada:
 
@@ -119,11 +168,11 @@ Fetch parcial
 
 Reemplazo del grid
 
-Fade/transition
+Fade / transition
 
 URL actualizada (opcional pero recomendado)
 
-8. Producto & Stock
+10. Producto & Stock
 
 Stock por talle/color es crítico
 
@@ -131,9 +180,9 @@ Estados claros
 
 Nada ambiguo
 
-Nada “forzado”
+Nada forzado
 
-9. Carrito & Checkout
+11. Carrito & Checkout
 
 Carrito en sesión
 
@@ -146,25 +195,72 @@ El mensaje debe ser:
 ✔ Humano
 ✔ Fácil de leer
 
-10. Futuro: Pagos
+12. Base de Datos (Reglas Críticas)
 
-MercadoPago / Transferencia
+Todo cambio en BD debe ser:
 
-No implementar sin pedido
+Eficiente
 
-No preparar abstracciones innecesarias
+Consistente
 
-11. Panel de Administración
+Transaccional cuando aplique
 
-Independiente
+Evitar:
+
+queries innecesarias
+
+duplicación de datos
+
+estructuras rígidas
+
+📌 El diseño debe ser compatible con:
+
+MySQL
+
+SQL Server (Azure Hosting)
+
+🚫 Nada que dependa de comportamientos exclusivos de MySQL
+🚫 Nada que rompa reglas de SQL Server
+
+13. Seguridad (Prioridad Absoluta)
+
+Cada cambio en backend debe considerar:
+
+Protección de datos críticos
+
+Validación estricta de inputs
+
+Uso correcto de:
+
+policies
+
+middleware
+
+guards
+
+Prevención de:
+
+XSS
+
+CSRF
+
+acceso no autorizado
+
+filtrado de información sensible
+
+📌 Si una implementación no puede justificarse en términos de seguridad → no se implementa.
+
+14. Panel de Administración
+
+Totalmente independiente
 
 Sin animaciones públicas
 
 Sin SPA
 
-Sin JS compartido
+Sin JS compartido con frontend
 
-12. Flujo Obligatorio para Cambios
+15. Flujo Obligatorio para Cambios
 
 Antes de tocar código, el agente debe:
 
@@ -176,10 +272,12 @@ Decir qué NO toca
 
 Confirmar que el diseño no cambia
 
-Si no puede → no implementar
+Si no puede cumplir esto → no implementar.
 
-13. Regla Final
+16. Regla Final
 
 Ivonne Showroom vende sensación, no tecnología.
+
 Si algo se nota, se descarta.
+
 Si algo fluye, se queda.
