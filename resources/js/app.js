@@ -1,6 +1,7 @@
 import "./bootstrap";
 import { initAnimations } from "./animations";
 import { initSpaSimulation } from "./spa-simulation";
+import { initCatalog } from "./catalog";
 
 // import Alpine from 'alpinejs'; // COMENTADO
 // window.Alpine = Alpine;       // COMENTADO
@@ -9,5 +10,6 @@ import { initSpaSimulation } from "./spa-simulation";
 document.addEventListener("DOMContentLoaded", () => {
     initAnimations();
     initSpaSimulation();
-    console.log("✨ Ivonne Showroom: SPA & Animations Initialized");
+    initCatalog();
+    console.log("✨ Ivonne Showroom: SPA & Catalog Initialized");
 });

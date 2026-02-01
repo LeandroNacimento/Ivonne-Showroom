@@ -39,7 +39,7 @@ export function initSpaSimulation() {
     });
 }
 
-async function navigateTo(url, push = true) {
+export async function navigateTo(url, push = true) {
     const content = document.querySelector('.spa-content');
     if (!content) {
         // Fallback crítico: si no hay estructura, navegar normal
