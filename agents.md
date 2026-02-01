@@ -274,7 +274,19 @@ Confirmar que el diseño no cambia
 
 Si no puede cumplir esto → no implementar.
 
-16. Regla Final
+16. Imagenes
+
+Las imágenes de productos deben manejarse con reglas explícitas y determinísticas.
+
+- La imagen principal de un producto nunca se define por coincidencia ni por orden implícito.
+- La lógica para obtener la imagen principal debe vivir fuera de las vistas (modelo o capa de dominio).
+- Blade no decide qué imagen mostrar, solo renderiza el resultado.
+- La construcción de URLs de imágenes debe estar desacoplada del filesystem.
+- Todas las secciones públicas (home, catálogo, detalle) deben usar la misma fuente de verdad para la imagen principal.
+
+Si una imagen no puede determinarse con claridad, se debe usar un placeholder controlado, nunca lógica condicional dispersa en vistas.
+
+17. Regla Final
 
 Ivonne Showroom vende sensación, no tecnología.
 
