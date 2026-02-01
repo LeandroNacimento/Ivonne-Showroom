@@ -11,7 +11,6 @@ Route::post('/carrito/agregar', [ShowroomController::class, 'addToCart'])->name(
 Route::post('/carrito/remover', [ShowroomController::class, 'removeFromCart'])->name('cart.remove');
 Route::post('/carrito/actualizar', [ShowroomController::class, 'updateCart'])->name('cart.update');
 Route::get('/contacto', [ShowroomController::class, 'contact'])->name('contact');
-Route::get('/sobre-ivonne', [ShowroomController::class, 'about'])->name('about');
 
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -33,7 +32,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Authenticated Admin Routes
     Route::middleware(['auth', 'admin'])->group(function () {
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
-        
+
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // Categories CRUD
