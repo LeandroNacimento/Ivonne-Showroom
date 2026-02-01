@@ -37,4 +37,18 @@ class Product extends Model
     {
         return $this->variations->sum('stock');
     }
+
+    public function getCoverUrlAttribute()
+    {
+        // Regla: La imagen principal es la de menor ID (la primera subida).
+        // Determinismo: Ordenamos explícitamente.
+        $cover = $this->images()->orderBy('id', 'asc')->first();
+
+        if ($cover) {
+            return asset('storage/' . $cover->path);
+        }
+
+        // Placeholder por defecto si no hay imagen
+        return asset('img/placeholder-product.jpg');
+    }
 }

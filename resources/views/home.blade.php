@@ -84,8 +84,8 @@
                     <div class="group relative bg-white rounded-lg shadow-sm overflow-hidden reveal-child">
                         <div
                             class="w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-t-lg overflow-hidden group-hover:opacity-75 lg:h-80 lg:aspect-none flex items-center justify-center">
-                            <!-- Placeholder for product image -->
-                            <span class="text-gray-400">Imagen Producto</span>
+                            <img src="{{ $product->cover_url }}" alt="{{ $product->name }}"
+                                class="w-full h-full object-center object-cover">
                         </div>
                         <div class="mt-4 flex justify-between px-4 pb-4">
                             <div>
