@@ -1,8 +1,14 @@
 import { initAnimations, initSmoothScroll, initScrollSpy } from './animations';
 
 export function initSpaSimulation() {
+    // Protección: Si no estamos en el frontend público (no hay .spa-content), no hacer nada.
+    if (!document.querySelector('.spa-content')) {
+        return;
+    }
+
     // Escucha global de clicks (Delegación)
     document.addEventListener('click', (e) => {
+        // ... resto del código ...
         // Encontrar el anchor más cercano
         const link = e.target.closest('a');
 

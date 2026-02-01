@@ -10,11 +10,7 @@ class ClientController extends Controller
 {
     public function index()
     {
-        $clients = Client::withCount('orders')
-            ->withSum('orders', 'total')
-            ->latest()
-            ->paginate(10);
-        return view('admin.clients.index', compact('clients'));
+        return view('admin.clients.index');
     }
 
     public function create()
@@ -39,10 +35,12 @@ class ClientController extends Controller
 
     public function show(Client $client)
     {
-        $client->load(['orders' => function($query) {
-            $query->latest('date');
-        }]);
-        
+        $client->load([
+            'orders' => function ($query) {
+                $query->latest('date');
+            }
+        ]);
+
         $stats = [
             'total_orders' => $client->orders->count(),
             'total_spent' => $client->orders->sum('total'),

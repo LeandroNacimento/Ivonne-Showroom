@@ -14,23 +14,7 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Order::with('client')->latest('date');
-
-        if ($request->has('status') && $request->status != '') {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->has('date_from') && $request->date_from != '') {
-            $query->whereDate('date', '>=', $request->date_from);
-        }
-
-        if ($request->has('date_to') && $request->date_to != '') {
-            $query->whereDate('date', '<=', $request->date_to);
-        }
-
-        $orders = $query->paginate(10);
-
-        return view('admin.orders.index', compact('orders'));
+        return view('admin.orders.index');
     }
 
     public function create()
@@ -77,7 +61,7 @@ class OrderController extends Controller
             foreach ($request->items as $item) {
                 // Fetch variation to get color/size info
                 $variation = \App\Models\ProductVariation::find($item['variation_id']);
-                
+
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item['product_id'],
@@ -134,7 +118,7 @@ class OrderController extends Controller
                     \App\Models\ProductVariation::find($item->variation_id)->increment('stock', $item->quantity);
                 }
             }
-            
+
             // Delete old items
             $order->items()->delete();
 
@@ -159,7 +143,7 @@ class OrderController extends Controller
             // Create new items and deduct stock
             foreach ($request->items as $item) {
                 $variation = \App\Models\ProductVariation::find($item['variation_id']);
-                
+
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item['product_id'],
@@ -186,7 +170,7 @@ class OrderController extends Controller
                 \App\Models\ProductVariation::find($item->variation_id)->increment('stock', $item->quantity);
             }
         }
-        
+
         $order->delete();
         return redirect()->route('admin.orders.index')->with('success', 'Pedido eliminado con éxito.');
     }

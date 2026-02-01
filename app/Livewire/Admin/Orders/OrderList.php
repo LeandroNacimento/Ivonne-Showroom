@@ -16,30 +16,42 @@ class OrderList extends Component
     public $date_from = '';
     public $date_to = '';
 
-    public function updatingSearch()    { $this->resetPage(); }
-    public function updatingStatus()    { $this->resetPage(); }
-    public function updatingDateFrom()  { $this->resetPage(); }
-    public function updatingDateTo()    { $this->resetPage(); }
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+    public function updatingStatus()
+    {
+        $this->resetPage();
+    }
+    public function updatingDateFrom()
+    {
+        $this->resetPage();
+    }
+    public function updatingDateTo()
+    {
+        $this->resetPage();
+    }
 
     public function render()
     {
         $orders = Order::query()
             ->with('client')
-            ->when($this->search, function(Builder $query) {
-                $query->where(function($q) {
+            ->when($this->search, function (Builder $query) {
+                $query->where(function ($q) {
                     $q->where('id', 'like', '%' . $this->search . '%')
-                      ->orWhereHas('client', function($subQ) {
-                          $subQ->where('name', 'like', '%' . $this->search . '%');
-                      });
+                        ->orWhereHas('client', function ($subQ) {
+                            $subQ->where('name', 'like', '%' . $this->search . '%');
+                        });
                 });
             })
-            ->when($this->status, function($query) {
+            ->when($this->status, function ($query) {
                 $query->where('status', $this->status);
             })
-            ->when($this->date_from, function($query) {
+            ->when($this->date_from, function ($query) {
                 $query->whereDate('date', '>=', $this->date_from);
             })
-            ->when($this->date_to, function($query) {
+            ->when($this->date_to, function ($query) {
                 $query->whereDate('date', '<=', $this->date_to);
             })
             ->latest()

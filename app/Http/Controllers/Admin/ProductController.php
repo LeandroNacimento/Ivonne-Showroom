@@ -15,8 +15,7 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with('category')->latest()->paginate(10);
-        return view('admin.products.index', compact('products'));
+        return view('admin.products.index');
     }
 
     public function create()
@@ -111,9 +110,9 @@ class ProductController extends Controller
         // For this MVP, let's assume we just add new ones or update existing if ID provided.
         // A better approach for variations in edit is often a separate component or Vue/Livewire.
         // I will stick to basic adding for now to keep it simple as requested.
-        
+
         if ($request->has('new_variations')) {
-             foreach ($request->new_variations as $variation) {
+            foreach ($request->new_variations as $variation) {
                 if ($variation['color'] && $variation['size']) {
                     ProductVariation::create([
                         'product_id' => $product->id,
@@ -140,15 +139,17 @@ class ProductController extends Controller
     public function search(Request $request)
     {
         $query = $request->get('q');
-        
+
         $products = Product::where('name', 'like', "%{$query}%")
             ->orWhere('id', 'like', "%{$query}%")
-            ->with(['variations' => function($q) {
-                $q->where('stock', '>', 0);
-            }])
+            ->with([
+                'variations' => function ($q) {
+                    $q->where('stock', '>', 0);
+                }
+            ])
             ->limit(20)
             ->get();
-            
+
         return response()->json($products);
     }
 }
