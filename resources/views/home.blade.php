@@ -2,43 +2,46 @@
 
 @section('content')
     <!-- Hero Section -->
-    <div id="inicio" class="spy-section relative bg-brand-blush overflow-hidden">
-        <div class="max-w-7xl mx-auto">
-            <div class="relative z-10 pb-8 bg-brand-blush sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
-                <main class="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
-                    <div class="sm:text-center lg:text-left">
-                        <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl reveal">
-                            <span class="block xl:inline">Estilo y elegancia</span>
-                            <span class="block text-brand-gold font-script xl:inline">para ti</span>
-                        </h1>
-                        <p class="reveal mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0"
-                            style="transition-delay: 100ms;">
-                            Descubre nuestra colección exclusiva de moda femenina. Prendas seleccionadas para resaltar tu
-                            belleza y confianza.
-                        </p>
-                        <div class="reveal mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start"
-                            style="transition-delay: 200ms;">
-                            <div class="rounded-md shadow">
-                                <a href="{{ route('catalog') }}"
-                                    class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-brand-pink hover:bg-brand-heart md:py-4 md:text-lg transition-colors">
-                                    Ver Catálogo
-                                </a>
-                            </div>
-                            <div class="mt-3 sm:mt-0 sm:ml-3">
-                                <a href="{{ route('contact') }}"
-                                    class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-brand-pink bg-white hover:bg-gray-50 md:py-4 md:text-lg transition-colors">
-                                    Contactar
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </main>
-            </div>
+    <div id="inicio"
+        class="spy-section relative w-full h-[85vh] min-h-[600px] bg-cover bg-center bg-no-repeat lg:bg-right-top"
+        style="background-image: url('{{ asset('img/imgHero.png') }}');">
+        <!-- Overlay for readability -->
+        <div
+            class="absolute inset-0 bg-gradient-to-r from-white/90 via-white/40 to-transparent sm:from-white/95 sm:via-white/25">
         </div>
-        <div class="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2 bg-brand-blush flex items-center justify-center reveal-fade"
-            style="transition-delay: 300ms;">
-            <img src="{{ asset('img/Logo.png') }}" alt="Ivonne Showroom"
-                class="h-64 w-auto object-contain mix-blend-multiply">
+
+        <div class="relative w-full h-full flex items-center px-4 sm:px-8 lg:px-24">
+            <main class="lg:w-1/2 xl:w-2/5">
+                <div class="sm:text-center lg:text-left">
+                    <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl reveal">
+                        <span class="block xl:inline">Estilo y elegancia</span>
+                        <span class="block text-brand-pink font-script xl:inline mt-2">para vos</span>
+                    </h1>
+                    <p class="reveal mt-4 text-base text-gray-700 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0 font-medium"
+                        style="transition-delay: 100ms;">
+                        Descubre nuestra colección exclusiva. Prendas seleccionadas con amor para resaltar tu belleza y
+                        confianza en cada paso.
+                    </p>
+                    <div class="reveal mt-8 sm:flex sm:justify-center lg:justify-start gap-4"
+                        style="transition-delay: 200ms;">
+
+                        <div class="rounded-full shadow-lg">
+                            <a href="{{ route('catalog') }}"
+                                class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-white bg-brand-pink hover:bg-brand-heart hover:scale-105 transform transition-all duration-300 md:py-4 md:text-lg md:px-10">
+                                Ver Catálogo
+                            </a>
+                        </div>
+
+                        <div class="mt-3 sm:mt-0">
+                            <a href="{{ route('contact') }}"
+                                class="w-full flex items-center justify-center px-8 py-3 border-2 border-brand-pink text-base font-medium rounded-full text-brand-pink bg-white/50 backdrop-blur-sm hover:bg-brand-pink hover:text-white md:py-4 md:text-lg md:px-10 transition-all duration-300">
+                                Contactar
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            </main>
         </div>
     </div>
 
