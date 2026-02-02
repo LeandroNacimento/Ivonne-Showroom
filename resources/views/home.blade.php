@@ -5,6 +5,9 @@
     <div id="inicio"
         class="spy-section relative w-full h-[85vh] min-h-[600px] bg-cover bg-center bg-no-repeat lg:bg-right-top"
         style="background-image: url('{{ asset('img/imgHero.png') }}');">
+        <!-- Dark Overlay -->
+        <div class="absolute inset-0 bg-black/60"></div>
+
         <!-- Overlay for readability -->
         <div
             class="absolute inset-0 bg-gradient-to-r from-white/90 via-white/40 to-transparent sm:from-white/95 sm:via-white/25">
