@@ -60,7 +60,7 @@
                         <div
                             class="w-full h-80 bg-gray-200 rounded-lg overflow-hidden group-hover:opacity-75 sm:h-64 aspect-w-1 aspect-h-1 flex items-center justify-center">
                             @if ($category->image)
-                                <img src="{{ asset($category->image) }}" alt="{{ $category->name }}"
+                                <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}"
                                     class="w-full h-full object-center object-cover">
                             @else
                                 <span class="text-gray-400">{{ $category->name }}</span>
