@@ -85,8 +85,18 @@ export async function navigateTo(url, push = true) {
         setTimeout(() => {
             content.innerHTML = newContent.innerHTML;
 
-            // Scroll al top
-            window.scrollTo({ top: 0, behavior: 'instant' });
+            // Scroll Logic: Handle Hash or default to Top
+            const targetUrl = new URL(url, window.location.origin);
+            if (targetUrl.hash) {
+                const targetElement = document.getElementById(targetUrl.hash.substring(1));
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    window.scrollTo({ top: 0, behavior: 'instant' });
+                }
+            } else {
+                window.scrollTo({ top: 0, behavior: 'instant' });
+            }
 
             // 6. Reinicializar scripts de UI
             initAnimations();
