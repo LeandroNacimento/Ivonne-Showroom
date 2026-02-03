@@ -36,15 +36,21 @@
                                 @csrf
                                 <input type="hidden" name="product_id" value="{{ $product->id }}">
 
-                                <div class="mb-6">
+                                <div class="mb-6" x-data="{ selected: null }">
                                     <h3 class="text-sm text-gray-900 font-medium mb-2">Selecciona una variante:</h3>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         @foreach ($product->variations as $variation)
                                             <label
-                                                class="relative border rounded-lg p-4 flex cursor-pointer focus:outline-none">
+                                                class="relative border rounded-lg p-4 flex cursor-pointer focus:outline-none transition-all duration-200"
+                                                :class="{
+                                                    'ring-2 ring-brand-pink border-brand-pink bg-pink-50': selected ==
+                                                        {{ $variation->id }},
+                                                    'hover:bg-gray-50': selected !=
+                                                        {{ $variation->id }}
+                                                }">
                                                 <input type="radio" name="variation_id" value="{{ $variation->id }}"
                                                     class="sr-only" aria-labelledby="variation-label-{{ $variation->id }}"
-                                                    required>
+                                                    x-model="selected" required>
                                                 <div class="flex items-center justify-between w-full">
                                                     <div class="flex items-center">
                                                         <div class="text-sm">
@@ -58,7 +64,7 @@
                                                         </div>
                                                     </div>
                                                     <div class="ml-4 flex-shrink-0 text-brand-pink"
-                                                        id="check-icon-{{ $variation->id }}" style="display: none;">
+                                                        x-show="selected == {{ $variation->id }}" style="display: none;">
                                                         <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
                                                             <path fill-rule="evenodd"
                                                                 d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -130,26 +136,5 @@
         </div>
     </div>
 
-    <script>
-        // Simple script to handle radio button styling
-        const radios = document.querySelectorAll('input[type="radio"][name="variation_id"]');
-        radios.forEach(radio => {
-            radio.addEventListener('change', function() {
-                // Reset all styles
-                document.querySelectorAll('label').forEach(label => {
-                    label.classList.remove('ring-2', 'ring-brand-pink', 'border-brand-pink');
-                    const icon = label.querySelector('[id^="check-icon-"]');
-                    if (icon) icon.style.display = 'none';
-                });
 
-                // Add style to selected
-                if (this.checked) {
-                    const label = this.closest('label');
-                    label.classList.add('ring-2', 'ring-brand-pink', 'border-brand-pink');
-                    const icon = label.querySelector('[id^="check-icon-"]');
-                    if (icon) icon.style.display = 'block';
-                }
-            });
-        });
-    </script>
 @endsection
