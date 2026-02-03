@@ -3,9 +3,14 @@ import { initAnimations } from "./animations";
 import { initSpaSimulation } from "./spa-simulation";
 import { initCatalog } from "./catalog";
 
-// import Alpine from 'alpinejs'; // COMENTADO
-// window.Alpine = Alpine;       // COMENTADO
-// Alpine.start();               // COMENTADO
+import Alpine from 'alpinejs';
+import carousel from './carousel';
+
+window.Alpine = Alpine;
+
+Alpine.data('categoriesCarousel', carousel);
+
+Alpine.start();
 
 document.addEventListener("DOMContentLoaded", () => {
     initAnimations();
