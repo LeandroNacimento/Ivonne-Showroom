@@ -4,7 +4,7 @@
     <div class="bg-white">
         <div class="max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="flex flex-col md:flex-row justify-between items-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 font-script text-brand-pink">Catálogo</h1>
+                <h1 class="text-3xl font-bold text-gray-900 font-script text-brand-pink reveal">Catálogo</h1>
 
                 <!-- Filters / Sort -->
                 <div class="flex gap-4 mt-4 md:mt-0">
@@ -31,10 +31,10 @@
             </div>
 
             <div id="catalog-products"
-                class="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
+                class="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8 reveal-stagger-container">
                 @forelse($products as $product)
                     <div
-                        class="group relative bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow">
+                        class="group relative bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow reveal-child">
                         <div
                             class="w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-t-lg overflow-hidden group-hover:opacity-75 lg:h-80 lg:aspect-none flex items-center justify-center">
                             <img src="{{ $product->cover_url }}" alt="{{ $product->name }}"
