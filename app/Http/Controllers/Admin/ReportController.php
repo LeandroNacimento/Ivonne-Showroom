@@ -11,6 +11,20 @@ use Carbon\Carbon;
 
 class ReportController extends Controller
 {
+    /**
+     * Get database-agnostic DATE extraction expression.
+     * Compatible with MySQL (DATE) and SQL Server (CAST AS DATE).
+     */
+    private function getDateExpression(string $column): string
+    {
+        $driver = config('database.default');
+
+        return match ($driver) {
+            'sqlsrv' => "CAST({$column} AS DATE)",
+            default => "DATE({$column})",
+        };
+    }
+
     public function index(Request $request)
     {
         $dateFrom = $request->input('date_from', Carbon::now()->startOfMonth()->format('Y-m-d'));
@@ -21,15 +35,15 @@ class ReportController extends Controller
 
         if ($reportType === 'sales') {
             $data = Order::select(
-                DB::raw('DATE(date) as date'), 
-                DB::raw('COUNT(*) as total_orders'), 
+                DB::raw($this->getDateExpression('date') . ' as date'),
+                DB::raw('COUNT(*) as total_orders'),
                 DB::raw('SUM(total) as total_sales')
             )
-            ->whereBetween('date', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
-            ->where('status', '!=', 'cancelled')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+                ->whereBetween('date', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
+                ->where('status', '!=', 'cancelled')
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get();
         } elseif ($reportType === 'products') {
             $data = OrderItem::join('orders', 'order_items.order_id', '=', 'orders.id')
                 ->join('products', 'order_items.product_id', '=', 'products.id')
@@ -69,30 +83,30 @@ class ReportController extends Controller
         $reportType = $request->input('report_type', 'sales');
 
         $fileName = 'reporte_' . $reportType . '_' . date('Ymd_His') . '.csv';
-        
+
         $headers = [
-            "Content-type"        => "text/csv",
+            "Content-type" => "text/csv",
             "Content-Disposition" => "attachment; filename=$fileName",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
         ];
 
-        $callback = function() use ($dateFrom, $dateTo, $reportType) {
+        $callback = function () use ($dateFrom, $dateTo, $reportType) {
             $file = fopen('php://output', 'w');
 
             if ($reportType === 'sales') {
                 fputcsv($file, ['Fecha', 'Cantidad Pedidos', 'Total Ventas']);
                 $data = Order::select(
-                    DB::raw('DATE(date) as date'), 
-                    DB::raw('COUNT(*) as total_orders'), 
+                    DB::raw($this->getDateExpression('date') . ' as date'),
+                    DB::raw('COUNT(*) as total_orders'),
                     DB::raw('SUM(total) as total_sales')
                 )
-                ->whereBetween('date', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
-                ->where('status', '!=', 'cancelled')
-                ->groupBy('date')
-                ->orderBy('date')
-                ->get();
+                    ->whereBetween('date', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
+                    ->where('status', '!=', 'cancelled')
+                    ->groupBy('date')
+                    ->orderBy('date')
+                    ->get();
 
                 foreach ($data as $row) {
                     fputcsv($file, [$row->date, $row->total_orders, $row->total_sales]);
