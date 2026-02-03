@@ -1,9 +1,9 @@
 <nav class="bg-white shadow-sm sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-20">
             <div class="flex items-center">
                 <a href="{{ route('home') }}" class="flex-shrink-0 flex items-center gap-2">
-                    <img src="{{ asset('img/Logo.png') }}" alt="Ivonne Showroom" class="h-16 w-auto">
+                    <img src="{{ asset('img/showroom-logo.png') }}" alt="Ivonne Showroom" class="h-16 w-auto">
                 </a>
             </div>
 

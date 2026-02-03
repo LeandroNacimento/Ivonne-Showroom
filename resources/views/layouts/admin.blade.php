@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>Admin - Ivonne Showroom</title>
-    <link rel="icon" href="{{ asset('img/Logo.png') }}" type="image/png">
+    <link rel="icon" href="{{ asset('img/showroom-logo.png') }}" type="image/png">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -52,7 +52,7 @@
                 </button>
             </div>
             <div class="flex flex-shrink-0 items-center px-4">
-                <img class="h-10 w-auto" src="{{ asset('img/Logo.png') }}" alt="Ivonne Showroom">
+                <img class="h-10 w-auto" src="{{ asset('img/showroom-logo.png') }}" alt="Ivonne Showroom">
             </div>
             <nav class="mt-5 h-full overflow-y-auto px-4 space-y-1">
                 @include('layouts.partials.admin-nav')
@@ -65,7 +65,7 @@
         class="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col lg:border-r lg:border-gray-200 lg:bg-white lg:shadow-sm">
         <div class="flex flex-col flex-grow overflow-y-auto pt-5 pb-4">
             <div class="flex flex-shrink-0 items-center px-6 mb-6">
-                <img class="h-12 w-auto" src="{{ asset('img/Logo.png') }}" alt="Ivonne Showroom">
+                <img class="h-12 w-auto" src="{{ asset('img/showroom-logo.png') }}" alt="Ivonne Showroom">
             </div>
             <nav class="mt-2 flex-1 space-y-1 px-4">
                 @include('layouts.partials.admin-nav')
