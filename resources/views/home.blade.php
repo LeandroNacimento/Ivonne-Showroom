@@ -60,7 +60,7 @@
                 scrollbar-width: none;
             }
         </style>
-        <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 relative group/carousel">
+        <div class="max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8 relative group/carousel">
             <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 text-center mb-8 font-script reveal">Categorías
                 Destacadas</h2>
 
@@ -112,7 +112,7 @@
 
     <!-- Featured Products Section -->
     <div id="novedades" class="spy-section bg-brand-blush py-12">
-        <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 text-center mb-8 font-script reveal">Novedades
             </h2>
             <div
