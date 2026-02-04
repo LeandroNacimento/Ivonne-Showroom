@@ -3,6 +3,8 @@
 @theme {
     /* Colors */
     --color-brand-blush: #f7e9ed;
+    --color-brand-blush-soft: #fbf4f6;
+    --color-brand-cream: #fdfafb;
     --color-brand-pink: #e94f9b;
     --color-brand-heart: #f59bb4;
     --color-brand-gold: #d4af37;
@@ -71,8 +73,40 @@
         transform: translateY(0);
     }
 
-    .spa-loading {
-        opacity: 0;
-        transform: translateY(10px);
+    /* Luxury Shadows */
+    .shadow-soft {
+        box-shadow: 0 4px 20px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+    }
+
+    .shadow-luxury {
+        box-shadow: 0 20px 40px -15px rgba(233, 79, 155, 0.15), 0 10px 20px -10px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Boutique V2 Sidebar & Filters */
+    .color-dot {
+        position: relative;
+    }
+    
+    label:has(input:checked) .color-dot {
+        @apply ring-2 ring-brand-pink ring-offset-2 scale-110;
+    }
+
+    .sidebar-section-title {
+        @apply text-[11px] uppercase tracking-[0.2em] font-extrabold text-gray-600 mb-6;
+    }
+
+    /* Mobile Drawer */
+    .drawer-backdrop {
+        background-color: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(4px);
+    }
+
+    /* Transition classes for JS */
+    #filter-drawer.pointer-events-auto .drawer-panel {
+        transform: translateX(0);
+    }
+
+    #filter-drawer.pointer-events-auto .drawer-backdrop {
+        opacity: 1;
     }
 }

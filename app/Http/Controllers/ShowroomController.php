@@ -18,30 +18,61 @@ class ShowroomController extends Controller
 
     public function catalog(Request $request)
     {
-        $query = Product::with('category', 'images');
+        $query = Product::with('category', 'images', 'variations');
 
-        if ($request->has('category')) {
+        // Filter by Category
+        if ($request->filled('category')) {
             $query->whereHas('category', function ($q) use ($request) {
                 $q->where('slug', $request->category);
             });
         }
 
+        // Filter by Sizes (Combinable)
+        if ($request->filled('sizes')) {
+            $sizes = is_array($request->sizes) ? $request->sizes : [$request->sizes];
+            $query->whereHas('variations', function ($q) use ($sizes) {
+                $q->whereIn('size', $sizes)->where('stock', '>', 0);
+            });
+        }
+
+        // Filter by Colors (Combinable)
+        if ($request->filled('colors')) {
+            $colors = is_array($request->colors) ? $request->colors : [$request->colors];
+            $query->whereHas('variations', function ($q) use ($colors) {
+                $q->whereIn('color', $colors)->where('stock', '>', 0);
+            });
+        }
+
+        // Sorting
         if ($request->has('sort')) {
             if ($request->sort == 'price_asc') {
-                $query->orderBy('price', 'asc');
+                $query->orderBy('price', 'asc')->orderBy('id', 'desc');
             } elseif ($request->sort == 'price_desc') {
-                $query->orderBy('price', 'desc');
+                $query->orderBy('price', 'desc')->orderBy('id', 'desc');
             } else {
-                $query->latest();
+                $query->orderBy('created_at', 'desc')->orderBy('id', 'desc');
             }
         } else {
-            $query->latest();
+            $query->orderBy('created_at', 'desc')->orderBy('id', 'desc');
         }
 
         $products = $query->paginate(12);
-        $categories = Category::all();
 
-        return view('catalog', compact('products', 'categories'));
+        // Data for Sidebar (Context-aware)
+        $categories = Category::withCount('products')->get();
+
+        $baseVarQuery = \App\Models\ProductVariation::where('stock', '>', 0);
+
+        if ($request->filled('category')) {
+            $baseVarQuery->whereHas('product.category', function ($q) use ($request) {
+                $q->where('slug', $request->category);
+            });
+        }
+
+        $availableSizes = (clone $baseVarQuery)->distinct()->orderBy('size')->pluck('size');
+        $availableColors = (clone $baseVarQuery)->distinct()->orderBy('color')->pluck('color');
+
+        return view('catalog', compact('products', 'categories', 'availableSizes', 'availableColors'));
     }
 
     public function product($slug)

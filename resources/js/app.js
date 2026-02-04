@@ -1,7 +1,7 @@
 import "./bootstrap";
 import { initAnimations } from "./animations";
 import { initSpaSimulation } from "./spa-simulation";
-import { initCatalog } from "./catalog";
+import { initCatalogFilters } from "./catalog-filters";
 
 import Alpine from 'alpinejs';
 import carousel from './carousel';
@@ -15,6 +15,6 @@ Alpine.start();
 document.addEventListener("DOMContentLoaded", () => {
     initAnimations();
     initSpaSimulation();
-    initCatalog();
-    console.log("✨ Ivonne Showroom: SPA & Catalog Initialized");
+    initCatalogFilters();
+    console.log("✨ Ivonne Showroom: Boutique Showroom Initialized");
 });

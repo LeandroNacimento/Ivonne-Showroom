@@ -24,13 +24,13 @@ export function initSpaSimulation() {
         if (href.startsWith('#')) return;
         if (!href.startsWith(window.location.origin) && !href.startsWith('/')) return;
 
-        // Si es la misma página (ruta exacta), ignorar (evita loop de carga)
-        // Salvo que queramos un "refresh" suave, pero generalmente no.
-        const targetUrl = new URL(href, window.location.origin);
-        if (targetUrl.pathname === window.location.pathname && !targetUrl.search) {
-            // Si es solo cambio de hash, dejarlo pasar
-            if (targetUrl.hash) return;
-            e.preventDefault(); // Evitar recarga si es click identico
+        // Si es la misma página exacta (misma ruta y mismos parámetros), ignorar
+        const currentUrl = new URL(window.location.href);
+        if (targetUrl.pathname === currentUrl.pathname && targetUrl.search === currentUrl.search) {
+            // Si hay un hash distinto, dejar que el navegador lo maneje o dejar pasar si es navegación a ancla
+            if (targetUrl.hash !== currentUrl.hash) return;
+            
+            e.preventDefault(); // Evitar recarga si es click idéntico
             return;
         }
 
@@ -45,77 +45,67 @@ export function initSpaSimulation() {
     });
 }
 
-export async function navigateTo(url, push = true) {
-    const content = document.querySelector('.spa-content');
-    if (!content) {
-        // Fallback crítico: si no hay estructura, navegar normal
-        window.location.href = url;
-        return;
-    }
-
-    // 1. Feedback visual inmediato (Salida)
-    content.classList.add('spa-loading');
-
-    try {
-        // 2. Fetch del contenido
-        const response = await fetch(url, {
-            headers: { 'X-SPA': 'true' }
-        });
-
-        if (!response.ok) throw new Error('Network error');
-
-        const html = await response.text();
-
-        // 3. Parsing (Solo extraemos .spa-content)
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const newContent = doc.querySelector('.spa-content');
-
-        if (!newContent) {
-            throw new Error('.spa-content not found in response');
+export function navigateTo(url, push = true) {
+    return new Promise((resolve, reject) => {
+        const content = document.querySelector('.spa-content');
+        if (!content) {
+            window.location.href = url;
+            return resolve();
         }
 
-        // 4. Actualizar URL (si es navegación nueva)
-        if (push) {
-            history.pushState(null, '', url);
-        }
+        content.classList.add('spa-loading');
 
-        // 5. Reemplazo del contenido (Swap)
-        // Usamos un pequeño timeout para dar sensación de transición si fue muy rápido
-        setTimeout(() => {
-            content.innerHTML = newContent.innerHTML;
+        fetch(url, { headers: { 'X-SPA': 'true' } })
+            .then(response => {
+                if (!response.ok) throw new Error('Network error');
+                return response.text();
+            })
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newContent = doc.querySelector('.spa-content');
 
-            // Scroll Logic: Handle Hash or default to Top
-            const targetUrl = new URL(url, window.location.origin);
-            if (targetUrl.hash) {
-                const targetElement = document.getElementById(targetUrl.hash.substring(1));
-                if (targetElement) {
-                    targetElement.scrollIntoView({ behavior: 'smooth' });
-                } else {
-                    window.scrollTo({ top: 0, behavior: 'instant' });
-                }
-            } else {
-                window.scrollTo({ top: 0, behavior: 'instant' });
-            }
+                if (!newContent) throw new Error('.spa-content not found');
 
-            // 6. Reinicializar scripts de UI
-            initAnimations();
-            initSmoothScroll();
-            initScrollSpy();
+                if (push) history.pushState(null, '', url);
 
-            // 7. Feedback visual (Entrada)
-            // Forzar reflow para reiniciar animaciones CSS si las hubiera
-            void content.offsetWidth;
-            content.classList.remove('spa-loading');
+                setTimeout(() => {
+                    content.innerHTML = newContent.innerHTML;
 
-            // Actualizar título del documento
-            const newTitle = doc.querySelector('title');
-            if (newTitle) document.title = newTitle.innerText;
+                    const targetUrl = new URL(url, window.location.origin);
+                    if (targetUrl.hash) {
+                        const targetElement = document.getElementById(targetUrl.hash.substring(1));
+                        if (targetElement) {
+                            targetElement.scrollIntoView({ behavior: 'smooth' });
+                        } else {
+                            window.scrollTo({ top: 0, behavior: 'instant' });
+                        }
+                    } else {
+                        window.scrollTo({ top: 0, behavior: 'instant' });
+                    }
 
-        }, 300); // 300ms coincide con la transición CSS
+                    initAnimations();
+                    initSmoothScroll();
+                    initScrollSpy();
 
-    } catch (error) {
-        console.warn('[SPA] Fallback to standard navigation reason:', error);
-        window.location.href = url;
-    }
+                    void content.offsetWidth;
+                    content.classList.remove('spa-loading');
+
+                    const newTitle = doc.querySelector('title');
+                    if (newTitle) document.title = newTitle.innerText;
+
+                    // Trigger event for other components to re-init
+                    document.dispatchEvent(new CustomEvent('spa:content-loaded', { 
+                        detail: { url, doc } 
+                    }));
+
+                    resolve();
+                }, 300);
+            })
+            .catch(error => {
+                console.warn('[SPA] Fallback reason:', error);
+                window.location.href = url;
+                resolve();
+            });
+    });
 }
