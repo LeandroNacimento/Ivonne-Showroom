@@ -9,7 +9,7 @@
                 <h1 class="text-4xl md:text-5xl lg:text-6xl font-script text-brand-pink/90 leading-tight">
                     Catálogo
                 </h1>
-                <p class="text-gray-400 mt-3 font-medium tracking-[0.2em] uppercase text-xs md:text-sm">
+                <p class="text-gray-400 mt-3 font-medium tracking-[0.3em] uppercase text-xs md:text-sm">
                     Colección Exclusiva
                 </p>
             </div>
@@ -46,7 +46,7 @@
                                 por</span>
                             <div class="relative group">
                                 <select name="sort" form="catalog-filters-form"
-                                    class="catalog-filter appearance-none bg-transparent py-1 pl-0 pr-8 focus:outline-none text-sm font-semibold text-gray-900 cursor-pointer transition-colors border-b border-transparent hover:border-brand-pink">
+                                    class="catalog-filter appearance-none bg-white/50 backdrop-blur-sm py-1.5 pl-3 pr-8 rounded-full focus:outline-none text-xs font-bold uppercase tracking-widest text-gray-700 cursor-pointer transition-all border border-gray-200 hover:border-brand-pink hover:text-brand-pink focus:ring-1 focus:ring-brand-pink">
                                     <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Más nuevos
                                     </option>
                                     <option value="price_asc" {{ request('sort') == 'price_asc' ? 'selected' : '' }}>Menor

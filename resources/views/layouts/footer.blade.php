@@ -1,9 +1,9 @@
-<footer class="bg-white border-t border-gray-100">
+<footer class="bg-white border-t border-brand-blush">
     <div class="max-w-[90%] mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col items-center text-center">
             <!-- Brand / Contact -->
             <div>
-                <h3 class="text-xl font-bold text-gray-900 mb-4">Ivonne Showroom</h3>
+                <h3 class="text-3xl text-brand-pink font-script mb-4">Ivonne Showroom</h3>
                 <p class="text-gray-500 text-sm mb-2">
                     {{ $settings['address'] ?? 'Napoleón Uriburu 1366, Formosa Capital' }}
                 </p>
