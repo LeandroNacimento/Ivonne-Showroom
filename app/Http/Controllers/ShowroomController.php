@@ -113,12 +113,21 @@ class ShowroomController extends Controller
 
     public function removeFromCart(Request $request, CartService $cartService)
     {
+        $request->validate([
+            'cart_key' => 'required|string',
+        ]);
+
         $cartService->removeFromCart($request->cart_key);
         return back()->with('success', 'Producto eliminado del carrito.');
     }
 
     public function updateCart(Request $request, CartService $cartService)
     {
+        $request->validate([
+            'cart_key' => 'required|string',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
         $cartService->updateQuantity($request->cart_key, $request->quantity);
         return back()->with('success', 'Carrito actualizado.');
     }
