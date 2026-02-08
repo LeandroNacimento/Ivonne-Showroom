@@ -32,8 +32,8 @@ services:
         container_name: laravel_db
         restart: unless-stopped
         environment:
-            MYSQL_DATABASE: ivonneshowroom
-            MYSQL_ROOT_PASSWORD: "secret_ivonne_password_2026"
+            MYSQL_DATABASE: "${DB_DATABASE}"
+            MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
             MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
         volumes:
             - dbdata:/var/lib/mysql
