@@ -66,7 +66,7 @@
 
                     <!-- Product Grid -->
                     <div id="catalog-products"
-                        class="grid grid-cols-2 gap-y-12 gap-x-6 lg:grid-cols-3 xl:grid-cols-4 reveal-stagger-container">
+                        class="grid grid-cols-2 gap-y-8 gap-x-4 sm:gap-x-6 lg:gap-y-12 lg:grid-cols-3 xl:grid-cols-4 reveal-stagger-container">
                         @forelse($products as $product)
                             <div class="group reveal-child h-full">
                                 <a href="{{ route('product.show', $product->slug) }}"

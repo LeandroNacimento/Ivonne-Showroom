@@ -1,4 +1,4 @@
-<nav class="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-100">
+<nav x-data="{ mobileMenuOpen: false }" class="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-100">
     <div class="max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-20">
             <div class="flex items-center">
@@ -37,14 +37,19 @@
 
                 <!-- Mobile menu button -->
                 <div class="flex items-center sm:hidden">
-                    <button type="button"
+                    <button type="button" @click="mobileMenuOpen = !mobileMenuOpen"
                         class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-gold"
-                        aria-controls="mobile-menu" aria-expanded="false">
+                        aria-controls="mobile-menu" :aria-expanded="mobileMenuOpen">
                         <span class="sr-only">Open main menu</span>
                         <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" aria-hidden="true">
+                            stroke="currentColor" aria-hidden="true" x-show="!mobileMenuOpen">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" x-show="mobileMenuOpen" style="display: none;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
@@ -53,15 +58,20 @@
     </div>
 
     <!-- Mobile menu, show/hide based on menu state. -->
-    <div class="sm:hidden hidden" id="mobile-menu">
-        <div class="pt-2 pb-3 space-y-1">
+    <!-- Mobile menu, show/hide based on menu state. -->
+    <div x-show="mobileMenuOpen" x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0"
+        x-transition:leave-end="opacity-0 -translate-y-2"
+        class="sm:hidden absolute top-20 left-0 w-full bg-white shadow-lg border-b border-gray-100 z-40"
+        id="mobile-menu" style="display: none;">
+        <div class="pt-4 pb-6 px-6 space-y-4">
             <a href="{{ route('home') }}"
-                class="bg-brand-blush border-l-4 border-brand-gold text-brand-gold block pl-3 pr-4 py-2 text-base font-medium">Inicio</a>
+                class="block text-lg font-medium text-gray-800 hover:text-brand-pink border-b border-gray-100 pb-2">Inicio</a>
             <a href="{{ route('catalog') }}"
-                class="border-l-4 border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 text-base font-medium">Catálogo</a>
-
+                class="block text-lg font-medium text-gray-800 hover:text-brand-pink border-b border-gray-100 pb-2">Catálogo</a>
             <a href="{{ route('contact') }}"
-                class="border-l-4 border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 text-base font-medium">Contacto</a>
+                class="block text-lg font-medium text-gray-800 hover:text-brand-pink border-b border-gray-100 pb-2">Contacto</a>
         </div>
     </div>
 </nav>

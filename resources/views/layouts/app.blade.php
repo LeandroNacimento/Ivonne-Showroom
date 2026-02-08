@@ -16,6 +16,7 @@
 
     <!-- Styles / Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
 </head>
 
 <body class="font-sans text-text-dark bg-brand-blush antialiased">
@@ -30,6 +31,7 @@
 
         @include('layouts.footer')
     </div>
+    @livewireScripts
 </body>
 
 </html>

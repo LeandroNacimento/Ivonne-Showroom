@@ -7,9 +7,33 @@
                 <!-- Image gallery -->
                 <div class="flex flex-col-reverse">
                     <div
-                        class="w-full aspect-w-1 aspect-h-1 bg-gray-200 rounded-lg overflow-hidden sm:aspect-w-2 sm:aspect-h-3 flex items-center justify-center">
-                        <img src="{{ $product->cover_url }}" alt="{{ $product->name }}"
-                            class="w-full h-full object-center object-cover">
+                        class="w-full aspect-w-1 aspect-h-1 bg-gray-200 rounded-lg overflow-hidden sm:aspect-w-2 sm:aspect-h-3 relative group">
+
+                        <!-- Gallery Container -->
+                        <div class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth w-full h-full absolute inset-0 hide-scroll"
+                            style="scrollbar-width: none; -ms-overflow-style: none;">
+                            @if ($product->images->count() > 0)
+                                @foreach ($product->images as $image)
+                                    <div class="w-full h-full flex-shrink-0 snap-center">
+                                        <img src="{{ asset('storage/' . $image->path) }}" alt="{{ $product->name }}"
+                                            class="w-full h-full object-center object-cover">
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="w-full h-full flex-shrink-0 snap-center">
+                                    <img src="{{ $product->cover_url }}" alt="{{ $product->name }}"
+                                        class="w-full h-full object-center object-cover">
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- Badge for multiple images -->
+                        @if ($product->images->count() > 1)
+                            <div
+                                class="absolute bottom-4 right-4 bg-black/50 text-white text-xs px-2 py-1 rounded-md backdrop-blur-sm pointer-events-none">
+                                Desliza para ver más
+                            </div>
+                        @endif
                     </div>
                     <!-- Thumbnails could go here -->
                 </div>
@@ -77,10 +101,21 @@
                                     </div>
                                 </div>
 
-                                <div class="flex items-center mb-6">
+                                <div class="flex items-center mb-6" x-data="{ qty: 1 }">
                                     <label for="quantity" class="mr-4 text-sm font-medium text-gray-700">Cantidad:</label>
-                                    <input type="number" name="quantity" id="quantity" value="1" min="1"
-                                        class="w-20 rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50 text-center">
+                                    <div class="flex items-center border border-gray-300 rounded-md">
+                                        <button type="button" @click="qty > 1 ? qty-- : null"
+                                            class="px-4 py-2 text-gray-600 hover:bg-gray-100 focus:outline-none transition-colors">
+                                            -
+                                        </button>
+                                        <input type="number" name="quantity" id="quantity" x-model="qty" min="1"
+                                            readonly
+                                            class="w-16 border-0 text-center focus:ring-0 p-0 text-gray-900 font-medium">
+                                        <button type="button" @click="qty++"
+                                            class="px-4 py-2 text-gray-600 hover:bg-gray-100 focus:outline-none transition-colors">
+                                            +
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <button type="submit"

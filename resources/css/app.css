@@ -17,6 +17,19 @@
     --font-sans: "Montserrat", sans-serif;
 }
 
+@layer base {
+    /* Hide number input arrows */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+        -webkit-appearance: none; 
+        margin: 0; 
+    }
+
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+}
+
 @layer utilities {
     /* 
        ANIMACIONES UX - Ivonne Showroom 
@@ -31,6 +44,13 @@
             opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
             transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
         will-change: opacity, transform;
+    }
+
+    @media (max-width: 640px) {
+        .reveal {
+            transition: opacity 0.5s ease-out;
+            transform: none !important;
+        }
     }
 
     /* Estado activo: Elemento en su posición final */
