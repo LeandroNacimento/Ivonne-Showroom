@@ -1,6 +1,4 @@
-@extends('layouts.app')
-
-@section('content')
+<x-layouts.app>
     <!-- Hero Section -->
     <div id="inicio"
         class="spy-section relative w-full h-[85vh] min-h-[600px] bg-cover bg-center bg-no-repeat lg:bg-right-top"
@@ -61,7 +59,8 @@
             }
         </style>
         <div class="max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8 relative group/carousel">
-            <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 text-center mb-8 font-script reveal">Categorías
+            <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 text-center mb-8 font-script reveal">
+                Categorías
                 Destacadas</h2>
 
             <!-- Left Button -->
@@ -113,7 +112,8 @@
     <!-- Featured Products Section -->
     <div id="novedades" class="spy-section bg-brand-blush py-12">
         <div class="max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 text-center mb-8 font-script reveal">Novedades
+            <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 text-center mb-8 font-script reveal">
+                Novedades
             </h2>
             <div
                 class="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-4 xl:gap-x-8 reveal-stagger-container">
@@ -134,7 +134,8 @@
                                 </h3>
                                 <p class="mt-1 text-sm text-gray-500">{{ $product->category->name }}</p>
                             </div>
-                            <p class="text-sm font-medium text-gray-900">${{ number_format($product->price, 0, ',', '.') }}
+                            <p class="text-sm font-medium text-gray-900">
+                                ${{ number_format($product->price, 0, ',', '.') }}
                             </p>
                         </div>
                     </div>
@@ -147,4 +148,4 @@
             </div>
         </div>
     </div>
-@endsection
+</x-layouts.app>

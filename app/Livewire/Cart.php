@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Services\CartService;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class Cart extends Component
@@ -11,13 +12,12 @@ class Cart extends Component
     public $total = 0;
     public $whatsappMessage = '';
 
-    protected $listeners = ['cartUpdated' => 'loadCart'];
-
     public function mount(CartService $cartService)
     {
         $this->loadCart($cartService);
     }
 
+    #[On('cart-updated')]
     public function loadCart(CartService $cartService)
     {
         $this->cart = $cartService->getCart();

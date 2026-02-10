@@ -9,8 +9,6 @@ Route::get('/producto/{slug}', [ShowroomController::class, 'product'])->name('pr
 Route::get('/carrito', [ShowroomController::class, 'cart'])->name('cart');
 Route::middleware(['throttle:60,1'])->group(function () {
     Route::post('/carrito/agregar', [ShowroomController::class, 'addToCart'])->name('cart.add');
-    Route::post('/carrito/remover', [ShowroomController::class, 'removeFromCart'])->name('cart.remove');
-    Route::post('/carrito/actualizar', [ShowroomController::class, 'updateCart'])->name('cart.update');
 });
 Route::get('/contacto', [ShowroomController::class, 'contact'])->name('contact');
 

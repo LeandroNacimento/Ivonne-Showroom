@@ -1,6 +1,4 @@
-@extends('layouts.app')
-
-@section('content')
+<x-layouts.app>
     <div class="bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div class="lg:grid lg:grid-cols-2 lg:gap-x-8 lg:items-start">
@@ -73,7 +71,8 @@
                                                         {{ $variation->id }}
                                                 }">
                                                 <input type="radio" name="variation_id" value="{{ $variation->id }}"
-                                                    class="sr-only" aria-labelledby="variation-label-{{ $variation->id }}"
+                                                    class="sr-only"
+                                                    aria-labelledby="variation-label-{{ $variation->id }}"
                                                     x-model="selected" required>
                                                 <div class="flex items-center justify-between w-full">
                                                     <div class="flex items-center">
@@ -88,7 +87,8 @@
                                                         </div>
                                                     </div>
                                                     <div class="ml-4 flex-shrink-0 text-brand-pink"
-                                                        x-show="selected == {{ $variation->id }}" style="display: none;">
+                                                        x-show="selected == {{ $variation->id }}"
+                                                        style="display: none;">
                                                         <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
                                                             <path fill-rule="evenodd"
                                                                 d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -102,14 +102,15 @@
                                 </div>
 
                                 <div class="flex items-center mb-6" x-data="{ qty: 1 }">
-                                    <label for="quantity" class="mr-4 text-sm font-medium text-gray-700">Cantidad:</label>
+                                    <label for="quantity"
+                                        class="mr-4 text-sm font-medium text-gray-700">Cantidad:</label>
                                     <div class="flex items-center border border-gray-300 rounded-md">
                                         <button type="button" @click="qty > 1 ? qty-- : null"
                                             class="px-4 py-2 text-gray-600 hover:bg-gray-100 focus:outline-none transition-colors">
                                             -
                                         </button>
-                                        <input type="number" name="quantity" id="quantity" x-model="qty" min="1"
-                                            readonly
+                                        <input type="number" name="quantity" id="quantity" x-model="qty"
+                                            min="1" readonly
                                             class="w-16 border-0 text-center focus:ring-0 p-0 text-gray-900 font-medium">
                                         <button type="button" @click="qty++"
                                             class="px-4 py-2 text-gray-600 hover:bg-gray-100 focus:outline-none transition-colors">
@@ -137,7 +138,8 @@
             <!-- Related Products -->
             @if ($relatedProducts->count() > 0)
                 <div class="mt-16 border-t border-gray-200 pt-10">
-                    <h2 class="text-2xl font-bold tracking-tight text-gray-900 font-script text-brand-pink mb-6">También te
+                    <h2 class="text-2xl font-bold tracking-tight text-gray-900 font-script text-brand-pink mb-6">También
+                        te
                         puede interesar</h2>
                     <div class="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-4 xl:gap-x-8">
                         @foreach ($relatedProducts as $related)
@@ -146,7 +148,8 @@
                                     class="w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-md overflow-hidden group-hover:opacity-75 lg:h-80 lg:aspect-none flex items-center justify-center">
                                     @if ($related->images->first())
                                         <img src="{{ asset('storage/' . $related->images->first()->path) }}"
-                                            alt="{{ $related->name }}" class="w-full h-full object-center object-cover">
+                                            alt="{{ $related->name }}"
+                                            class="w-full h-full object-center object-cover">
                                     @else
                                         <span class="text-gray-400">Imagen</span>
                                     @endif
@@ -172,4 +175,4 @@
     </div>
 
 
-@endsection
+</x-layouts.app>

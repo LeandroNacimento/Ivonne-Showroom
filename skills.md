@@ -1,262 +1,337 @@
 # Skills — Ivonne Showroom
 
-Este documento define las habilidades técnicas que el agente puede ejecutar.
-Toda skill debe respetar las reglas establecidas en `agents.md`.
+Este documento define **qué puede hacer el agente y cómo**, dentro del proyecto _Ivonne Showroom_.
+Todas las skills **deben cumplir estrictamente** las reglas establecidas en `agents.md`.
 
-Las skills:
+---
 
-- NO toman decisiones de producto
-- NO alteran diseño visual sin autorización
-- NO ejecutan acciones de Git
+## Principios Generales
 
-🧠 Skills de Análisis (no tocan código)
-🔍 analyze_feature
+- Las skills **NO toman decisiones de producto**
+- Las skills **NO modifican diseño visual** sin autorización explícita
+- Las skills **NO ejecutan acciones de Git** (commit, push, merge, etc.)
+- Las skills **NO introducen dependencias nuevas** sin validación previa
+- Las skills **respetan mobile-first, progressive enhancement y SSR**
 
-Descripción:
-Analiza una funcionalidad solicitada y valida su compatibilidad con la arquitectura del proyecto.
+---
 
-Input:
+## 🧠 Skills de Análisis (no tocan código)
 
-feature_description (string)
+### 🔍 analyze_project_structure
 
-Output:
+**Descripción**
+Analiza la estructura actual del proyecto y detecta inconsistencias arquitectónicas.
 
-affected_layers (frontend / backend / db)
+**Input**
 
-potential_risks (array)
+- project_tree
 
-architecture_fit (true | false)
+**Output**
 
-🔍 analyze_security_impact
+- layers_detected (frontend / backend / db)
+- coupling_issues
+- livewire_misuse
+- mobile_risks
+- refactor_recommendations
 
-Descripción:
-Evalúa impacto de seguridad antes de cualquier cambio backend.
+📌 Skill base obligatoria antes de refactors grandes.
 
-Input:
+---
 
-change_description (string)
+### 🔍 analyze_feature
 
-Output:
+**Descripción**
+Analiza una funcionalidad solicitada y valida su compatibilidad con la arquitectura actual.
 
-risks (XSS, CSRF, auth, data leakage)
+**Input**
 
-required_mitigations (array)
+- feature_description (string)
 
-📌 Obligatoria para cambios en backend o BD.
+**Output**
 
-🛠️ Skills de Backend (Laravel)
-🧩 create_laravel_component
+- affected_layers (frontend / backend / db)
+- potential_risks (array)
+- architecture_fit (true | false)
 
-Descripción:
-Crea o modifica componentes Blade reutilizables sin alterar diseño existente.
+---
 
-Input:
+### 🔍 analyze_security_impact
 
-component_name
+**Descripción**
+Evalúa impacto de seguridad antes de cualquier cambio en backend o base de datos.
 
-purpose
+**Input**
 
-affected_views
+- change_description (string)
 
-Output:
+**Output**
 
-files_created_or_modified
+- risks (XSS, CSRF, auth, data leakage)
+- required_mitigations (array)
+
+📌 **Obligatoria** para cambios en backend o BD.
+
+---
+
+## 🛠️ Skills de Backend (Laravel)
+
+### 🧩 create_laravel_component
+
+**Descripción**
+Crea o modifica componentes Blade reutilizables sin alterar el diseño existente.
+
+**Input**
+
+- component_name
+- purpose
+- affected_views
+
+**Output**
+
+- files_created_or_modified
 
 📌 No define estilos nuevos, solo estructura.
 
-🧩 modify_controller_logic
+---
 
-Descripción:
+### 🧩 modify_controller_logic
+
+**Descripción**
 Ajusta lógica de controladores respetando:
 
-validación estricta
+- validación estricta
+- policies y middleware
+- consistencia transaccional
 
-policies y middleware
+**Input**
 
-consistencia transaccional
+- controller
+- change_description
 
-Input:
+**Output**
 
-controller
+- files_modified
+- validation_rules
 
-change_description
+---
 
-Output:
+### 🧩 update_model_logic
 
-files_modified
-
-validation_rules
-
-🧩 update_model_logic
-
-Descripción:
+**Descripción**
 Agrega o modifica lógica de dominio en modelos Eloquent.
 
-Casos comunes:
+**Casos comunes**
 
-imagen principal del producto
+- imagen principal del producto
+- stock por talle / color
+- estados de producto
 
-stock por talle/color
+**Input**
 
-estados de producto
+- model
+- business_rule
 
-Input:
+**Output**
 
-model
+- methods_added
+- side_effects
 
-business_rule
+📌 Blade **nunca** implementa esta lógica.
 
-Output:
+---
 
-methods_added
+## ⚡ Skills Livewire & Interactividad
 
-side_effects
+### ⚡ refactor_livewire_component
 
-📌 Blade nunca implementa esta lógica.
+**Descripción**
+Refactoriza componentes Livewire para cumplir buenas prácticas.
 
-🗄️ Skills de Base de Datos
-🧱 propose_schema_change
+**Criterios**
 
-Descripción:
-Propone cambios de base de datos sin ejecutarlos.
+- estado mínimo
+- responsabilidades claras
+- compatible con mobile
 
-Input:
+**Input**
 
-change_reason
+- component_name
+- refactor_goal
 
-Output:
+**Output**
 
-migration_plan
+- files_modified
+- state_changes
 
-affected_tables
+📌 No introduce lógica JS innecesaria.
 
-sql_server_compatibility (true | false)
+---
+
+### ⚡ analyze_livewire_mobile_issues
+
+**Descripción**
+Detecta problemas comunes de Livewire en mobile (eventos, rehidratación, layout).
+
+**Input**
+
+- component_name
+
+**Output**
+
+- detected_issues
+- root_causes
+- recommended_fixes
+
+---
+
+## 🗄️ Skills de Base de Datos
+
+### 🧱 propose_schema_change
+
+**Descripción**
+Propone cambios de base de datos **sin ejecutarlos**.
+
+**Input**
+
+- change_reason
+
+**Output**
+
+- migration_plan
+- affected_tables
+- sql_server_compatibility (true | false)
 
 📌 Nunca ejecuta migraciones automáticamente.
 
-🧱 optimize_query
+---
 
-Descripción:
+### 🧱 optimize_query
+
+**Descripción**
 Optimiza consultas evitando duplicación y queries innecesarias.
 
-Input:
+**Input**
 
-query_context
+- query_context
 
-Output:
+**Output**
 
-before_after_explanation
+- before_after_explanation
+- indexes_suggested
 
-indexes_suggested
+---
 
-🎨 Skills de Frontend (UX controlada)
-✨ enhance_ui_progressively
+## 🎨 Skills de Frontend (UX controlada)
 
-Descripción:
-Agrega mejoras visuales que:
+### ✨ enhance_ui_progressively
 
-no rompen sin JS
+**Descripción**
+Agrega mejoras visuales progresivas que:
 
-respetan SEO
+- no rompen sin JS
+- respetan SEO
+- solo afectan frontend público
 
-solo afectan frontend público
+**Input**
 
-Input:
+- section (home / catalog / product)
+- enhancement_type (fade / translate / stagger)
 
-section (home / catalog / product)
+**Output**
 
-enhancement_type (fade / translate / stagger)
+- js_files_touched
+- css_classes_added
 
-Output:
+📌 Usa `IntersectionObserver`
+📌 Nunca toca `/admin`
 
-js_files_touched
+---
 
-css_classes_added
+### ✨ implement_partial_update
 
-📌 Usa IntersectionObserver
-📌 Nunca toca /admin
+**Descripción**
+Implementa actualización parcial de contenido sin convertir el sitio en SPA.
 
-✨ implement_partial_update
+**Input**
 
-Descripción:
-Implementa fetch parcial para catálogo sin convertir el sitio en SPA.
+- target_section (catalog)
+- pagination_context
 
-Input:
+**Output**
 
-target_section (catalog)
+- files_modified
+- replaced_dom_node (.spa-content)
 
-pagination_context
+📌 Nunca mueve `<main>`, `<nav>`, `<footer>`
 
-Output:
+---
 
-files_modified
+## 🛒 Skills de Carrito & Checkout
 
-replaced_dom_node (.spa-content)
+### 🛍️ update_cart_logic
 
-📌 Nunca mueve <main>, <nav>, <footer>
+**Descripción**
+Modifica lógica del carrito basada en sesión.
 
-🛒 Skills de Carrito & Checkout
-🛍️ update_cart_logic
+**Input**
 
-Descripción:
-Modifica lógica del carrito en sesión.
+- change_description
 
-Input:
+**Output**
 
-change_description
+- session_keys_used
+- validation_applied
 
-Output:
+---
 
-session_keys_used
+### 💬 generate_whatsapp_message
 
-validation_applied
-
-💬 generate_whatsapp_message
-
-Descripción:
+**Descripción**
 Construye el mensaje final de checkout para WhatsApp.
 
-Input:
+**Input**
 
-cart_content
+- cart_content
+- customer_notes
 
-customer_notes
+**Output**
 
-Output:
-
-formatted_message (string)
+- formatted_message (string)
 
 📌 Lenguaje humano
 📌 Nada técnico
 📌 Fácil de copiar y enviar
 
-🔒 Skills de Validación y Seguridad
-🛡️ validate_inputs
+---
 
-Descripción:
+## 🔒 Skills de Validación y Seguridad
+
+### 🛡️ validate_inputs
+
+**Descripción**
 Define reglas de validación estrictas para formularios.
 
-Input:
+**Input**
 
-form_name
+- form_name
+- fields
 
-fields
+**Output**
 
-Output:
+- validation_rules
 
-validation_rules
+---
 
-🛡️ apply_access_control
+### 🛡️ apply_access_control
 
-Descripción:
+**Descripción**
 Configura policies, middleware o guards cuando corresponde.
 
-Input:
+**Input**
 
-resource
+- resource
+- access_rule
 
-access_rule
+**Output**
 
-Output:
-
-files_modified
+- files_modified

@@ -1,42 +1,41 @@
-<form id="catalog-filters-form" action="{{ route('catalog') }}" method="GET" class="space-y-12">
-    <!-- Preserve sorting in the form if it exists -->
-    <input type="hidden" name="sort" value="{{ request('sort', 'newest') }}">
+{{-- Catalog Filters — shared by desktop sidebar and mobile drawer --}}
+{{-- Rendered inside Livewire CatalogPage, so wire:model binds to the component state --}}
 
-    <!-- Categories Section -->
+<div class="space-y-12">
+    {{-- Categories --}}
     <div class="space-y-4">
         <h3 class="sidebar-section-title">Categorías</h3>
         <ul class="space-y-2">
             <li>
-                <a href="{{ route('catalog', array_merge(request()->except(['category', 'page']))) }}"
-                    class="block py-2 px-3 rounded-lg text-sm font-medium transition-all {{ !request('category') ? 'bg-brand-pink/10 text-brand-pink' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                <button type="button" wire:click="$set('category', null)"
+                    class="block w-full text-left py-2 px-3 rounded-lg text-sm font-medium transition-all cursor-pointer {{ !$category ? 'bg-brand-pink/10 text-brand-pink' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
                     Todas las prendas
-                </a>
+                </button>
             </li>
-            @foreach ($categories as $category)
+            @foreach ($categories as $cat)
                 <li>
-                    <a href="{{ route('catalog', array_merge(request()->except(['page']), ['category' => $category->slug])) }}"
-                        class="flex items-center justify-between py-2 px-3 rounded-lg text-sm transition-all group {{ request('category') == $category->slug ? 'bg-brand-pink/10 text-brand-pink font-bold' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-                        <span>{{ $category->name }}</span>
+                    <button type="button" wire:click="$set('category', '{{ $cat->slug }}')"
+                        class="flex items-center justify-between w-full py-2 px-3 rounded-lg text-sm transition-all group cursor-pointer {{ $category == $cat->slug ? 'bg-brand-pink/10 text-brand-pink font-bold' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                        <span>{{ $cat->name }}</span>
                         <span
-                            class="text-[10px] text-gray-400 group-hover:text-brand-pink/60 transition-colors">({{ $category->products_count }})</span>
-                    </a>
+                            class="text-[10px] text-gray-400 group-hover:text-brand-pink/60 transition-colors">({{ $cat->products_count }})</span>
+                    </button>
                 </li>
             @endforeach
         </ul>
     </div>
 
-    <!-- Sizes Section -->
+    {{-- Sizes --}}
     @if ($availableSizes->count() > 0)
         <div class="space-y-5 pt-4 border-t border-brand-pink/10">
             <h3 class="sidebar-section-title">Talles</h3>
             <div class="flex flex-wrap gap-2">
                 @foreach ($availableSizes as $size)
                     <label class="cursor-pointer group">
-                        <input type="checkbox" name="sizes[]" value="{{ $size }}" class="hidden catalog-filter"
-                            {{ in_array($size, (array) request('sizes', [])) ? 'checked' : '' }}>
+                        <input type="checkbox" wire:model.live="sizes" value="{{ $size }}" class="hidden">
                         <span
                             class="inline-flex items-center justify-center min-w-[3rem] px-3 py-2 rounded-lg border text-xs font-bold transition-all
-                                {{ in_array($size, (array) request('sizes', []))
+                                {{ in_array($size, $sizes)
                                     ? 'bg-gray-900 border-gray-900 text-white shadow-lg shadow-black/10'
                                     : 'bg-white border-gray-100 text-gray-600 hover:border-brand-pink/30 hover:text-gray-900' }}">
                             {{ $size }}
@@ -47,15 +46,14 @@
         </div>
     @endif
 
-    <!-- Colors Section -->
+    {{-- Colors --}}
     @if ($availableColors->count() > 0)
         <div class="space-y-5 pt-4 border-t border-brand-pink/10">
             <h3 class="sidebar-section-title">Colores</h3>
             <div class="flex flex-wrap gap-4">
                 @foreach ($availableColors as $color)
                     @php
-                        $isActive = in_array($color, (array) request('colors', []));
-                        // Map common Spanish names to CSS colors
+                        $isActive = in_array($color, $colors);
                         $cssColor = match (strtolower($color)) {
                             'blanco' => '#ffffff',
                             'negro' => '#000000',
@@ -74,8 +72,7 @@
                         };
                     @endphp
                     <label class="cursor-pointer group relative" title="{{ $color }}">
-                        <input type="checkbox" name="colors[]" value="{{ $color }}"
-                            class="hidden catalog-filter" {{ $isActive ? 'checked' : '' }}>
+                        <input type="checkbox" wire:model.live="colors" value="{{ $color }}" class="hidden">
                         <span
                             class="block w-7 h-7 rounded-full border border-gray-200 transition-all color-dot shadow-sm
                                 {{ $isActive ? 'ring-2 ring-brand-pink ring-offset-2 scale-110 shadow-md' : 'hover:scale-110 hover:shadow-md' }}"
@@ -86,4 +83,4 @@
             </div>
         </div>
     @endif
-</form>
+</div>
