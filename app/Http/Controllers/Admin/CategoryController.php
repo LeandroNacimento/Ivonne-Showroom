@@ -26,6 +26,8 @@ class CategoryController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'supports_size' => 'boolean',
+            'supports_color' => 'boolean',
         ]);
 
         $slug = Str::slug($request->name);
@@ -39,6 +41,8 @@ class CategoryController extends Controller
             'name' => $request->name,
             'slug' => $slug,
             'image' => $imagePath,
+            'supports_size' => $request->has('supports_size'),
+            'supports_color' => $request->has('supports_color'),
         ]);
 
         return redirect()->route('admin.categories.index')->with('success', 'Categoría creada con éxito.');
@@ -54,10 +58,14 @@ class CategoryController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'supports_size' => 'boolean',
+            'supports_color' => 'boolean',
         ]);
 
         $category->name = $request->name;
         $category->slug = Str::slug($request->name);
+        $category->supports_size = $request->has('supports_size');
+        $category->supports_color = $request->has('supports_color');
 
         if ($request->hasFile('image')) {
             // Delete old image if exists

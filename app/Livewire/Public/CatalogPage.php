@@ -53,27 +53,38 @@ class CatalogPage extends Component
 
     public function render()
     {
+        $currentCategory = null;
+
         $query = Product::with('category', 'images', 'variations');
 
         // Filter by Category
         if ($this->category) {
-            $query->whereHas('category', function ($q) {
-                $q->where('slug', $this->category);
-            });
+            $currentCategory = Category::where('slug', $this->category)->first();
+            if ($currentCategory) {
+                $query->where('category_id', $currentCategory->id);
+            }
         }
 
-        // Filter by Sizes
-        if (!empty($this->sizes)) {
+        // Determine supported attributes
+        $supportsSize = $currentCategory ? $currentCategory->supports_size : true; // Default to true if no category selected (show all)
+        $supportsColor = $currentCategory ? $currentCategory->supports_color : true;
+
+        // Filter by Sizes (only if supported)
+        if ($supportsSize && !empty($this->sizes)) {
             $query->whereHas('variations', function ($q) {
                 $q->whereIn('size', $this->sizes)->where('stock', '>', 0);
             });
+        } elseif (!$supportsSize) {
+            $this->sizes = []; // Reset if not supported
         }
 
-        // Filter by Colors
-        if (!empty($this->colors)) {
+        // Filter by Colors (only if supported)
+        if ($supportsColor && !empty($this->colors)) {
             $query->whereHas('variations', function ($q) {
                 $q->whereIn('color', $this->colors)->where('stock', '>', 0);
             });
+        } elseif (!$supportsColor) {
+            $this->colors = []; // Reset if not supported
         }
 
         // Sorting
@@ -88,22 +99,46 @@ class CatalogPage extends Component
         // Sidebar data
         $categories = Category::withCount('products')->get();
 
-        $baseVarQuery = ProductVariation::where('stock', '>', 0);
+        // Load available filters dynamically based on current selection and support
+        $availableSizes = collect();
+        $availableColors = collect();
 
-        if ($this->category) {
-            $baseVarQuery->whereHas('product.category', function ($q) {
-                $q->where('slug', $this->category);
+        // Base query for variations, scoped to current category if selected
+        $baseVarQuery = ProductVariation::query()
+            ->where('stock', '>', 0);
+
+        if ($currentCategory) {
+            $baseVarQuery->whereHas('product', function ($q) use ($currentCategory) {
+                $q->where('category_id', $currentCategory->id);
             });
         }
 
-        $availableSizes = (clone $baseVarQuery)->distinct()->orderBy('size')->pluck('size');
-        $availableColors = (clone $baseVarQuery)->distinct()->orderBy('color')->pluck('color');
+        if ($supportsSize) {
+            $availableSizes = (clone $baseVarQuery)
+                ->select('size')
+                ->distinct()
+                ->whereNotNull('size')
+                ->where('size', '!=', '')
+                ->orderBy('size')
+                ->pluck('size');
+        }
+
+        if ($supportsColor) {
+            $availableColors = (clone $baseVarQuery)
+                ->select('color')
+                ->distinct()
+                ->whereNotNull('color')
+                ->where('color', '!=', '')
+                ->orderBy('color')
+                ->pluck('color');
+        }
 
         return view('livewire.public.catalog-page', [
             'products' => $products,
             'categories' => $categories,
             'availableSizes' => $availableSizes,
             'availableColors' => $availableColors,
+            'currentCategory' => $currentCategory, // Pass to view for UI logic
         ]);
     }
 }
