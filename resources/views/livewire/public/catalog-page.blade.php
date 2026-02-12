@@ -1,7 +1,7 @@
 <div>
     <div class="bg-brand-blush-soft">
         <div class="max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
-            <div class="flex flex-col lg:flex-row gap-12" x-data="{ filtersOpen: false }">
+            <div class="flex flex-col lg:flex-row gap-12" x-data="{ filtersOpen: false }" x-init="$watch('filtersOpen', value => document.body.classList.toggle('overflow-hidden', value))">
 
                 {{-- Sidebar (Desktop) --}}
                 <aside class="hidden lg:block w-64 flex-shrink-0 space-y-12">
@@ -141,14 +141,10 @@
                             @include('livewire.public.partials.catalog-filters')
                         </div>
 
-                        <div class="p-6 grid grid-cols-2 gap-4 border-t border-gray-100">
+                        <div class="p-6 border-t border-gray-100">
                             <button type="button" wire:click="resetFilters" @click="filtersOpen = false"
-                                class="py-3 px-4 text-center text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-colors cursor-pointer">
-                                Limpiar
-                            </button>
-                            <button type="button" @click="filtersOpen = false"
-                                class="py-3 px-4 bg-gray-900 text-white text-xs font-bold uppercase tracking-widest hover:bg-brand-pink transition-colors rounded-lg shadow-lg shadow-black/5 cursor-pointer">
-                                Aplicar
+                                class="w-full py-3 px-4 text-center text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-gray-900 border border-gray-200 rounded-lg transition-colors cursor-pointer">
+                                Limpiar Filtros
                             </button>
                         </div>
                     </div>
