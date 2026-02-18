@@ -8,8 +8,8 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('product_images', function (Blueprint $table) {
-            $table->string('color')->nullable()->after('path');
-            $table->integer('position')->default(0)->after('color');
+            $table->string('color')->nullable();
+            $table->integer('position')->default(0);
         });
     }
 

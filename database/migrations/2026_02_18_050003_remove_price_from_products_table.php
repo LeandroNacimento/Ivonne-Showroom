@@ -16,7 +16,7 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->decimal('price', 10, 2)->default(0)->after('description');
+            $table->decimal('price', 10, 2)->default(0);
             $table->dropSoftDeletes();
         });
     }
