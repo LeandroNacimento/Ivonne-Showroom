@@ -10,9 +10,9 @@
         </div>
 
         <div x-data="{
-            variations: [{ color: '', size: '', stock: '' }],
+            variations: [{ color: '', size: '', price: '', stock: '', sku: '' }],
             addVariation() {
-                this.variations.push({ color: '', size: '', stock: '' });
+                this.variations.push({ color: '', size: '', price: '', stock: '', sku: '' });
             },
             removeVariation(index) {
                 this.variations.splice(index, 1);
@@ -42,21 +42,21 @@
                         </div>
 
                         <div class="bg-white rounded-lg shadow-sm p-6">
-                            <h2 class="text-lg font-semibold text-gray-900 mb-4">Variaciones (Talle y Color)</h2>
+                            <h2 class="text-lg font-semibold text-gray-900 mb-4">Variaciones</h2>
                             <div class="space-y-4">
                                 <template x-for="(variation, index) in variations" :key="index">
-                                    <div class="grid grid-cols-12 gap-4 items-center">
-                                        <div class="col-span-4">
+                                    <div class="grid grid-cols-12 gap-3 items-center">
+                                        <div class="col-span-3">
                                             <input type="text" :name="`variations[${index}][color]`"
-                                                x-model="variation.color" placeholder="Color (Ej: Rosa)"
-                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
+                                                x-model="variation.color" placeholder="Color"
+                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50 text-sm"
                                                 required>
                                         </div>
-                                        <div class="col-span-4">
+                                        <div class="col-span-2">
                                             <select :name="`variations[${index}][size]`" x-model="variation.size"
-                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
+                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50 text-sm"
                                                 required>
-                                                <option value="" disabled>Seleccionar</option>
+                                                <option value="" disabled>Talle</option>
                                                 <option value="XS">XS</option>
                                                 <option value="S">S</option>
                                                 <option value="M">M</option>
@@ -65,11 +65,22 @@
                                                 <option value="XXL">XXL</option>
                                             </select>
                                         </div>
-                                        <div class="col-span-3">
+                                        <div class="col-span-2">
+                                            <input type="number" :name="`variations[${index}][price]`"
+                                                x-model="variation.price" placeholder="Precio" step="0.01"
+                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50 text-sm"
+                                                required>
+                                        </div>
+                                        <div class="col-span-2">
                                             <input type="number" :name="`variations[${index}][stock]`"
                                                 x-model="variation.stock" placeholder="Stock"
-                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
+                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50 text-sm"
                                                 required>
+                                        </div>
+                                        <div class="col-span-2">
+                                            <input type="text" :name="`variations[${index}][sku]`"
+                                                x-model="variation.sku" placeholder="SKU (opc.)"
+                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50 text-sm">
                                         </div>
                                         <div class="col-span-1 text-center">
                                             <button type="button" @click="removeVariation(index)"
@@ -108,14 +119,6 @@
                                 </select>
                             </div>
 
-                            <div class="mb-4">
-                                <label for="price" class="block text-sm font-medium text-gray-700 mb-1">Precio
-                                    ($)</label>
-                                <input type="number" name="price" id="price" step="0.01"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
-                                    required>
-                            </div>
-
                             <div class="flex items-center mb-4">
                                 <input type="checkbox" name="is_featured" id="is_featured"
                                     class="rounded border-gray-300 text-brand-pink shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
@@ -137,4 +140,5 @@
                 </div>
             </form>
         </div>
-    @endsection
+    </div>
+@endsection

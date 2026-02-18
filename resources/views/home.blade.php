@@ -135,7 +135,7 @@
                                 <p class="mt-1 text-sm text-gray-500">{{ $product->category->name }}</p>
                             </div>
                             <p class="text-sm font-medium text-gray-900">
-                                ${{ number_format($product->price, 0, ',', '.') }}
+                                ${{ number_format($product->min_price, 0, ',', '.') }}
                             </p>
                         </div>
                     </div>

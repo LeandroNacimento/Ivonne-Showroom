@@ -66,7 +66,7 @@ class CatalogPage extends Component
         }
 
         // Determine supported attributes
-        $supportsSize = $currentCategory ? $currentCategory->supports_size : true; // Default to true if no category selected (show all)
+        $supportsSize = $currentCategory ? $currentCategory->supports_size : true;
         $supportsColor = $currentCategory ? $currentCategory->supports_color : true;
 
         // Filter by Sizes (only if supported)
@@ -75,7 +75,7 @@ class CatalogPage extends Component
                 $q->whereIn('size', $this->sizes)->where('stock', '>', 0);
             });
         } elseif (!$supportsSize) {
-            $this->sizes = []; // Reset if not supported
+            $this->sizes = [];
         }
 
         // Filter by Colors (only if supported)
@@ -84,13 +84,16 @@ class CatalogPage extends Component
                 $q->whereIn('color', $this->colors)->where('stock', '>', 0);
             });
         } elseif (!$supportsColor) {
-            $this->colors = []; // Reset if not supported
+            $this->colors = [];
         }
 
-        // Sorting
+        // Sorting — price now lives in product_variations, use subquery
+        $minPriceSub = ProductVariation::selectRaw('COALESCE(MIN(price), 0)')
+            ->whereColumn('product_id', 'products.id');
+
         $query = match ($this->sort) {
-            'price_asc' => $query->orderBy('price', 'asc')->orderBy('id', 'desc'),
-            'price_desc' => $query->orderBy('price', 'desc')->orderBy('id', 'desc'),
+            'price_asc' => $query->orderBy($minPriceSub)->orderBy('id', 'desc'),
+            'price_desc' => $query->orderByDesc($minPriceSub)->orderBy('id', 'desc'),
             default => $query->orderBy('created_at', 'desc')->orderBy('id', 'desc'),
         };
 
@@ -138,7 +141,7 @@ class CatalogPage extends Component
             'categories' => $categories,
             'availableSizes' => $availableSizes,
             'availableColors' => $availableColors,
-            'currentCategory' => $currentCategory, // Pass to view for UI logic
+            'currentCategory' => $currentCategory,
         ]);
     }
 }

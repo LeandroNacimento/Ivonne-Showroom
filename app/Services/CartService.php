@@ -32,7 +32,7 @@ class CartService
                 'product_id' => $product->id,
                 'variation_id' => $variation->id,
                 'name' => $product->name,
-                'price' => $product->price,
+                'price' => $variation->price,
                 'color' => $variation->color,
                 'size' => $variation->size,
                 'image' => $product->images->first() ? $product->images->first()->path : null,
@@ -89,7 +89,7 @@ class CartService
             $message .= "- {$item['name']} ({$item['color']} - {$item['size']}) x {$item['quantity']} = $" . number_format($item['price'] * $item['quantity'], 0, ',', '.') . "\n";
         }
         $message .= "\nTotal: $" . number_format($this->getTotal(), 0, ',', '.');
-        
+
         return urlencode($message);
     }
 }

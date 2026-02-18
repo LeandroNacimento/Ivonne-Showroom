@@ -42,7 +42,7 @@
 
                     <div class="mt-3">
                         <h2 class="sr-only">Información del producto</h2>
-                        <p class="text-3xl text-gray-900">${{ number_format($product->price, 0, ',', '.') }}</p>
+                        <p class="text-3xl text-gray-900">{{ $product->price_range }}</p>
                     </div>
 
                     <div class="mt-6">
@@ -82,6 +82,7 @@
                                                                 {{ $variation->color }} - {{ $variation->size }}
                                                             </p>
                                                             <p class="text-gray-500">
+                                                                ${{ number_format($variation->price, 0, ',', '.') }} ·
                                                                 Stock: {{ $variation->stock }}
                                                             </p>
                                                         </div>
@@ -164,7 +165,7 @@
                                         </h3>
                                     </div>
                                     <p class="text-sm font-medium text-gray-900">
-                                        ${{ number_format($related->price, 0, ',', '.') }}</p>
+                                        ${{ number_format($related->min_price, 0, ',', '.') }}</p>
                                 </div>
                             </div>
                         @endforeach

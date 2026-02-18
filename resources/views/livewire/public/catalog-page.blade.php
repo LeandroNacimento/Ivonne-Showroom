@@ -73,7 +73,7 @@
 
                                     <div class="pt-6 pb-4 px-2 space-y-1">
                                         <p class="text-xl font-bold text-gray-900 leading-tight">
-                                            ${{ number_format($product->price, 0, ',', '.') }}
+                                            ${{ number_format($product->min_price, 0, ',', '.') }}
                                         </p>
                                         <h3 class="text-sm font-medium text-gray-600 tracking-wide uppercase">
                                             {{ $product->name }}
