@@ -1,6 +1,6 @@
 <div class="bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 class="text-3xl font-bold text-gray-900 font-script text-brand-pink mb-8">Tu Carrito</h1>
+        <h1 class="text-3xl font-bold text-gray-900 font-script text-brand-pink mb-8">Tu Pedido</h1>
 
         @if (session('success'))
             <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative"
@@ -17,7 +17,7 @@
                         d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
                 <p class="text-lg text-gray-700 mb-4">
-                    Tu carrito está vacío.
+                    Tu pedido está vacío.
                 </p>
                 <a href="{{ route('catalog') }}"
                     class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-brand-pink hover:bg-brand-heart transition-colors">
@@ -46,7 +46,7 @@
                                     <h3 class="text-lg font-medium text-gray-900"><a
                                             href="{{ route('product.show', \Illuminate\Support\Str::slug($item['name'])) }}">{{ $item['name'] }}</a>
                                     </h3>
-                                    <p class="text-sm text-gray-500">{{ $item['color'] }} - {{ $item['size'] }}</p>
+                                    <p class="text-sm text-gray-500">{{ $item['color'] }} · {{ $item['size'] }}</p>
                                     <p class="text-sm font-medium text-gray-900 mt-1">
                                         ${{ number_format($item['price'], 0, ',', '.') }}</p>
                                 </div>
@@ -54,17 +54,22 @@
                                     <div class="flex items-center border border-gray-300 rounded-md">
                                         <button type="button" wire:click="decrement('{{ $key }}')"
                                             wire:loading.attr="disabled"
-                                            class="px-3 py-1 text-gray-600 hover:bg-gray-100 focus:outline-none transition-colors border-r border-gray-300">
+                                            class="px-3 py-1 text-gray-600 hover:bg-gray-100 focus:outline-none transition-colors border-r border-gray-300
+                                                {{ $item['quantity'] <= 1 ? 'opacity-30 cursor-not-allowed' : '' }}">
                                             -
                                         </button>
                                         <input type="number" value="{{ $item['quantity'] }}" readonly
                                             class="w-12 border-0 text-center focus:ring-0 p-0 text-gray-900 font-medium bg-transparent h-8">
                                         <button type="button" wire:click="increment('{{ $key }}')"
                                             wire:loading.attr="disabled"
-                                            class="px-3 py-1 text-gray-600 hover:bg-gray-100 focus:outline-none transition-colors border-l border-gray-300">
+                                            class="px-3 py-1 text-gray-600 hover:bg-gray-100 focus:outline-none transition-colors border-l border-gray-300
+                                                {{ $item['quantity'] >= ($item['stock'] ?? 99) ? 'opacity-30 cursor-not-allowed' : '' }}">
                                             +
                                         </button>
                                     </div>
+                                    @if ($item['quantity'] >= ($item['stock'] ?? 99))
+                                        <span class="text-xs text-amber-600 ml-2">Máx.</span>
+                                    @endif
                                     <button type="button" wire:click="removeFromCart('{{ $key }}')"
                                         wire:loading.attr="disabled"
                                         class="text-red-500 hover:text-red-700 text-sm font-medium ml-2">
@@ -94,6 +99,8 @@
                     Enviar Pedido por WhatsApp
                 </a>
             </div>
+            <p class="text-xs text-gray-400 text-right mt-2">Confirmá disponibilidad y coordiná el pago por WhatsApp.
+            </p>
         @endif
     </div>
 </div>

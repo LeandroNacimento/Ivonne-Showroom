@@ -54,7 +54,7 @@ class ShowroomController extends Controller
         $success = $cartService->addToCart($request->product_id, $request->variation_id, $request->quantity);
 
         if ($success) {
-            return redirect()->route('cart')->with('success', 'Producto agregado al carrito.');
+            return redirect()->route('cart')->with('success', '✔ Producto agregado correctamente');
         }
 
         return back()->with('error', 'No se pudo agregar el producto.');
