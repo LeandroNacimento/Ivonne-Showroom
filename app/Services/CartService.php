@@ -35,6 +35,7 @@ class CartService
                 'price' => $variation->price,
                 'color' => $variation->color,
                 'size' => $variation->size,
+                'stock' => $variation->stock,
                 'image' => $product->images->first() ? $product->images->first()->path : null,
                 'quantity' => $quantity,
             ];

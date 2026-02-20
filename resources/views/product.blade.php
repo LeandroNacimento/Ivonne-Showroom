@@ -41,6 +41,15 @@
                     const v = this.allVariations.find(v => v.id == this.selectedVariation);
                     return v ? v.price : null;
                 },
+                get selectedStock() {
+                    if (!this.selectedVariation) return null;
+                    const v = this.allVariations.find(v => v.id == this.selectedVariation);
+                    return v ? v.stock : null;
+                },
+                get minPrice() {
+                    if (this.activeVariations.length === 0) return 0;
+                    return Math.min(...this.activeVariations.map(v => v.price));
+                },
             
                 selectColor(color) {
                     this.activeColor = color;
@@ -82,10 +91,16 @@
 
                     <div class="mt-3">
                         <h2 class="sr-only">Información del producto</h2>
-                        <p class="text-3xl text-gray-900"
-                            x-text="selectedPrice ? formatPrice(selectedPrice) : '{{ $product->price_range }}'">
-                            {{ $product->price_range }}
-                        </p>
+                        <div>
+                            <p class="text-3xl font-bold text-gray-900" x-show="selectedPrice"
+                                x-text="selectedPrice ? formatPrice(selectedPrice) : ''" style="display:none;"></p>
+                            <p class="text-3xl text-gray-900" x-show="!selectedPrice">
+                                <span class="text-base text-gray-500 font-normal">Desde</span>
+                                <span x-text="formatPrice(minPrice)"></span>
+                            </p>
+                            <p class="text-sm text-gray-500 mt-1" x-show="selectedStock !== null"
+                                x-text="'Stock disponible: ' + selectedStock" style="display:none;"></p>
+                        </div>
                     </div>
 
                     <div class="mt-6">
@@ -120,7 +135,7 @@
                                 <!-- Variation Selector (filtered by active color) -->
                                 <div class="mb-6">
                                     <h3 class="text-sm text-gray-900 font-medium mb-2"
-                                        x-text="colorNames.length > 1 ? 'Selecciona tu talle:' : 'Selecciona una variante:'">
+                                        x-text="activeVariations.some(v => v.size !== 'Único') ? 'Seleccioná tu talle:' : 'Seleccioná una opción:'">
                                     </h3>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <template x-for="variation in activeVariations" :key="variation.id">
@@ -137,10 +152,12 @@
                                                     <div class="flex items-center">
                                                         <div class="text-sm">
                                                             <p class="font-medium text-gray-900"
-                                                                x-text="variation.size !== 'Único' ? variation.color + ' - ' + variation.size : variation.color">
+                                                                x-text="variation.size !== 'Único' ? variation.size : 'Único'">
                                                             </p>
-                                                            <p class="text-gray-500"
-                                                                x-text="formatPrice(variation.price) + ' · Stock: ' + variation.stock">
+                                                            <p class="text-gray-500">
+                                                                <span x-text="formatPrice(variation.price)"></span>
+                                                                <span class="mx-1">·</span>
+                                                                <span x-text="'Stock: ' + variation.stock"></span>
                                                             </p>
                                                         </div>
                                                     </div>
@@ -159,27 +176,36 @@
                                     </div>
                                 </div>
 
-                                <div class="flex items-center mb-6" x-data="{ qty: 1 }">
+                                <div class="flex items-center mb-6" x-data="{ qty: 1 }"
+                                    x-effect="if (selectedStock !== null && qty > selectedStock) qty = Math.max(1, selectedStock)">
                                     <label for="quantity"
                                         class="mr-4 text-sm font-medium text-gray-700">Cantidad:</label>
                                     <div class="flex items-center border border-gray-300 rounded-md">
                                         <button type="button" @click="qty > 1 ? qty-- : null"
-                                            class="px-4 py-2 text-gray-600 hover:bg-gray-100 focus:outline-none transition-colors">
+                                            class="px-4 py-2 text-gray-600 hover:bg-gray-100 focus:outline-none transition-colors"
+                                            :class="qty <= 1 && 'opacity-30 cursor-not-allowed'">
                                             -
                                         </button>
                                         <input type="number" name="quantity" id="quantity" x-model="qty"
-                                            min="1" readonly
+                                            min="1" :max="selectedStock || 99" readonly
                                             class="w-16 border-0 text-center focus:ring-0 p-0 text-gray-900 font-medium">
-                                        <button type="button" @click="qty++"
-                                            class="px-4 py-2 text-gray-600 hover:bg-gray-100 focus:outline-none transition-colors">
+                                        <button type="button"
+                                            @click="(selectedStock === null || qty < selectedStock) ? qty++ : null"
+                                            class="px-4 py-2 text-gray-600 hover:bg-gray-100 focus:outline-none transition-colors"
+                                            :class="selectedStock !== null && qty >= selectedStock &&
+                                                'opacity-30 cursor-not-allowed'">
                                             +
                                         </button>
                                     </div>
+                                    <span x-show="selectedStock !== null && qty >= selectedStock"
+                                        class="ml-3 text-xs text-amber-600" style="display:none;">
+                                        Máximo disponible
+                                    </span>
                                 </div>
 
                                 <button type="submit"
                                     class="w-full bg-brand-pink border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white hover:bg-brand-heart focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 focus:ring-brand-pink transition-colors">
-                                    Agregar al Carrito
+                                    Agregar al Pedido
                                 </button>
                             </form>
                         </template>
@@ -189,7 +215,7 @@
                         </template>
 
                         <div class="mt-4 text-sm text-gray-500 text-center">
-                            <p>Coordinamos el pago y envío directamente por chat.</p>
+                            <p>El pago y el envío se coordinan directamente por WhatsApp.</p>
                         </div>
                     </div>
                 </div>
@@ -198,7 +224,8 @@
             <!-- Related Products -->
             @if ($relatedProducts->count() > 0)
                 <div class="mt-16 border-t border-gray-200 pt-10">
-                    <h2 class="text-2xl font-bold tracking-tight text-gray-900 font-script text-brand-pink mb-6">También
+                    <h2 class="text-2xl font-bold tracking-tight text-gray-900 font-script text-brand-pink mb-6">
+                        También
                         te
                         puede interesar</h2>
                     <div class="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-4 xl:gap-x-8">
@@ -208,7 +235,8 @@
                                     class="w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-md overflow-hidden group-hover:opacity-75 lg:h-80 lg:aspect-none flex items-center justify-center">
                                     @if ($related->images->first())
                                         <img src="{{ asset('storage/' . $related->images->first()->path) }}"
-                                            alt="{{ $related->name }}" class="w-full h-full object-center object-cover">
+                                            alt="{{ $related->name }}"
+                                            class="w-full h-full object-center object-cover">
                                     @else
                                         <span class="text-gray-400">Imagen</span>
                                     @endif

@@ -38,7 +38,10 @@ class Cart extends Component
     public function increment($cartKey, CartService $cartService)
     {
         if (isset($this->cart[$cartKey])) {
-            $this->updateQuantity($cartKey, $this->cart[$cartKey]['quantity'] + 1, $cartService);
+            $maxStock = $this->cart[$cartKey]['stock'] ?? 99;
+            if ($this->cart[$cartKey]['quantity'] < $maxStock) {
+                $this->updateQuantity($cartKey, $this->cart[$cartKey]['quantity'] + 1, $cartService);
+            }
         }
     }
 
