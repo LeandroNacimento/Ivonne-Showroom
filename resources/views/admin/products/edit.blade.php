@@ -72,6 +72,7 @@
                         <div class="mb-4">
                             <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
                             <select name="category_id" id="category_id"
+                                x-on:change="Livewire.dispatch('category-changed', { categoryId: parseInt($event.target.value) })"
                                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
                                 required>
                                 @foreach ($categories as $category)

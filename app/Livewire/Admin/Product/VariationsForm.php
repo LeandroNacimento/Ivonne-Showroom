@@ -2,25 +2,35 @@
 
 namespace App\Livewire\Admin\Product;
 
+use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class VariationsForm extends Component
 {
     public array $colors = [];
     public string $basePrice = '';
+    public bool $supportsSize = true;
 
-    public function mount(?Product $product = null): void
+    public function mount(?Product $product = null, ?int $categoryId = null): void
     {
+        // Resolve supportsSize from product's category or passed categoryId
         if ($product && $product->exists) {
+            $this->supportsSize = $product->category->supports_size ?? true;
             $product->load('variations');
             $grouped = $product->variations->groupBy('color');
 
             foreach ($grouped as $colorName => $vars) {
-                $group = ['name' => $colorName, 'variations' => []];
+                $group = [
+                    'uuid' => Str::uuid()->toString(),
+                    'name' => $colorName,
+                    'variations' => [],
+                ];
 
                 foreach ($vars as $v) {
                     $group['variations'][] = [
+                        'uuid' => Str::uuid()->toString(),
                         'id' => $v->id,
                         'size' => $v->size,
                         'price' => $v->price,
@@ -31,6 +41,9 @@ class VariationsForm extends Component
 
                 $this->colors[] = $group;
             }
+        } elseif ($categoryId) {
+            $cat = Category::find($categoryId);
+            $this->supportsSize = $cat ? ($cat->supports_size ?? true) : true;
         }
 
         // Always have at least one color group
@@ -39,11 +52,32 @@ class VariationsForm extends Component
         }
     }
 
+    /* ──────────────── Category Change Listener ──────────────── */
+
+    #[\Livewire\Attributes\On('category-changed')]
+    public function updateCategory(int $categoryId): void
+    {
+        $cat = Category::find($categoryId);
+        $this->supportsSize = $cat ? ($cat->supports_size ?? true) : true;
+
+        // Si la categoría no soporta talle, dejar solo una variación por color
+        if (!$this->supportsSize) {
+            foreach ($this->colors as $cIdx => $color) {
+                if (count($color['variations']) > 1) {
+                    $this->colors[$cIdx]['variations'] = [
+                        $color['variations'][0],
+                    ];
+                }
+            }
+        }
+    }
+
     /* ──────────────── Color CRUD ──────────────── */
 
     public function addColor(): void
     {
         $this->colors[] = [
+            'uuid' => Str::uuid()->toString(),
             'name' => '',
             'variations' => [
                 $this->emptyVariation(),
@@ -70,14 +104,14 @@ class VariationsForm extends Component
 
     public function removeVariation(int $colorIndex, int $varIndex): void
     {
-        $variations = &$this->colors[$colorIndex]['variations'];
-
-        if (count($variations) <= 1) {
+        if (count($this->colors[$colorIndex]['variations']) <= 1) {
             return;
         }
 
-        unset($variations[$varIndex]);
-        $variations = array_values($variations);
+        unset($this->colors[$colorIndex]['variations'][$varIndex]);
+        $this->colors[$colorIndex]['variations'] = array_values(
+            $this->colors[$colorIndex]['variations']
+        );
     }
 
     /* ──────────────── Base Price Helper ──────────────── */
@@ -92,7 +126,9 @@ class VariationsForm extends Component
             foreach ($color['variations'] as &$v) {
                 $v['price'] = $this->basePrice;
             }
+            unset($v); // liberar referencia al último elemento
         }
+        unset($color); // liberar referencia al último color
     }
 
     /* ──────────────── Real-time Validation ──────────────── */
@@ -149,7 +185,7 @@ class VariationsForm extends Component
                 $flat[] = [
                     'id' => $v['id'] ?? '',
                     'color' => $colorName,
-                    'size' => $v['size'] ?? '',
+                    'size' => $this->supportsSize ? ($v['size'] ?? '') : 'Único',
                     'price' => $v['price'] ?? '',
                     'stock' => $v['stock'] ?? '',
                     'sku' => $v['sku'] ?? '',
@@ -172,6 +208,7 @@ class VariationsForm extends Component
     private function emptyVariation(): array
     {
         return [
+            'uuid' => Str::uuid()->toString(),
             'id' => '',
             'size' => '',
             'price' => '',
