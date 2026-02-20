@@ -27,7 +27,7 @@
                 {{-- Row 2: Input + Delete --}}
                 <div class="flex items-center justify-between">
                     <input type="text" wire:model.blur="colors.{{ $cIdx }}.name"
-                        placeholder="Ej: Rosa, Negro, Beige…"
+                        placeholder="Ej: Rosa, Negro, Beige…" @keydown.enter.prevent
                         class="flex-1 h-10 rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50 text-sm font-medium"
                         required>
 

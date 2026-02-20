@@ -39,29 +39,11 @@
                         @livewire('admin.product.variations-form', ['product' => $product])
                     </div>
 
-                    {{-- Existing Images --}}
-                    @if ($product->images->count())
-                        <div class="bg-white rounded-lg shadow-sm p-6">
-                            <h2 class="text-lg font-semibold text-gray-900 mb-4">Imágenes Actuales</h2>
-                            <div class="grid grid-cols-4 gap-4">
-                                @foreach ($product->images as $image)
-                                    <div class="relative group" x-data="{ markedForDelete: false }">
-                                        <img src="{{ asset('storage/' . $image->path) }}" alt=""
-                                            class="h-24 w-24 object-cover rounded-md"
-                                            :class="markedForDelete && 'opacity-30'">
-                                        <label class="absolute top-1 right-1 cursor-pointer">
-                                            <input type="checkbox" name="delete_images[]" value="{{ $image->id }}"
-                                                class="sr-only" x-model="markedForDelete">
-                                            <span class="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full"
-                                                :class="markedForDelete ? 'bg-red-700' :
-                                                    'bg-red-500 opacity-0 group-hover:opacity-100'"
-                                                x-text="markedForDelete ? '✓ Eliminar' : '✕'"></span>
-                                        </label>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
+                    {{-- Images by Color (Livewire) --}}
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Imágenes</h2>
+                        @livewire('admin.product.images-form', ['product' => $product])
+                    </div>
                 </div>
 
                 <!-- Sidebar -->
@@ -90,12 +72,6 @@
                                 {{ $product->is_featured ? 'checked' : '' }}>
                             <label for="is_featured" class="ml-2 block text-sm text-gray-900">Destacar en Home</label>
                         </div>
-                    </div>
-
-                    <div class="bg-white rounded-lg shadow-sm p-6">
-                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Agregar Imágenes</h2>
-                        <input type="file" name="images[]" multiple
-                            class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-blush file:text-brand-pink hover:file:bg-brand-pink hover:file:text-white transition-colors">
                     </div>
 
                     <button type="submit"
