@@ -29,7 +29,13 @@ class ShowroomController extends Controller
             ->take(4)
             ->get();
 
-        return view('product', compact('product', 'relatedProducts'));
+        // Group images by color for Alpine.js dynamic gallery
+        $imagesByColor = $product->images
+            ->groupBy('color')
+            ->map(fn($imgs) => $imgs->map(fn($img) => asset('storage/' . $img->path))->values())
+            ->toArray();
+
+        return view('product', compact('product', 'relatedProducts', 'imagesByColor'));
     }
 
     public function cart()

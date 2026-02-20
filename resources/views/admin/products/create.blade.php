@@ -65,8 +65,7 @@
 
                     <div class="bg-white rounded-lg shadow-sm p-6">
                         <h2 class="text-lg font-semibold text-gray-900 mb-4">Imágenes</h2>
-                        <input type="file" name="images[]" multiple
-                            class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-blush file:text-brand-pink hover:file:bg-brand-pink hover:file:text-white transition-colors">
+                        @livewire('admin.product.images-form')
                     </div>
 
                     <button type="submit"

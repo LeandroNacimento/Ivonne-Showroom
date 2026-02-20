@@ -50,6 +50,8 @@ class VariationsForm extends Component
         if (empty($this->colors)) {
             $this->addColor();
         }
+
+        $this->dispatchColorSync();
     }
 
     /* ──────────────── Category Change Listener ──────────────── */
@@ -83,6 +85,8 @@ class VariationsForm extends Component
                 $this->emptyVariation(),
             ],
         ];
+
+        $this->dispatchColorSync();
     }
 
     public function removeColor(int $index): void
@@ -93,6 +97,8 @@ class VariationsForm extends Component
 
         unset($this->colors[$index]);
         $this->colors = array_values($this->colors);
+
+        $this->dispatchColorSync();
     }
 
     /* ──────────────── Variation CRUD ──────────────── */
@@ -168,6 +174,7 @@ class VariationsForm extends Component
             // colors.{colorIdx}.name — also check duplicates
             if (count($parts) === 3 && $parts[2] === 'name') {
                 $this->validateDuplicates();
+                $this->dispatchColorSync();
             }
         }
     }
@@ -215,6 +222,17 @@ class VariationsForm extends Component
             'stock' => '',
             'sku' => '',
         ];
+    }
+
+    private function dispatchColorSync(): void
+    {
+        $names = collect($this->colors)
+            ->pluck('name')
+            ->filter(fn($n) => trim($n) !== '')
+            ->values()
+            ->toArray();
+
+        $this->dispatch('sync-image-colors', colors: $names);
     }
 
     private function validateDuplicates(): void

@@ -31,7 +31,9 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images' => 'nullable|array',
+            'images.*' => 'nullable|array',
+            'images.*.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             'variations' => 'required|array|min:1',
             'variations.*.color' => 'required|string',
             'variations.*.size' => 'required|string',
@@ -49,14 +51,18 @@ class ProductController extends Controller
                 'is_featured' => $request->has('is_featured'),
             ]);
 
-            // Images
+            // Images grouped by color: images[ColorName][] = file
             if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $image) {
-                    $path = $image->store('products', 'public');
-                    ProductImage::create([
-                        'product_id' => $product->id,
-                        'path' => $path,
-                    ]);
+                foreach ($request->file('images') as $color => $files) {
+                    foreach ($files as $position => $file) {
+                        $path = $file->store('products', 'public');
+                        ProductImage::create([
+                            'product_id' => $product->id,
+                            'path' => $path,
+                            'color' => $color,
+                            'position' => $position,
+                        ]);
+                    }
                 }
             }
 
@@ -89,7 +95,9 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images' => 'nullable|array',
+            'images.*' => 'nullable|array',
+            'images.*.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             'variations' => 'required|array|min:1',
             'variations.*.id' => 'nullable|integer',
             'variations.*.color' => 'required|string',
@@ -108,14 +116,24 @@ class ProductController extends Controller
                 'is_featured' => $request->has('is_featured'),
             ]);
 
-            // New images
+            // New images grouped by color: images[ColorName][] = file
             if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $image) {
-                    $path = $image->store('products', 'public');
-                    ProductImage::create([
-                        'product_id' => $product->id,
-                        'path' => $path,
-                    ]);
+                foreach ($request->file('images') as $color => $files) {
+                    // Position continues from existing images of this color
+                    $maxPos = $product->images()
+                        ->where('color', $color)
+                        ->max('position') ?? -1;
+
+                    foreach ($files as $file) {
+                        $maxPos++;
+                        $path = $file->store('products', 'public');
+                        ProductImage::create([
+                            'product_id' => $product->id,
+                            'path' => $path,
+                            'color' => $color,
+                            'position' => $maxPos,
+                        ]);
+                    }
                 }
             }
 
@@ -131,7 +149,7 @@ class ProductController extends Controller
                 }
             }
 
-            // Sync variations: keep IDs that are sent, delete the rest
+            // Sync variations: delete old, then upsert
             $keepIds = collect($request->variations)
                 ->pluck('id')
                 ->filter()
@@ -140,29 +158,30 @@ class ProductController extends Controller
             // Delete variations not in the submitted list
             $product->variations()->whereNotIn('id', $keepIds)->delete();
 
-            // Upsert each variation
+            // Upsert each variation (update existing first, then create new)
             foreach ($request->variations as $v) {
+                $data = [
+                    'color' => $v['color'],
+                    'size' => $v['size'],
+                    'price' => $v['price'],
+                    'stock' => $v['stock'],
+                    'sku' => $v['sku'] ?? null,
+                ];
+
                 if (!empty($v['id'])) {
-                    // Update existing
                     ProductVariation::where('id', $v['id'])
                         ->where('product_id', $product->id)
-                        ->update([
+                        ->update($data);
+                } else {
+                    // Use updateOrCreate to handle duplicates gracefully
+                    ProductVariation::updateOrCreate(
+                        [
+                            'product_id' => $product->id,
                             'color' => $v['color'],
                             'size' => $v['size'],
-                            'price' => $v['price'],
-                            'stock' => $v['stock'],
-                            'sku' => $v['sku'] ?? null,
-                        ]);
-                } else {
-                    // Create new
-                    ProductVariation::create([
-                        'product_id' => $product->id,
-                        'color' => $v['color'],
-                        'size' => $v['size'],
-                        'price' => $v['price'],
-                        'stock' => $v['stock'],
-                        'sku' => $v['sku'] ?? null,
-                    ]);
+                        ],
+                        $data
+                    );
                 }
             }
         });
