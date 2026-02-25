@@ -253,6 +253,7 @@
     {{-- ─── Hidden Inputs for Form Submission ─── --}}
     @foreach ($this->flatVariations as $idx => $flat)
         <input type="hidden" name="variations[{{ $idx }}][id]" value="{{ $flat['id'] }}">
+        <input type="hidden" name="variations[{{ $idx }}][color_id]" value="{{ $flat['color_id'] }}">
         <input type="hidden" name="variations[{{ $idx }}][color]" value="{{ $flat['color'] }}">
         <input type="hidden" name="variations[{{ $idx }}][size]" value="{{ $flat['size'] }}">
         <input type="hidden" name="variations[{{ $idx }}][price]" value="{{ $flat['price'] }}">

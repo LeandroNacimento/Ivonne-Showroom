@@ -122,9 +122,14 @@ class ProductSeeder extends Seeder
                             // Slight price variation per color (±5%)
                             $price = intval($basePrice * (1 + rand(-5, 5) / 100));
 
+                            $productColor = \App\Models\ProductColor::firstOrCreate(
+                                ['product_id' => $product->id, 'name' => $color],
+                                ['position' => 0]
+                            );
+
                             ProductVariation::create([
                                 'product_id' => $product->id,
-                                'color' => $color,
+                                'product_color_id' => $productColor->id,
                                 'size' => $size,
                                 'price' => $price,
                                 'stock' => rand(0, 20),
@@ -160,9 +165,14 @@ class ProductSeeder extends Seeder
                     foreach ($def['colors'] as $color) {
                         $price = intval($basePrice * (1 + rand(-5, 5) / 100));
 
+                        $productColor = \App\Models\ProductColor::firstOrCreate(
+                            ['product_id' => $product->id, 'name' => $color],
+                            ['position' => 0]
+                        );
+
                         ProductVariation::create([
                             'product_id' => $product->id,
-                            'color' => $color,
+                            'product_color_id' => $productColor->id,
                             'size' => 'Único',
                             'price' => $price,
                             'stock' => rand(1, 15),

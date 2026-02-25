@@ -60,13 +60,13 @@ class OrderController extends Controller
 
             foreach ($request->items as $item) {
                 // Fetch variation to get color/size info
-                $variation = \App\Models\ProductVariation::find($item['variation_id']);
+                $variation = \App\Models\ProductVariation::with('productColor')->find($item['variation_id']);
 
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item['product_id'],
                     'variation_id' => $item['variation_id'],
-                    'color' => $variation->color,
+                    'color' => $variation->productColor->name,
                     'size' => $variation->size,
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
@@ -142,13 +142,13 @@ class OrderController extends Controller
 
             // Create new items and deduct stock
             foreach ($request->items as $item) {
-                $variation = \App\Models\ProductVariation::find($item['variation_id']);
+                $variation = \App\Models\ProductVariation::with('productColor')->find($item['variation_id']);
 
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item['product_id'],
                     'variation_id' => $item['variation_id'],
-                    'color' => $variation->color,
+                    'color' => $variation->productColor->name,
                     'size' => $variation->size,
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],

@@ -1,0 +1,6 @@
+refactor(db): enforce not-null constraint on product_color_id after contract phase
+
+- Added defensive null checks before schema alteration
+- Hardened domain integrity at database level
+- Preserved foreign keys and indexes (InnoDB)
+- Finalized relational strictness for MySQL 8+

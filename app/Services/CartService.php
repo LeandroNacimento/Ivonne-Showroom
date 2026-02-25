@@ -17,7 +17,7 @@ class CartService
     {
         $cart = $this->getCart();
         $product = Product::with('images')->find($productId);
-        $variation = ProductVariation::find($variationId);
+        $variation = ProductVariation::with('productColor')->find($variationId);
 
         if (!$product || !$variation) {
             return false;
@@ -33,7 +33,7 @@ class CartService
                 'variation_id' => $variation->id,
                 'name' => $product->name,
                 'price' => $variation->price,
-                'color' => $variation->color,
+                'color' => $variation->productColor->name,
                 'size' => $variation->size,
                 'stock' => $variation->stock,
                 'image' => $product->images->first() ? $product->images->first()->path : null,

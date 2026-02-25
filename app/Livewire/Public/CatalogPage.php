@@ -55,7 +55,11 @@ class CatalogPage extends Component
     {
         $currentCategory = null;
 
-        $query = Product::with('category', 'images', 'variations');
+        $query = Product::with([
+            'category',
+            'images',
+            'variations'
+        ])->withMin('variations', 'price')->withSum('variations', 'stock');
 
         // Filter by Category
         if ($this->category) {
@@ -81,19 +85,18 @@ class CatalogPage extends Component
         // Filter by Colors (only if supported)
         if ($supportsColor && !empty($this->colors)) {
             $query->whereHas('variations', function ($q) {
-                $q->whereIn('color', $this->colors)->where('stock', '>', 0);
+                $q->whereHas('productColor', function ($qColor) {
+                    $qColor->whereIn('name', $this->colors);
+                })->where('stock', '>', 0);
             });
         } elseif (!$supportsColor) {
             $this->colors = [];
         }
 
-        // Sorting — price now lives in product_variations, use subquery
-        $minPriceSub = ProductVariation::selectRaw('COALESCE(MIN(price), 0)')
-            ->whereColumn('product_id', 'products.id');
-
+        // Sorting — use the dynamically added aggregate column variations_min_price
         $query = match ($this->sort) {
-            'price_asc' => $query->orderBy($minPriceSub)->orderBy('id', 'desc'),
-            'price_desc' => $query->orderByDesc($minPriceSub)->orderBy('id', 'desc'),
+            'price_asc' => $query->orderByRaw('COALESCE(variations_min_price, 0) ASC')->orderBy('id', 'desc'),
+            'price_desc' => $query->orderByRaw('COALESCE(variations_min_price, 0) DESC')->orderBy('id', 'desc'),
             default => $query->orderBy('created_at', 'desc')->orderBy('id', 'desc'),
         };
 
@@ -127,13 +130,18 @@ class CatalogPage extends Component
         }
 
         if ($supportsColor) {
-            $availableColors = (clone $baseVarQuery)
-                ->select('color')
+            $availableColors = \App\Models\ProductColor::whereHas('variations', function ($q) use ($currentCategory) {
+                $q->where('stock', '>', 0);
+                if ($currentCategory) {
+                    $q->whereHas('product', function ($q2) use ($currentCategory) {
+                        $q2->where('category_id', $currentCategory->id);
+                    });
+                }
+            })
+                ->select('name')
                 ->distinct()
-                ->whereNotNull('color')
-                ->where('color', '!=', '')
-                ->orderBy('color')
-                ->pluck('color');
+                ->orderBy('name')
+                ->pluck('name');
         }
 
         return view('livewire.public.catalog-page', [

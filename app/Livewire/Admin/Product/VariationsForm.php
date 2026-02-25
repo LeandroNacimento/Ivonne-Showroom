@@ -15,20 +15,19 @@ class VariationsForm extends Component
 
     public function mount(?Product $product = null, ?int $categoryId = null): void
     {
-        // Resolve supportsSize from product's category or passed categoryId
         if ($product && $product->exists) {
             $this->supportsSize = $product->category->supports_size ?? true;
-            $product->load('variations');
-            $grouped = $product->variations->groupBy('color');
+            $product->load(['colors.variations']);
 
-            foreach ($grouped as $colorName => $vars) {
+            foreach ($product->colors as $colorModel) {
                 $group = [
                     'uuid' => Str::uuid()->toString(),
-                    'name' => $colorName,
+                    'id' => $colorModel->id,
+                    'name' => $colorModel->name,
                     'variations' => [],
                 ];
 
-                foreach ($vars as $v) {
+                foreach ($colorModel->variations as $v) {
                     $group['variations'][] = [
                         'uuid' => Str::uuid()->toString(),
                         'id' => $v->id,
@@ -187,10 +186,12 @@ class VariationsForm extends Component
 
         foreach ($this->colors as $color) {
             $colorName = $color['name'];
+            $colorId = $color['id'] ?? null;
 
             foreach ($color['variations'] as $v) {
                 $flat[] = [
                     'id' => $v['id'] ?? '',
+                    'color_id' => $colorId,
                     'color' => $colorName,
                     'size' => $this->supportsSize ? ($v['size'] ?? '') : 'Único',
                     'price' => $v['price'] ?? '',

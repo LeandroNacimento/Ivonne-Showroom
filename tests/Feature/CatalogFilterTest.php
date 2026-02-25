@@ -29,11 +29,23 @@ class CatalogFilterTest extends TestCase
             'name' => 'Vestido Test',
             'slug' => 'vestido-test',
             'description' => 'Test',
-            'price' => 1000,
             'is_featured' => true
         ]);
 
-        ProductVariation::create(['product_id' => $product->id, 'size' => 'M', 'color' => 'Rojo', 'stock' => 10]);
+        $color = \App\Models\ProductColor::create([
+            'product_id' => $product->id,
+            'name' => 'Rojo',
+            'position' => 1
+        ]);
+
+        ProductVariation::create([
+            'product_id' => $product->id,
+            'product_color_id' => $color->id,
+            'size' => 'M',
+            'color' => 'Rojo',
+            'stock' => 10,
+            'price' => 1000
+        ]);
 
         Livewire::withQueryParams(['category' => 'vestidos'])
             ->test(CatalogPage::class)
@@ -58,11 +70,23 @@ class CatalogFilterTest extends TestCase
             'name' => 'Cartera Test',
             'slug' => 'cartera-test',
             'description' => 'Test',
-            'price' => 1000,
             'is_featured' => true
         ]);
 
-        ProductVariation::create(['product_id' => $product->id, 'size' => 'Unico', 'color' => 'Negro', 'stock' => 5]);
+        $color = \App\Models\ProductColor::create([
+            'product_id' => $product->id,
+            'name' => 'Negro',
+            'position' => 1
+        ]);
+
+        ProductVariation::create([
+            'product_id' => $product->id,
+            'product_color_id' => $color->id,
+            'size' => 'Unico',
+            'color' => 'Negro',
+            'stock' => 5,
+            'price' => 1000
+        ]);
 
         Livewire::withQueryParams(['category' => 'carteras'])
             ->test(CatalogPage::class)

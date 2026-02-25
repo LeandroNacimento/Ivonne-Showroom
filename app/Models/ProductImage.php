@@ -10,9 +10,8 @@ class ProductImage extends Model
     use HasFactory;
 
     protected $fillable = [
-        'product_id',
+        'product_color_id',
         'path',
-        'color',
         'position',
     ];
 
@@ -23,5 +22,10 @@ class ProductImage extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function productColor()
+    {
+        return $this->belongsTo(ProductColor::class);
     }
 }

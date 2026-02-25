@@ -11,9 +11,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Services\ProductService;
+use App\Services\ProductImageService;
 
 class ProductController extends Controller
 {
+    protected ProductService $productService;
+    protected ProductImageService $imageService;
+
+    public function __construct(ProductService $productService, ProductImageService $imageService)
+    {
+        $this->productService = $productService;
+        $this->imageService = $imageService;
+    }
     public function index()
     {
         return view('admin.products.index');
@@ -51,31 +61,11 @@ class ProductController extends Controller
                 'is_featured' => $request->has('is_featured'),
             ]);
 
-            // Images grouped by color: images[ColorName][] = file
-            if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $color => $files) {
-                    foreach ($files as $position => $file) {
-                        $path = $file->store('products', 'public');
-                        ProductImage::create([
-                            'product_id' => $product->id,
-                            'path' => $path,
-                            'color' => $color,
-                            'position' => $position,
-                        ]);
-                    }
-                }
-            }
+            $this->productService->syncVariations($product, $request->variations);
 
-            // Variations
-            foreach ($request->variations as $variation) {
-                ProductVariation::create([
-                    'product_id' => $product->id,
-                    'color' => $variation['color'],
-                    'size' => $variation['size'],
-                    'price' => $variation['price'],
-                    'stock' => $variation['stock'],
-                    'sku' => $variation['sku'] ?? null,
-                ]);
+            $imagesData = $request->file('images');
+            if (!empty($imagesData) && is_array($imagesData)) {
+                $this->imageService->storeImages($product, $imagesData);
             }
         });
 
@@ -116,73 +106,15 @@ class ProductController extends Controller
                 'is_featured' => $request->has('is_featured'),
             ]);
 
-            // New images grouped by color: images[ColorName][] = file
-            if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $color => $files) {
-                    // Position continues from existing images of this color
-                    $maxPos = $product->images()
-                        ->where('color', $color)
-                        ->max('position') ?? -1;
+            $this->productService->syncVariations($product, $request->variations);
 
-                    foreach ($files as $file) {
-                        $maxPos++;
-                        $path = $file->store('products', 'public');
-                        ProductImage::create([
-                            'product_id' => $product->id,
-                            'path' => $path,
-                            'color' => $color,
-                            'position' => $maxPos,
-                        ]);
-                    }
-                }
-            }
-
-            // Delete removed images
             if ($request->has('delete_images')) {
-                $imagesToDelete = ProductImage::whereIn('id', $request->delete_images)
-                    ->where('product_id', $product->id)
-                    ->get();
-
-                foreach ($imagesToDelete as $img) {
-                    Storage::disk('public')->delete($img->path);
-                    $img->delete();
-                }
+                $this->imageService->deleteImages($product, $request->delete_images);
             }
 
-            // Sync variations: delete old, then upsert
-            $keepIds = collect($request->variations)
-                ->pluck('id')
-                ->filter()
-                ->toArray();
-
-            // Delete variations not in the submitted list
-            $product->variations()->whereNotIn('id', $keepIds)->delete();
-
-            // Upsert each variation (update existing first, then create new)
-            foreach ($request->variations as $v) {
-                $data = [
-                    'color' => $v['color'],
-                    'size' => $v['size'],
-                    'price' => $v['price'],
-                    'stock' => $v['stock'],
-                    'sku' => $v['sku'] ?? null,
-                ];
-
-                if (!empty($v['id'])) {
-                    ProductVariation::where('id', $v['id'])
-                        ->where('product_id', $product->id)
-                        ->update($data);
-                } else {
-                    // Use updateOrCreate to handle duplicates gracefully
-                    ProductVariation::updateOrCreate(
-                        [
-                            'product_id' => $product->id,
-                            'color' => $v['color'],
-                            'size' => $v['size'],
-                        ],
-                        $data
-                    );
-                }
+            $imagesData = $request->file('images');
+            if (!empty($imagesData) && is_array($imagesData)) {
+                $this->imageService->storeImages($product, $imagesData);
             }
         });
 

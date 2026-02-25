@@ -23,6 +23,11 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function colors()
+    {
+        return $this->hasMany(ProductColor::class)->orderBy('position');
+    }
+
     public function variations()
     {
         return $this->hasMany(ProductVariation::class);
@@ -30,16 +35,20 @@ class Product extends Model
 
     public function images()
     {
-        return $this->hasMany(ProductImage::class)
-            ->orderBy('position')
-            ->orderBy('id');
+        return $this->hasManyThrough(ProductImage::class, ProductColor::class)
+            ->orderBy('product_images.position')
+            ->orderBy('product_images.id');
     }
 
     /**
-     * Precio mínimo entre todas las variaciones (usa query, no collection).
+     * Precio mínimo entre todas las variaciones (usa query agregada o collection).
      */
     public function getMinPriceAttribute()
     {
+        if (array_key_exists('variations_min_price', $this->attributes)) {
+            return $this->attributes['variations_min_price'] ?? 0;
+        }
+
         if ($this->relationLoaded('variations')) {
             return $this->variations->min('price') ?? 0;
         }
@@ -52,7 +61,10 @@ class Product extends Model
      */
     public function getPriceRangeAttribute(): string
     {
-        if ($this->relationLoaded('variations')) {
+        if (array_key_exists('variations_min_price', $this->attributes) && array_key_exists('variations_max_price', $this->attributes)) {
+            $min = $this->attributes['variations_min_price'] ?? 0;
+            $max = $this->attributes['variations_max_price'] ?? 0;
+        } elseif ($this->relationLoaded('variations')) {
             $min = $this->variations->min('price') ?? 0;
             $max = $this->variations->max('price') ?? 0;
         } else {
@@ -61,10 +73,10 @@ class Product extends Model
         }
 
         if ($min == $max) {
-            return '$' . number_format($min, 0, ',', '.');
+            return '$' . number_format((float) $min, 0, ',', '.');
         }
 
-        return '$' . number_format($min, 0, ',', '.') . ' - $' . number_format($max, 0, ',', '.');
+        return '$' . number_format((float) $min, 0, ',', '.') . ' - $' . number_format((float) $max, 0, ',', '.');
     }
 
     /**
@@ -72,6 +84,13 @@ class Product extends Model
      */
     public function getTotalStockAttribute()
     {
+        if (array_key_exists('variations_sum_stock', $this->attributes)) {
+            return $this->attributes['variations_sum_stock'] ?? 0;
+        }
+
+        if ($this->relationLoaded('variations')) {
+            return $this->variations->sum('stock');
+        }
         return $this->variations()->sum('stock');
     }
 
@@ -80,7 +99,11 @@ class Product extends Model
      */
     public function getCoverUrlAttribute()
     {
-        $cover = $this->images()->orderBy('position')->orderBy('id')->first();
+        if ($this->relationLoaded('images')) {
+            $cover = $this->images->first();
+        } else {
+            $cover = $this->images()->orderBy('position')->orderBy('id')->first();
+        }
 
         if ($cover) {
             return asset('storage/' . $cover->path);
