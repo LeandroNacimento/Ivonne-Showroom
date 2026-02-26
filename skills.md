@@ -73,6 +73,48 @@ Evalúa impacto de seguridad antes de cualquier cambio en backend o base de dato
 
 ---
 
+### 🧱 validate_domain_integrity
+
+**Descripción**
+
+Audita la integridad estructural del dominio en base de datos (MySQL 8+)
+sin modificar el esquema ni ejecutar migraciones.
+
+Evalúa que el modelo relacional esté alineado con las reglas del dominio
+y que no existan inconsistencias estructurales.
+
+---
+
+**Valida**
+
+- Foreign Keys activas y coherentes (ON DELETE / ON UPDATE)
+- Columnas críticas correctamente definidas como NOT NULL
+- Ausencia de columnas legacy
+- Índices alineados con queries frecuentes
+- Ausencia de índices duplicados o innecesarios
+- Integridad jerárquica (ej. product → colors → variations → images)
+- Coherencia entre relaciones Eloquent y estructura real de MySQL
+
+---
+
+**Input**
+
+- table_name (opcional)
+- domain_context (opcional descripción de la regla de negocio)
+
+---
+
+**Output**
+
+- integrity_status (valid | warning | critical)
+- structural_findings (array)
+- foreign_key_analysis
+- nullability_analysis
+- index_alignment_analysis
+- improvement_suggestions (array)
+
+---
+
 ## 🛠️ Skills de Backend (Laravel)
 
 ### 🧩 create_laravel_component
@@ -199,7 +241,9 @@ Propone cambios de base de datos **sin ejecutarlos**.
 
 - migration_plan
 - affected_tables
-- sql_server_compatibility (true | false)
+- mysql_8_compatibility (true | false)
+- impact_on_existing_foreign_keys
+- downtime_risk_level (low | medium | high)
 
 📌 Nunca ejecuta migraciones automáticamente.
 
