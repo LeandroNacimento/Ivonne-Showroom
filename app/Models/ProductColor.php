@@ -30,6 +30,12 @@ class ProductColor extends Model
         return $this->hasMany(ProductImage::class)->orderBy('position');
     }
 
+    public function mainImage()
+    {
+        return $this->hasOne(ProductImage::class)
+            ->where('is_main', true);
+    }
+
     /**
      * Get the cover image for this color.
      */
