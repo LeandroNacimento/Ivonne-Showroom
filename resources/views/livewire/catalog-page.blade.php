@@ -3,20 +3,12 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
 
         {{-- Sección Superior --}}
-        <div
-            class="flex flex-col space-y-8 md:flex-row md:items-end md:justify-between mb-12 pb-8 border-b border-gray-100">
-            <div>
-                {{-- Título: text-4xl, font-light, tracking-tight, mayor separación del subtítulo --}}
-                <h1 class="text-4xl font-light tracking-tight text-gray-900">Catálogo</h1>
-                <p class="mt-4 text-sm font-light text-gray-500 tracking-wide">Última colección exclusiva de Ivonne
-                    Showroom</p>
-            </div>
-
+        <div class="flex flex-col space-y-8 md:flex-row md:items-end md:justify-end mb-12 pb-8 border-b border-gray-100">
             <div class="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-6">
                 {{-- Selector de Categoría --}}
                 <div class="relative min-w-[200px]">
                     <select wire:model.live="categoryId"
-                        class="block w-full appearance-none rounded-none border-b border-gray-200 bg-transparent px-2 py-2.5 text-sm font-light text-gray-700 focus:border-gray-900 focus:outline-none focus:ring-0 cursor-pointer">
+                        class="block w-full appearance-none bg-white border border-neutral-300 rounded-md px-4 py-2 text-sm text-neutral-800 shadow-sm focus:outline-none focus:ring-1 focus:ring-neutral-400 transition hover:border-neutral-500 cursor-pointer">
                         <option value="">Todas las prendas</option>
                         @foreach ($categories as $category)
                             <option value="{{ $category->id }}">
@@ -35,7 +27,7 @@
                 {{-- Selector de Ordenamiento --}}
                 <div class="relative min-w-[180px]">
                     <select wire:model.live="sort"
-                        class="block w-full appearance-none rounded-none border-b border-gray-200 bg-transparent px-2 py-2.5 text-sm font-light text-gray-700 focus:border-gray-900 focus:outline-none focus:ring-0 cursor-pointer">
+                        class="block w-full appearance-none bg-white border border-neutral-300 rounded-md px-4 py-2 text-sm text-neutral-800 shadow-sm focus:outline-none focus:ring-1 focus:ring-neutral-400 transition hover:border-neutral-500 cursor-pointer">
                         <option value="latest">Novedades</option>
                         <option value="price_asc">Menor Precio</option>
                         <option value="price_desc">Mayor Precio</option>
@@ -61,44 +53,39 @@
             @forelse($products as $product)
                 {{-- Product Card: Transición opacity sutil on hover --}}
                 <a href="{{ route('product.show', $product->slug) }}"
-                    class="group flex flex-col h-full focus:outline-none transition-opacity duration-200 hover:opacity-90">
+                    class="group flex flex-col h-full focus:outline-none transition duration-300 ease-in-out hover:-translate-y-1 hover:shadow-lg">
 
                     {{-- A) Imagen Principal --}}
-                    <div class="relative w-full aspect-[4/5] overflow-hidden bg-stone-50 mb-5">
+                    <div class="relative w-full aspect-[4/5] overflow-hidden bg-stone-50">
                         <img src="{{ $product->mainColor?->image ?? ($product->colors->first()?->image ?? 'https://via.placeholder.com/600x750') }}"
                             loading="lazy" alt="{{ $product->name }}"
                             class="w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.03]">
                     </div>
 
                     {{-- Cuerpo de Información --}}
-                    <div class="flex flex-col flex-grow px-1">
+                    <div class="flex flex-col flex-grow bg-white/90 backdrop-blur-sm p-4 rounded-b-md space-y-1">
 
                         {{-- B) Nombre del Producto --}}
                         <div class="flex-grow">
-                            <h3 class="text-sm font-light text-gray-800 tracking-wide line-clamp-2 leading-relaxed">
+                            <h3 class="text-lg font-semibold text-neutral-900 line-clamp-2 leading-relaxed">
                                 {{ $product->name }}
                             </h3>
                         </div>
 
                         {{-- C) Precio Mínimo --}}
-                        <div class="mt-3">
-                            <p class="text-base font-semibold tracking-tight text-gray-900">
+                        <div class="mt-1">
+                            <p class="text-base font-semibold text-neutral-800">
                                 Desde ${{ number_format($product->variations_min_price, 0, ',', '.') }}
                             </p>
                         </div>
 
                         {{-- Atributos Disponibles --}}
                         <div class="mt-2 space-y-1">
-                            @if (count($product->available_sizes) > 0)
-                                <p class="text-xs text-gray-500 font-light tracking-wide">
-                                    Disponible en {{ implode(' · ', array_slice($product->available_sizes, 0, 4)) }}
-                                    @if (count($product->available_sizes) > 4)
-                                        · +{{ count($product->available_sizes) - 4 }}
-                                    @endif
-                                </p>
-                            @endif
+                            <p class="text-sm font-medium text-neutral-700 mt-2">
+                                {{ $product->availability_label }}
+                            </p>
 
-                            <p class="text-xs text-gray-400 font-light tracking-wide">
+                            <p class="text-xs text-neutral-500 mt-1">
                                 {{ $product->colors->count() }} colores disponibles
                             </p>
                         </div>

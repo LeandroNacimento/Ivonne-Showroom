@@ -99,9 +99,6 @@ class Product extends Model
         return $this->variations()->sum('stock');
     }
 
-    /**
-     * URL de la imagen de portada (primera por position/id).
-     */
     public function getCoverUrlAttribute()
     {
         if ($this->relationLoaded('images')) {
@@ -115,5 +112,48 @@ class Product extends Model
         }
 
         return asset('img/placeholder-product.jpg');
+    }
+
+    public function getAvailableSizesAttribute(): array
+    {
+        if (!$this->relationLoaded('variations')) {
+            $this->load('variations');
+        }
+
+        return $this->variations
+            ->where('stock', '>', 0)
+            ->pluck('size')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+    }
+
+    public function getHasSizesAttribute(): bool
+    {
+        return $this->category?->supports_size ?? false;
+    }
+
+    public function getAvailabilityLabelAttribute(): string
+    {
+        if (!$this->has_sizes) {
+            return 'Disponible';
+        }
+
+        $sizes = $this->available_sizes;
+
+        if (count($sizes) === 0) {
+            return 'Sin stock';
+        }
+
+        if (count($sizes) === 1) {
+            return 'Talle único';
+        }
+
+        reset($sizes);
+        $first = current($sizes);
+        $last = end($sizes);
+
+        return "Disponible en {$first}-{$last}";
     }
 }

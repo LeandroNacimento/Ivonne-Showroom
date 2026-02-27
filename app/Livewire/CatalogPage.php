@@ -43,6 +43,8 @@ class CatalogPage extends Component
                 }
             ], 'price')
             ->with([
+                'category',
+                'variations',
                 'mainColor:id,product_id,image,is_main',
                 'colors' => function ($q) {
                     $q->whereHas('variations', function ($v) {
@@ -68,17 +70,6 @@ class CatalogPage extends Component
     public function getProductsProperty()
     {
         $products = $this->queryBuilder()->paginate($this->perPage);
-
-        // Transformar la colección para calcular los talles disponibles sin hacer queries extra
-        $products->getCollection()->transform(function ($product) {
-            $product->available_sizes = $product->colors
-                ->flatMap(fn($color) => $color->variations->pluck('size'))
-                ->unique()
-                ->values()
-                ->toArray();
-
-            return $product;
-        });
 
         return $products;
     }
