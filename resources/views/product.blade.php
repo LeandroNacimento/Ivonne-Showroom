@@ -62,9 +62,8 @@
             }">
 
                 <!-- Image gallery -->
-                <div class="flex flex-col-reverse">
-                    <div
-                        class="w-full aspect-w-1 aspect-h-1 bg-gray-200 rounded-lg overflow-hidden sm:aspect-w-2 sm:aspect-h-3 relative group">
+                <div class="flex flex-col-reverse relative">
+                    <div class="w-full aspect-[4/5] bg-gray-200 rounded-lg overflow-hidden relative group">
 
                         <!-- Gallery Container -->
                         <div class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth w-full h-full absolute inset-0 hide-scroll"
@@ -232,7 +231,7 @@
                         @foreach ($relatedProducts as $related)
                             <div class="group relative">
                                 <div
-                                    class="w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-md overflow-hidden group-hover:opacity-75 lg:h-80 lg:aspect-none flex items-center justify-center">
+                                    class="w-full min-h-80 bg-gray-200 aspect-[4/5] rounded-md overflow-hidden group-hover:opacity-75 lg:h-80 flex items-center justify-center">
                                     @if ($related->colors->first() && $related->colors->first()->image)
                                         <img src="{{ $related->colors->where('is_main', true)->first()?->image ?? $related->colors->first()->image }}"
                                             alt="{{ $related->name }}"

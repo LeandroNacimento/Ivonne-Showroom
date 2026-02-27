@@ -38,6 +38,7 @@ class ProductSeeder extends Seeder
 
     public function run(): void
     {
+        $faker = \Faker\Factory::create();
         // ── Categories with product definitions ──────────────────
         // supports_size = true
         $clothingCategories = [
@@ -114,18 +115,28 @@ class ProductSeeder extends Seeder
                     ]
                 );
 
-                if ($product->variations()->count() === 0) {
+                if ($product->variations()->count() === 0 && \App\Models\ProductVariation::where('product_id', $product->id)->count() === 0) {
                     $basePrice = rand(15000, 85000);
 
-                    foreach ($def['colors'] as $color) {
+                    $colorsCount = rand(2, 4);
+                    $faker->unique(true); // reset unique state for this product
+
+                    for ($i = 0; $i < $colorsCount; $i++) {
+                        $productColor = \App\Models\ProductColor::create([
+                            'product_id' => $product->id,
+                            'name' => ucfirst($faker->unique()->safeColorName()),
+                            'is_main' => ($i === 0),
+                            'image' => 'https://picsum.photos/seed/product-' . $product->id . '-color-' . $i . '/600/750'
+                        ]);
+
+                        \App\Models\ProductImage::firstOrCreate(
+                            ['product_color_id' => $productColor->id, 'position' => 0],
+                            ['path' => 'products/sample-image.jpg']
+                        );
+
                         foreach ($def['sizes'] as $size) {
                             // Slight price variation per color (±5%)
                             $price = intval($basePrice * (1 + rand(-5, 5) / 100));
-
-                            $productColor = \App\Models\ProductColor::firstOrCreate(
-                                ['product_id' => $product->id, 'name' => $color],
-                                ['position' => 0]
-                            );
 
                             ProductVariation::create([
                                 'product_id' => $product->id,
@@ -159,15 +170,25 @@ class ProductSeeder extends Seeder
                     ]
                 );
 
-                if ($product->variations()->count() === 0) {
+                if ($product->variations()->count() === 0 && \App\Models\ProductVariation::where('product_id', $product->id)->count() === 0) {
                     $basePrice = rand(8000, 45000);
 
-                    foreach ($def['colors'] as $color) {
+                    $colorsCount = rand(2, 4);
+                    $faker->unique(true); // reset unique state
+
+                    for ($i = 0; $i < $colorsCount; $i++) {
                         $price = intval($basePrice * (1 + rand(-5, 5) / 100));
 
-                        $productColor = \App\Models\ProductColor::firstOrCreate(
-                            ['product_id' => $product->id, 'name' => $color],
-                            ['position' => 0]
+                        $productColor = \App\Models\ProductColor::create([
+                            'product_id' => $product->id,
+                            'name' => ucfirst($faker->unique()->safeColorName()),
+                            'is_main' => ($i === 0),
+                            'image' => 'https://picsum.photos/seed/product-' . $product->id . '-color-' . $i . '/600/750'
+                        ]);
+
+                        \App\Models\ProductImage::firstOrCreate(
+                            ['product_color_id' => $productColor->id, 'position' => 0],
+                            ['path' => 'products/sample-image.jpg']
                         );
 
                         ProductVariation::create([
