@@ -14,5 +14,5 @@
     </div>
 
     {{-- Livewire Catalog --}}
-    <livewire:public.catalog-page />
+    <livewire:catalog-page />
 </x-layouts.app>

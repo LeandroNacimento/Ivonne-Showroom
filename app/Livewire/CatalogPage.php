@@ -38,22 +38,22 @@ class CatalogPage extends Component
                 $q->where('stock', '>', 0);
             })
             ->withMin([
-                'colors.variations as variations_min_price' => function ($q) {
+                'variations as variations_min_price' => function ($q) {
                     $q->where('stock', '>', 0);
                 }
             ], 'price')
             ->with([
+                'mainColor:id,product_id,image,is_main',
                 'colors' => function ($q) {
                     $q->whereHas('variations', function ($v) {
                         $v->where('stock', '>', 0);
                     })
-                        ->select('id', 'product_id', 'name', 'hex_code')
+                        ->select('id', 'product_id', 'name', 'image', 'is_main')
                         ->with([
                             'variations' => function ($v) {
                                 $v->where('stock', '>', 0)
                                     ->select('id', 'product_color_id', 'size');
                             },
-                            'mainImage'
                         ]);
                 }
             ]);

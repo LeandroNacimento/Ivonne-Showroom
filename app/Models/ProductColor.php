@@ -12,6 +12,8 @@ class ProductColor extends Model
     protected $fillable = [
         'product_id',
         'name',
+        'image',
+        'is_main',
         'position',
     ];
 
@@ -32,16 +34,11 @@ class ProductColor extends Model
 
     public function mainImage()
     {
-        return $this->hasOne(ProductImage::class)
-            ->where('is_main', true);
+        return $this->hasOne(ProductImage::class)->ofMany('position', 'min');
     }
 
-    /**
-     * Get the cover image for this color.
-     */
     public function getCoverImageAttribute()
     {
-        return $this->images()->where('is_cover', true)->first()
-            ?? $this->images()->first();
+        return $this->images()->first();
     }
 }

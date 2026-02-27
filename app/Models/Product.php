@@ -23,6 +23,11 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function mainColor()
+    {
+        return $this->hasOne(ProductColor::class)->where('is_main', true);
+    }
+
     public function colors()
     {
         return $this->hasMany(ProductColor::class)->orderBy('position');
@@ -30,7 +35,7 @@ class Product extends Model
 
     public function variations()
     {
-        return $this->hasMany(ProductVariation::class);
+        return $this->hasManyThrough(ProductVariation::class, ProductColor::class);
     }
 
     public function images()

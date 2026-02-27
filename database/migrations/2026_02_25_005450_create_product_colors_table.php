@@ -14,6 +14,8 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->string('name');
+            $table->string('image')->nullable();
+            $table->boolean('is_main')->default(false);
             $table->integer('position')->default(0);
             $table->timestamps();
 
