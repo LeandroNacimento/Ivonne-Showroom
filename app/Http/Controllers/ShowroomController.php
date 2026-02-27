@@ -23,17 +23,20 @@ class ShowroomController extends Controller
 
     public function product($slug)
     {
-        $product = Product::where('slug', $slug)->with('category', 'images', 'variations')->firstOrFail();
+        $product = Product::where('slug', $slug)->with(['category', 'colors', 'variations.productColor'])->firstOrFail();
         $relatedProducts = Product::where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
+            ->with(['colors'])
             ->take(4)
             ->get();
 
         // Group images by color for Alpine.js dynamic gallery
-        $imagesByColor = $product->images
-            ->groupBy('color')
-            ->map(fn($imgs) => $imgs->map(fn($img) => asset('storage/' . $img->path))->values())
-            ->toArray();
+        $imagesByColor = [];
+        foreach ($product->colors as $color) {
+            if ($color->image) {
+                $imagesByColor[$color->name] = [$color->image];
+            }
+        }
 
         return view('product', compact('product', 'relatedProducts', 'imagesByColor'));
     }

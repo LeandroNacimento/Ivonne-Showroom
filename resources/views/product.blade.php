@@ -8,7 +8,7 @@
         ->map(
             fn($v) => [
                 'id' => $v->id,
-                'color' => $v->color,
+                'color' => $v->productColor->name ?? 'Único',
                 'size' => $v->size,
                 'price' => $v->price,
                 'stock' => $v->stock,
@@ -16,7 +16,7 @@
         )
         ->values(),
 ),
-                activeColor: Object.keys(@js($imagesByColor))[0] || @js($product->variations->first()?->color ?? ''),
+                activeColor: Object.keys(@js($imagesByColor))[0] || @js($product->colors->first()?->name ?? 'Único'),
                 selectedVariation: null,
                 currentSlide: 0,
             
@@ -31,7 +31,7 @@
                     }
                     // Fallback: first available images from any color
                     const firstColor = Object.keys(this.allImages)[0];
-                    return firstColor ? this.allImages[firstColor] : ['{{ $product->cover_url }}'];
+                    return firstColor ? this.allImages[firstColor] : ['{{ $product->colors->where('is_main', true)->first()?->image ?? ($product->colors->first()?->image ?? 'https://via.placeholder.com/600x750') }}'];
                 },
                 get activeVariations() {
                     return this.allVariations.filter(v => v.color === this.activeColor);
@@ -233,8 +233,8 @@
                             <div class="group relative">
                                 <div
                                     class="w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-md overflow-hidden group-hover:opacity-75 lg:h-80 lg:aspect-none flex items-center justify-center">
-                                    @if ($related->images->first())
-                                        <img src="{{ asset('storage/' . $related->images->first()->path) }}"
+                                    @if ($related->colors->first() && $related->colors->first()->image)
+                                        <img src="{{ $related->colors->where('is_main', true)->first()?->image ?? $related->colors->first()->image }}"
                                             alt="{{ $related->name }}"
                                             class="w-full h-full object-center object-cover">
                                     @else
