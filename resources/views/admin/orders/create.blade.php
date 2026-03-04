@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-7xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-bold text-gray-800">Nuevo Pedido</h1>
             <a href="{{ route('admin.orders.index') }}" class="text-gray-600 hover:text-gray-900">
@@ -13,18 +13,18 @@
             <form action="{{ route('admin.orders.store') }}" method="POST">
                 @csrf
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     <!-- Order Details -->
-                    <div class="md:col-span-2 space-y-6">
+                    <div class="lg:col-span-3 space-y-6">
                         <!-- Items -->
                         <div class="bg-white rounded-lg shadow-sm p-6">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Ítems del Pedido</h2>
 
                             <div class="space-y-4">
                                 <template x-for="(item, index) in items" :key="index">
-                                    <div class="grid grid-cols-12 gap-4 items-end border-b border-gray-100 pb-4"
+                                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 md:items-end border-b border-gray-100 pb-6 md:pb-4"
                                         @product-selected="setProduct(index, $event.detail)">
-                                        <div class="col-span-4 relative">
+                                        <div class="md:col-span-5 relative">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Producto</label>
 
                                             <!-- En modo edición o tras seleccionar, mostramos la información elegida -->
@@ -48,7 +48,7 @@
                                                 @livewire('admin.orders.order-product-selector', key(str()->random(10)))
                                             </div>
                                         </div>
-                                        <div class="col-span-3">
+                                        <div class="md:col-span-3">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Variación</label>
                                             <select :name="`items[${index}][variation_id]`"
                                                 class="w-full rounded-md border-gray-300 shadow-sm text-sm"
@@ -61,19 +61,19 @@
                                                 </template>
                                             </select>
                                         </div>
-                                        <div class="col-span-2">
+                                        <div class="md:col-span-1">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Cant.</label>
                                             <input type="number" :name="`items[${index}][quantity]`"
                                                 x-model="item.quantity" min="1"
                                                 class="w-full rounded-md border-gray-300 shadow-sm text-sm">
                                         </div>
-                                        <div class="col-span-2">
+                                        <div class="md:col-span-2">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Precio Unit.</label>
                                             <input type="number" :name="`items[${index}][unit_price]`"
                                                 x-model="item.unitPrice" step="0.01"
                                                 class="w-full rounded-md border-gray-300 shadow-sm text-sm">
                                         </div>
-                                        <div class="col-span-1">
+                                        <div class="md:col-span-1 mt-2 md:mt-0 flex md:justify-end">
                                             <button type="button" @click="removeItem(index)"
                                                 class="text-red-500 hover:text-red-700">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor"
@@ -96,7 +96,7 @@
                     </div>
 
                     <!-- Sidebar -->
-                    <div class="space-y-6">
+                    <div class="lg:col-span-1 space-y-6">
                         <!-- Client & Info -->
                         <div class="bg-white rounded-lg shadow-sm p-6">
                             <div class="mb-4">
