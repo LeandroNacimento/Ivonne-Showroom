@@ -23,27 +23,27 @@
             <div x-show="open"
                 class="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg overflow-hidden border border-gray-200">
                 <ul class="max-h-60 overflow-y-auto" role="listbox">
-                    @forelse($variations as $variation)
-                        <li wire:click="selectProduct({{ $variation->id }})" @click="open = false"
+                    @forelse($products as $product)
+                        <li wire:click="selectProduct({{ $product->id }})" @click="open = false"
                             class="group cursor-pointer select-none py-2 pl-3 pr-9 text-gray-900 hover:bg-brand-pink hover:text-white transition-colors border-b border-gray-100 last:border-0"
                             role="option">
                             <div class="flex items-center justify-between">
                                 <div class="flex flex-col">
-                                    <span class="font-semibold text-sm">{{ $variation->product->name }}</span>
+                                    <span class="font-semibold text-sm">{{ $product->name }}</span>
                                     <span class="text-xs text-gray-500 group-hover:text-brand-blush">
-                                        Color: {{ $variation->productColor->name ?? 'N/A' }} | Talle:
-                                        {{ $variation->size }}
+                                        {{ $product->variations->count() }}
+                                        {{ $product->variations->count() == 1 ? 'talle disponible' : 'talles disponibles' }}
                                     </span>
                                 </div>
                                 <span
                                     class="bg-gray-100 text-gray-600 group-hover:bg-white group-hover:text-brand-pink text-xs px-2 py-1 rounded-full font-bold">
-                                    Stock: {{ $variation->stock }}
+                                    Stock total: {{ $product->variations->sum('stock') }}
                                 </span>
                             </div>
                         </li>
                     @empty
                         <li class="select-none py-3 px-3 text-sm text-gray-500 text-center">
-                            No se encontraron variaciones disponibles con stock para: "<span
+                            No se encontraron productos disponibles con stock para: "<span
                                 class="font-semibold">{{ $search }}</span>"
                         </li>
                     @endforelse
