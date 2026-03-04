@@ -70,6 +70,32 @@ class ProductVariation extends Model
         $this->attributes['stock'] = $stock;
     }
 
+    /**
+     * Verifica si hay stock suficiente
+     */
+    public function hasStock(int $quantity = 1): bool
+    {
+        return $this->stock >= $quantity;
+    }
+
+    /**
+     * Disminuye el stock. Lanza excepción si queda negativo (capturado por el mutator).
+     */
+    public function decreaseStock(int $quantity = 1): void
+    {
+        $this->stock -= $quantity;
+        $this->save();
+    }
+
+    /**
+     * Incrementa el stock.
+     */
+    public function increaseStock(int $quantity = 1): void
+    {
+        $this->stock += $quantity;
+        $this->save();
+    }
+
     public function product()
     {
         return $this->belongsTo(Product::class);
