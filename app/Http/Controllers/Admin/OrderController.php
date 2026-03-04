@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Services\OrderStatusTransitionHandler;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -25,7 +26,7 @@ class OrderController extends Controller
         return view('admin.orders.create', compact('clients'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, OrderStatusTransitionHandler $handler)
     {
         $request->validate([
             'client_id' => 'required|exists:clients,id',
@@ -41,7 +42,7 @@ class OrderController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
         ]);
 
-        DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request, $handler) {
             $total = 0;
             foreach ($request->items as $item) {
                 $total += $item['quantity'] * $item['unit_price'];
@@ -72,10 +73,11 @@ class OrderController extends Controller
                     'unit_price' => $item['unit_price'],
                     'subtotal' => $item['quantity'] * $item['unit_price'],
                 ]);
-
-                // Deduct stock
-                $variation->decrement('stock', $item['quantity']);
             }
+
+            // Aplicar lógica de inventario
+            $order->load(['items.variation.productColor', 'items.product']);
+            $handler->handle($order, 'pendiente', $request->status);
         });
 
         return redirect()->route('admin.orders.index')->with('success', 'Pedido creado con éxito.');
@@ -95,7 +97,7 @@ class OrderController extends Controller
         return view('admin.orders.edit', compact('order', 'clients'));
     }
 
-    public function update(Request $request, Order $order)
+    public function update(Request $request, Order $order, OrderStatusTransitionHandler $handler)
     {
         $request->validate([
             'client_id' => 'required|exists:clients,id',
@@ -111,16 +113,15 @@ class OrderController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
         ]);
 
-        DB::transaction(function () use ($request, $order) {
-            // Restore stock from old items
-            foreach ($order->items as $item) {
-                if ($item->variation_id) {
-                    \App\Models\ProductVariation::find($item->variation_id)->increment('stock', $item->quantity);
-                }
-            }
+        DB::transaction(function () use ($request, $order, $handler) {
+            // Revertir el stock de los ítems viejos virtualmente pasando a 'pendiente'
+            $oldStatus = $order->status;
+            $order->load(['items.variation.productColor', 'items.product']);
+            $handler->handle($order, $oldStatus, 'pendiente');
 
             // Delete old items
             $order->items()->delete();
+            $order->unsetRelation('items');
 
             // Calculate new total
             $total = 0;
@@ -140,7 +141,7 @@ class OrderController extends Controller
                 'total' => $total,
             ]);
 
-            // Create new items and deduct stock
+            // Create new items
             foreach ($request->items as $item) {
                 $variation = \App\Models\ProductVariation::with('productColor')->find($item['variation_id']);
 
@@ -154,24 +155,25 @@ class OrderController extends Controller
                     'unit_price' => $item['unit_price'],
                     'subtotal' => $item['quantity'] * $item['unit_price'],
                 ]);
-
-                $variation->decrement('stock', $item['quantity']);
             }
+
+            // Aplicar el nuevo stock de los ítems creados
+            $order->load(['items.variation.productColor', 'items.product']);
+            $handler->handle($order, 'pendiente', $request->status);
         });
 
         return redirect()->route('admin.orders.index')->with('success', 'Pedido actualizado con éxito.');
     }
 
-    public function destroy(Order $order)
+    public function destroy(Order $order, OrderStatusTransitionHandler $handler)
     {
-        // Restore stock
-        foreach ($order->items as $item) {
-            if ($item->variation_id) {
-                \App\Models\ProductVariation::find($item->variation_id)->increment('stock', $item->quantity);
-            }
-        }
+        DB::transaction(function () use ($order, $handler) {
+            // Restore stock passing to 'cancelado' virtually
+            $order->load(['items.variation.productColor', 'items.product']);
+            $handler->handle($order, $order->status, 'cancelado');
+            $order->delete();
+        });
 
-        $order->delete();
         return redirect()->route('admin.orders.index')->with('success', 'Pedido eliminado con éxito.');
     }
 }
