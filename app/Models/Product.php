@@ -10,6 +10,15 @@ class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const SIZE_ORDER = [
+        'XS' => 1,
+        'S' => 2,
+        'M' => 3,
+        'L' => 4,
+        'XL' => 5,
+        'XXL' => 6,
+    ];
+
     protected $fillable = [
         'category_id',
         'name',
@@ -125,6 +134,7 @@ class Product extends Model
             ->pluck('size')
             ->filter()
             ->unique()
+            ->sortBy(fn($size) => self::SIZE_ORDER[$size] ?? 999)
             ->values()
             ->toArray();
     }
@@ -137,7 +147,7 @@ class Product extends Model
     public function getAvailabilityLabelAttribute(): string
     {
         if (!$this->has_sizes) {
-            return 'Disponible';
+            return $this->total_stock > 0 ? 'Disponible' : 'Sin stock';
         }
 
         $sizes = $this->available_sizes;
@@ -150,10 +160,6 @@ class Product extends Model
             return 'Talle único';
         }
 
-        reset($sizes);
-        $first = current($sizes);
-        $last = end($sizes);
-
-        return "Disponible en {$first}-{$last}";
+        return 'Disponible en ' . implode(' - ', $sizes);
     }
 }
