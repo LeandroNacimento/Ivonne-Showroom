@@ -22,18 +22,17 @@
 
                             <div class="space-y-4">
                                 <template x-for="(item, index) in items" :key="index">
-                                    <div class="grid grid-cols-12 gap-4 items-end border-b border-gray-100 pb-4">
-                                        <div class="col-span-7 relative">
-                                            <label class="block text-xs font-medium text-gray-500 mb-1">Producto /
-                                                Variación</label>
+                                    <div class="grid grid-cols-12 gap-4 items-end border-b border-gray-100 pb-4"
+                                        @product-selected="setProduct(index, $event.detail)">
+                                        <div class="col-span-4 relative">
+                                            <label class="block text-xs font-medium text-gray-500 mb-1">Producto</label>
 
                                             <!-- En modo edición o tras seleccionar, mostramos la información elegida -->
-                                            <div x-show="item.variationId"
+                                            <div x-show="item.productId"
                                                 class="flex items-center justify-between bg-gray-50 p-2 rounded-md border border-gray-200">
                                                 <div class="flex flex-col">
                                                     <span class="text-sm font-semibold text-gray-800"
                                                         x-text="item.productName"></span>
-                                                    <span class="text-xs text-gray-500" x-text="item.variationLabel"></span>
                                                 </div>
                                                 <button type="button" @click="clearProduct(index)"
                                                     class="text-xs text-brand-pink hover:underline">
@@ -42,14 +41,25 @@
 
                                                 <input type="hidden" :name="`items[${index}][product_id]`"
                                                     x-model="item.productId">
-                                                <input type="hidden" :name="`items[${index}][variation_id]`"
-                                                    x-model="item.variationId">
                                             </div>
 
-                                            <!-- Si no hay variación seleccionada, mostramos el componente Livewire buscador interactivo -->
-                                            <div x-show="!item.variationId">
-                                                @livewire('admin.orders.order-product-selector', ['index' => '{{ $index }}'], key(str()->random(10)))
+                                            <!-- Si no hay producto seleccionado, mostramos el componente Livewire buscador -->
+                                            <div x-show="!item.productId">
+                                                @livewire('admin.orders.order-product-selector', key(str()->random(10)))
                                             </div>
+                                        </div>
+                                        <div class="col-span-3">
+                                            <label class="block text-xs font-medium text-gray-500 mb-1">Variación</label>
+                                            <select :name="`items[${index}][variation_id]`"
+                                                class="w-full rounded-md border-gray-300 shadow-sm text-sm"
+                                                x-model="item.variationId" :disabled="!item.productId">
+                                                <option value="">Seleccionar...</option>
+                                                <template x-for="variation in item.variations" :key="variation.id">
+                                                    <option :value="variation.id"
+                                                        x-text="`${variation.color !== 'N/A' ? variation.color + ' - ' : ''}${variation.size} (Stock: ${variation.stock})`">
+                                                    </option>
+                                                </template>
+                                            </select>
                                         </div>
                                         <div class="col-span-2">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Cant.</label>
@@ -182,9 +192,9 @@
                         productId: '',
                         productName: '',
                         variationId: '',
-                        variationLabel: '',
                         quantity: 1,
-                        unitPrice: 0
+                        unitPrice: 0,
+                        variations: []
                     }],
                     shippingCost: 0,
 
@@ -193,9 +203,9 @@
                             productId: '',
                             productName: '',
                             variationId: '',
-                            variationLabel: '',
                             quantity: 1,
-                            unitPrice: 0
+                            unitPrice: 0,
+                            variations: []
                         });
                     },
 
@@ -208,28 +218,24 @@
                         item.productId = '';
                         item.productName = '';
                         item.variationId = '';
-                        item.variationLabel = '';
                         item.unitPrice = 0;
+                        item.variations = [];
                     },
 
-                    listenLivewireEvents() {
-                        window.addEventListener('productSelected', event => {
-                            const {
-                                index,
-                                product,
-                                variation,
-                                price
-                            } = event.detail[0];
-                            let item = this.items[index];
+                    setProduct(index, details) {
+                        const {
+                            product,
+                            variations
+                        } = details;
+                        let item = this.items[index];
 
-                            if (item) {
-                                item.productId = product.id;
-                                item.productName = product.name;
-                                item.variationId = variation.id;
-                                item.variationLabel = `Color: ${variation.color} | Talle: ${variation.size}`;
-                                item.unitPrice = price;
-                            }
-                        });
+                        if (item) {
+                            item.productId = product.id;
+                            item.productName = product.name;
+                            item.unitPrice = product.price;
+                            item.variations = variations;
+                            item.variationId = '';
+                        }
                     },
 
                     calculateTotal() {
@@ -248,9 +254,5 @@
                 }
             }
         </script>
-        <script>
-            document.addEventListener('alpine:init', () => {
-                Alpine.data('orderForm', () => orderForm());
-            });
         </script>
     @endsection
