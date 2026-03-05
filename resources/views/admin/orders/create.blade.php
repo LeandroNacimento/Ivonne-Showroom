@@ -22,9 +22,9 @@
 
                             <div class="space-y-4">
                                 <template x-for="(item, index) in items" :key="index">
-                                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 md:items-end border-b border-gray-100 pb-6 md:pb-4"
-                                        @product-selected="setProduct(index, $event.detail)">
-                                        <div class="md:col-span-5 relative">
+                                    <div
+                                        class="grid grid-cols-1 md:grid-cols-12 gap-4 md:items-end border-b border-gray-100 pb-6 md:pb-4">
+                                        <div class="md:col-span-4 md:pr-4 relative">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Producto</label>
 
                                             <!-- En modo edición o tras seleccionar, mostramos la información elegida -->
@@ -43,16 +43,32 @@
                                                     x-model="item.productId">
                                             </div>
 
-                                            <!-- Si no hay producto seleccionado, mostramos el componente Livewire buscador -->
-                                            <div x-show="!item.productId">
-                                                @livewire('admin.orders.order-product-selector', key(str()->random(10)))
+                                            <!-- Si no hay producto seleccionado, mostramos el componente buscador Alpine -->
+                                            <div x-show="!item.productId" class="relative">
+                                                <input type="text"
+                                                    class="w-full rounded-md border-gray-300 shadow-sm text-sm"
+                                                    placeholder="Buscar producto..." x-model="item.productSearch"
+                                                    @input.debounce.300ms="searchProduct(index)"
+                                                    @focus="item.showResults = true" @click.away="item.showResults = false"
+                                                    autocomplete="off">
+
+                                                <!-- Results Dropdown -->
+                                                <div x-show="item.showResults && item.searchResults.length > 0"
+                                                    class="absolute z-50 left-0 min-w-full md:min-w-[450px] bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                                    <template x-for="result in item.searchResults" :key="result.id">
+                                                        <div class="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                                            @click="selectProduct(index, result)" x-text="result.name">
+                                                        </div>
+                                                    </template>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="md:col-span-3">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Variación</label>
                                             <select :name="`items[${index}][variation_id]`"
                                                 class="w-full rounded-md border-gray-300 shadow-sm text-sm"
-                                                x-model="item.variationId" :disabled="!item.productId">
+                                                x-model="item.variationId" :disabled="!item.productId"
+                                                @change="updatePrice(index)">
                                                 <option value="">Seleccionar...</option>
                                                 <template x-for="variation in item.variations" :key="variation.id">
                                                     <option :value="variation.id"
@@ -64,7 +80,8 @@
                                         <div class="md:col-span-1">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Cant.</label>
                                             <input type="number" :name="`items[${index}][quantity]`"
-                                                x-model="item.quantity" min="1"
+                                                x-model="item.quantity" min="1" :max="item.maxStock"
+                                                @input="validateQuantity(index)"
                                                 class="w-full rounded-md border-gray-300 shadow-sm text-sm">
                                         </div>
                                         <div class="md:col-span-2">
@@ -72,6 +89,12 @@
                                             <input type="number" :name="`items[${index}][unit_price]`"
                                                 x-model="item.unitPrice" step="0.01"
                                                 class="w-full rounded-md border-gray-300 shadow-sm text-sm">
+                                        </div>
+                                        <div class="md:col-span-1">
+                                            <label class="block text-xs font-medium text-gray-500 mb-1">Subtotal</label>
+                                            <div class="w-full text-sm font-semibold text-gray-800 mt-2 text-right md:text-left"
+                                                x-text="formatCurrency((parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0))">
+                                            </div>
                                         </div>
                                         <div class="md:col-span-1 mt-2 md:mt-0 flex md:justify-end">
                                             <button type="button" @click="removeItem(index)"
@@ -126,11 +149,8 @@
                                 <select name="status" id="status"
                                     class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
                                     required>
-                                    <option value="draft">Borrador</option>
-                                    <option value="reserved">Reservado</option>
-                                    <option value="paid">Pagado</option>
-                                    <option value="delivered">Entregado</option>
-                                    <option value="cancelled">Cancelado</option>
+                                    <option value="pendiente" selected>Pendiente</option>
+                                    <option value="reservado">Reservado</option>
                                 </select>
                             </div>
                         </div>
@@ -191,9 +211,13 @@
                     items: [{
                         productId: '',
                         productName: '',
+                        productSearch: '',
                         variationId: '',
                         quantity: 1,
                         unitPrice: 0,
+                        maxStock: null,
+                        showResults: false,
+                        searchResults: [],
                         variations: []
                     }],
                     shippingCost: 0,
@@ -202,9 +226,13 @@
                         this.items.push({
                             productId: '',
                             productName: '',
+                            productSearch: '',
                             variationId: '',
                             quantity: 1,
                             unitPrice: 0,
+                            maxStock: null,
+                            showResults: false,
+                            searchResults: [],
                             variations: []
                         });
                     },
@@ -217,32 +245,74 @@
                         let item = this.items[index];
                         item.productId = '';
                         item.productName = '';
+                        item.productSearch = '';
                         item.variationId = '';
                         item.unitPrice = 0;
+                        item.maxStock = null;
+                        item.showResults = false;
+                        item.searchResults = [];
                         item.variations = [];
                     },
 
-                    setProduct(index, details) {
-                        const {
-                            product,
-                            variations
-                        } = details;
+                    searchProduct(index) {
                         let item = this.items[index];
+                        if (item.productSearch.length < 2) {
+                            item.searchResults = [];
+                            return;
+                        }
 
-                        if (item) {
-                            item.productId = product.id;
-                            item.productName = product.name;
-                            item.unitPrice = product.price;
-                            item.variations = variations;
-                            item.variationId = '';
+                        fetch(`{{ route('admin.products.search') }}?q=${encodeURIComponent(item.productSearch)}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                item.searchResults = data;
+                                item.showResults = true;
+                            });
+                    },
+
+                    selectProduct(index, product) {
+                        let item = this.items[index];
+                        item.productId = product.id;
+                        item.productName = product.name;
+                        item.productSearch = '';
+                        item.unitPrice = product.price || 0;
+                        item.maxStock = null;
+                        item.variationId = '';
+                        item.showResults = false;
+                        item.searchResults = [];
+                        item.variations = product.variations || [];
+                    },
+
+                    updatePrice(index) {
+                        let item = this.items[index];
+                        if (item.variationId && item.variations) {
+                            let variation = item.variations.find(v => v.id == item.variationId);
+                            if (variation) {
+                                item.unitPrice = variation.price;
+                                item.maxStock = variation.stock;
+
+                                this.validateQuantity(index);
+                            }
+                        }
+                    },
+
+                    validateQuantity(index) {
+                        let item = this.items[index];
+                        if (item.maxStock !== null && item.quantity > item.maxStock) {
+                            item.quantity = item.maxStock;
+                        }
+                        if (item.quantity !== '' && item.quantity < 1) {
+                            item.quantity = 1;
                         }
                     },
 
                     calculateTotal() {
                         let itemsTotal = this.items.reduce((sum, item) => {
-                            return sum + (Number(item.quantity) * Number(item.unitPrice));
+                            let q = parseFloat(item.quantity) || 0;
+                            let p = parseFloat(item.unitPrice) || 0;
+                            return sum + (q * p);
                         }, 0);
-                        return itemsTotal + Number(this.shippingCost);
+                        let shipping = parseFloat(this.shippingCost) || 0;
+                        return itemsTotal + shipping;
                     },
 
                     formatCurrency(value) {

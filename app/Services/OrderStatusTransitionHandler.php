@@ -8,62 +8,86 @@ use Illuminate\Validation\ValidationException;
 class OrderStatusTransitionHandler
 {
     /**
-     * Maneja la transición de estado de un pedido y su impacto lógico en el stock de los productos.
-     * Esta clase asume estar ejecutándose dentro de una transacción de BD (DB::transaction).
+     * Estados terminales que no permiten ninguna transición.
+     */
+    private const TERMINAL_STATES = ['entregado', 'cancelado'];
+
+    /**
+     * Transiciones permitidas: [oldStatus => [allowedNewStatuses]]
+     */
+    private const ALLOWED_TRANSITIONS = [
+        'pendiente' => ['reservado', 'cancelado'],
+        'reservado' => ['entregado', 'cancelado'],
+    ];
+
+    /**
+     * Maneja la transición de estado de un pedido y su impacto en el stock.
+     * Debe ejecutarse dentro de una DB::transaction().
      *
-     * @param Order $order El pedido que va a cambiar de estado y sus ítems (deben estar cargados).
-     * @param string $oldStatus El estado viejo del pedido.
-     * @param string $newStatus El nuevo estado al que transicionará el pedido.
-     * @return void
-     * @throws ValidationException
+     * @throws ValidationException si la transición no está permitida o no hay stock.
      */
     public function handle(Order $order, string $oldStatus, string $newStatus): void
     {
-        // 1. Si el estado no cambia, no hacemos nada
-        if (strtolower($oldStatus) === strtolower($newStatus)) {
+        // Si el estado no cambia, no hacemos nada.
+        if ($oldStatus === $newStatus) {
             return;
         }
 
-        $wasDiscounting = in_array(strtolower($oldStatus), ['confirmado', 'entregado']);
-        $willDiscount = in_array(strtolower($newStatus), ['confirmado', 'entregado']);
+        // Bloquear transiciones desde estados terminales.
+        if (in_array($oldStatus, self::TERMINAL_STATES)) {
+            throw ValidationException::withMessages([
+                'status' => "El pedido está en estado '{$oldStatus}' y no puede ser modificado.",
+            ]);
+        }
 
-        // 2. Definir reglas de negocio basadas en el impacto del stock
+        // Validar que la transición sea permitida.
+        $allowed = self::ALLOWED_TRANSITIONS[$oldStatus] ?? [];
+        if (!in_array($newStatus, $allowed)) {
+            throw ValidationException::withMessages([
+                'status' => "La transición de '{$oldStatus}' a '{$newStatus}' no está permitida.",
+            ]);
+        }
 
-        // Caso A: No descontaba y ahora descontará -> Disminuir stock
-        if (!$wasDiscounting && $willDiscount) {
+        // pendiente → reservado: descontar stock
+        if ($oldStatus === 'pendiente' && $newStatus === 'reservado') {
             $this->decreaseOrderStock($order);
         }
 
-        // Caso B: Descontaba y ahora dejará de descontar -> Aumentar (Devolver) stock
-        elseif ($wasDiscounting && !$willDiscount) {
+        // reservado → cancelado: devolver stock
+        if ($oldStatus === 'reservado' && $newStatus === 'cancelado') {
             $this->increaseOrderStock($order);
         }
 
-        // Si wasDiscounting == willDiscount, el stock no se ve afectado.
+        // pendiente → cancelado: sin cambio de stock
+        // reservado → entregado: sin cambio de stock
     }
 
     /**
-     * Aplica el decuento iterando por cada ítem del pedido.
+     * Descuenta el stock de cada ítem. Lanza excepción si no hay stock suficiente.
      */
     private function decreaseOrderStock(Order $order): void
     {
         foreach ($order->items as $item) {
-            $variation = $item->variation; // Asume eager loading o carga on-demand
+            $variation = $item->variation;
 
-            if ($variation) {
-                if (!$variation->hasStock($item->quantity)) {
-                    throw ValidationException::withMessages([
-                        'stock' => "No hay stock suficiente para el producto: {$item->product->name} (Talle: {$item->size}, Color: {$item->color}). Requerido: {$item->quantity}, Disponible: {$variation->stock}."
-                    ]);
-                }
-
-                $variation->decreaseStock($item->quantity);
+            if (!$variation) {
+                throw ValidationException::withMessages([
+                    'stock' => "La variación del producto '{$item->product?->name}' ya no existe.",
+                ]);
             }
+
+            if (!$variation->hasStock($item->quantity)) {
+                throw ValidationException::withMessages([
+                    'stock' => "Sin stock suficiente para '{$item->product?->name}' (Talle: {$item->size}, Color: {$item->color}). Requerido: {$item->quantity}, Disponible: {$variation->stock}.",
+                ]);
+            }
+
+            $variation->decreaseStock($item->quantity);
         }
     }
 
     /**
-     * Devuelve el stock iterando por cada ítem.
+     * Devuelve el stock de cada ítem.
      */
     private function increaseOrderStock(Order $order): void
     {

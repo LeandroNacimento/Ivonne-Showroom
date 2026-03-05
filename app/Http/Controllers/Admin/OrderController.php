@@ -3,16 +3,20 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreOrderRequest;
+use App\Http\Requests\Admin\UpdateOrderRequest;
 use App\Models\Client;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\Product;
 use App\Services\OrderStatusTransitionHandler;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
+    /** Estados terminales: bloquean edición y eliminación */
+    private const TERMINAL_STATES = ['entregado', 'cancelado'];
+
     public function index(Request $request)
     {
         return view('admin.orders.index');
@@ -21,53 +25,36 @@ class OrderController extends Controller
     public function create()
     {
         $clients = Client::orderBy('name')->get();
-
-
         return view('admin.orders.create', compact('clients'));
     }
 
-    public function store(Request $request, OrderStatusTransitionHandler $handler)
+    public function store(StoreOrderRequest $request, OrderStatusTransitionHandler $handler)
     {
-        $request->validate([
-            'client_id' => 'required|exists:clients,id',
-            'date' => 'required|date',
-            'status' => 'required|string',
-            'payment_method' => 'nullable|string',
-            'delivery_type' => 'nullable|string',
-            'shipping_cost' => 'nullable|numeric|min:0',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.variation_id' => 'required|exists:product_variations,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0',
-        ]);
-
         DB::transaction(function () use ($request, $handler) {
-            $total = 0;
-            foreach ($request->items as $item) {
-                $total += $item['quantity'] * $item['unit_price'];
-            }
-            $total += $request->shipping_cost ?? 0;
+            $total = collect($request->items)
+                ->sum(fn($item) => $item['quantity'] * $item['unit_price']);
+            $total += (float) ($request->shipping_cost ?? 0);
 
+            // Crear el pedido siempre como "pendiente" primero
             $order = Order::create([
                 'client_id' => $request->client_id,
                 'date' => $request->date,
-                'status' => $request->status,
+                'status' => 'pendiente',
                 'payment_method' => $request->payment_method,
                 'delivery_type' => $request->delivery_type,
-                'shipping_cost' => $request->shipping_cost ?? 0,
+                'shipping_cost' => (float) ($request->shipping_cost ?? 0),
                 'total' => $total,
             ]);
 
+            // Crear ítems
             foreach ($request->items as $item) {
-                // Fetch variation to get color/size info
-                $variation = \App\Models\ProductVariation::with('productColor')->find($item['variation_id']);
+                $variation = \App\Models\ProductVariation::with('productColor')->findOrFail($item['variation_id']);
 
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item['product_id'],
                     'variation_id' => $item['variation_id'],
-                    'color' => $variation->productColor->name,
+                    'color' => $variation->productColor?->name ?? 'N/A',
                     'size' => $variation->size,
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
@@ -75,9 +62,12 @@ class OrderController extends Controller
                 ]);
             }
 
-            // Aplicar lógica de inventario
-            $order->load(['items.variation.productColor', 'items.product']);
-            $handler->handle($order, 'pendiente', $request->status);
+            // Si el estado deseado es "reservado", ejecutar la transición vía handler
+            if ($request->status === 'reservado') {
+                $order->load(['items.variation.productColor', 'items.product']);
+                $handler->handle($order, 'pendiente', 'reservado');
+                $order->update(['status' => 'reservado']);
+            }
         });
 
         return redirect()->route('admin.orders.index')->with('success', 'Pedido creado con éxito.');
@@ -91,75 +81,89 @@ class OrderController extends Controller
 
     public function edit(Order $order)
     {
+        // Bloquear edición si el pedido está en estado terminal
+        if (in_array($order->status, self::TERMINAL_STATES)) {
+            return redirect()->route('admin.orders.show', $order)
+                ->with('error', "El pedido está en estado '{$order->status}' y no puede editarse.");
+        }
+
         $clients = Client::orderBy('name')->get();
-        $order->load(['items.product']); // Load product for existing items to show name
+        $order->load(['items.product', 'items.variation']);
 
         return view('admin.orders.edit', compact('order', 'clients'));
     }
 
-    public function update(Request $request, Order $order, OrderStatusTransitionHandler $handler)
+    public function update(UpdateOrderRequest $request, Order $order, OrderStatusTransitionHandler $handler)
     {
-        $request->validate([
-            'client_id' => 'required|exists:clients,id',
-            'date' => 'required|date',
-            'status' => 'required|string',
-            'payment_method' => 'nullable|string',
-            'delivery_type' => 'nullable|string',
-            'shipping_cost' => 'nullable|numeric|min:0',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.variation_id' => 'required|exists:product_variations,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0',
-        ]);
+        // Bloquear actualización si ya está en estado terminal
+        if (in_array($order->status, self::TERMINAL_STATES)) {
+            abort(403, "No se puede modificar un pedido en estado '{$order->status}'.");
+        }
 
         DB::transaction(function () use ($request, $order, $handler) {
-            // Revertir el stock de los ítems viejos virtualmente pasando a 'pendiente'
             $oldStatus = $order->status;
-            $order->load(['items.variation.productColor', 'items.product']);
-            $handler->handle($order, $oldStatus, 'pendiente');
+            $newStatus = $request->status;
 
-            // Delete old items
-            $order->items()->delete();
-            $order->unsetRelation('items');
+            if ($oldStatus === 'pendiente') {
+                // Edición completa permitida: re-crear ítems y gestionar transición de estado
+                $order->load(['items.variation.productColor', 'items.product']);
+                $order->items()->delete();
+                $order->unsetRelation('items');
 
-            // Calculate new total
-            $total = 0;
-            foreach ($request->items as $item) {
-                $total += $item['quantity'] * $item['unit_price'];
-            }
-            $total += $request->shipping_cost ?? 0;
+                $total = collect($request->items)
+                    ->sum(fn($item) => $item['quantity'] * $item['unit_price']);
+                $total += (float) ($request->shipping_cost ?? 0);
 
-            // Update Order
-            $order->update([
-                'client_id' => $request->client_id,
-                'date' => $request->date,
-                'status' => $request->status,
-                'payment_method' => $request->payment_method,
-                'delivery_type' => $request->delivery_type,
-                'shipping_cost' => $request->shipping_cost ?? 0,
-                'total' => $total,
-            ]);
-
-            // Create new items
-            foreach ($request->items as $item) {
-                $variation = \App\Models\ProductVariation::with('productColor')->find($item['variation_id']);
-
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item['product_id'],
-                    'variation_id' => $item['variation_id'],
-                    'color' => $variation->productColor->name,
-                    'size' => $variation->size,
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['unit_price'],
-                    'subtotal' => $item['quantity'] * $item['unit_price'],
+                $order->update([
+                    'client_id' => $request->client_id,
+                    'date' => $request->date,
+                    'status' => 'pendiente', // Se mantiene pendiente hasta pasar por handler
+                    'payment_method' => $request->payment_method,
+                    'delivery_type' => $request->delivery_type,
+                    'shipping_cost' => (float) ($request->shipping_cost ?? 0),
+                    'total' => $total,
                 ]);
-            }
 
-            // Aplicar el nuevo stock de los ítems creados
-            $order->load(['items.variation.productColor', 'items.product']);
-            $handler->handle($order, 'pendiente', $request->status);
+                foreach ($request->items as $item) {
+                    $variation = \App\Models\ProductVariation::with('productColor')->findOrFail($item['variation_id']);
+                    OrderItem::create([
+                        'order_id' => $order->id,
+                        'product_id' => $item['product_id'],
+                        'variation_id' => $item['variation_id'],
+                        'color' => $variation->productColor?->name ?? 'N/A',
+                        'size' => $variation->size,
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['unit_price'],
+                        'subtotal' => $item['quantity'] * $item['unit_price'],
+                    ]);
+                }
+
+                // Ejecutar transición de estado si cambió
+                if ($oldStatus !== $newStatus) {
+                    $order->load(['items.variation.productColor', 'items.product']);
+                    $handler->handle($order, 'pendiente', $newStatus);
+                    $order->update(['status' => $newStatus]);
+                }
+            } elseif ($oldStatus === 'reservado') {
+                // Ítems bloqueados: solo actualizar campos de cabecera y estado
+                $total = $order->items->sum('subtotal') + (float) ($request->shipping_cost ?? 0);
+
+                $order->update([
+                    'client_id' => $request->client_id,
+                    'date' => $request->date,
+                    'payment_method' => $request->payment_method,
+                    'delivery_type' => $request->delivery_type,
+                    'shipping_cost' => (float) ($request->shipping_cost ?? 0),
+                    'total' => $total,
+                ]);
+
+                // Ejecutar transición de estado si cambió
+                if ($oldStatus !== $newStatus) {
+                    $order->load(['items.variation.productColor', 'items.product']);
+                    $handler->handle($order, 'reservado', $newStatus);
+                    $order->update(['status' => $newStatus]);
+                }
+            }
         });
 
         return redirect()->route('admin.orders.index')->with('success', 'Pedido actualizado con éxito.');
@@ -167,10 +171,21 @@ class OrderController extends Controller
 
     public function destroy(Order $order, OrderStatusTransitionHandler $handler)
     {
-        DB::transaction(function () use ($order, $handler) {
-            // Restore stock passing to 'cancelado' virtually
-            $order->load(['items.variation.productColor', 'items.product']);
-            $handler->handle($order, $order->status, 'cancelado');
+        // Bloquear eliminación si está en estado terminal
+        if (in_array($order->status, self::TERMINAL_STATES)) {
+            return redirect()->route('admin.orders.index')
+                ->with('error', "No se puede eliminar un pedido en estado '{$order->status}'.");
+        }
+
+        // Bloquear eliminación si está en reservado (exigir cancelar primero)
+        if ($order->status === 'reservado') {
+            return redirect()->route('admin.orders.index')
+                ->with('error', 'Para eliminar un pedido reservado primero debe cancelarlo (así se devuelve el stock).');
+        }
+
+        // Solo se elimina si está en pendiente (sin stock comprometido)
+        DB::transaction(function () use ($order) {
+            $order->items()->delete();
             $order->delete();
         });
 

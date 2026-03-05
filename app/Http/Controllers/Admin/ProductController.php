@@ -139,11 +139,29 @@ class ProductController extends Controller
             ->with([
                 'variations' => function ($q) {
                     $q->where('stock', '>', 0);
-                }
+                },
+                'variations.productColor'
             ])
             ->limit(20)
             ->get();
 
-        return response()->json($products);
+        $mappedProducts = $products->map(function ($product) {
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'price' => $product->price,
+                'variations' => $product->variations->map(function ($v) use ($product) {
+                    return [
+                        'id' => $v->id,
+                        'color' => $v->productColor->name ?? 'N/A',
+                        'size' => $v->size,
+                        'stock' => $v->stock,
+                        'price' => $v->price ?? $product->price,
+                    ];
+                })->values()->toArray()
+            ];
+        });
+
+        return response()->json($mappedProducts);
     }
 }

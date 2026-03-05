@@ -23,16 +23,18 @@ class OrderProductSelector extends Component
         ])->find($productId);
 
         if ($product) {
-            $variationsPayload = $product->variations->map(function ($v) {
+            $variationsPayload = $product->variations->map(function ($v) use ($product) {
                 return [
                     'id' => $v->id,
                     'color' => $v->productColor->name ?? 'N/A',
                     'size' => $v->size,
                     'stock' => $v->stock,
+                    'price' => $v->price ?? $product->price,
                 ];
             })->values()->toArray();
 
-            $this->dispatch('product-selected', 
+            $this->dispatch(
+                'product-selected',
                 product: [
                     'id' => $product->id,
                     'name' => $product->name,
@@ -40,7 +42,7 @@ class OrderProductSelector extends Component
                 ],
                 variations: $variationsPayload
             );
-            
+
             $this->search = '';
         }
     }
