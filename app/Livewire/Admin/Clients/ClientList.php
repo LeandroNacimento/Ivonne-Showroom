@@ -19,12 +19,12 @@ class ClientList extends Component
 
     public function render()
     {
-        $clients = User::where('role', 'client')
-            ->when($this->search, function($query) {
-                $query->where(function($q) {
+        $clients = \App\Models\Client::query()
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
                     $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('email', 'like', '%' . $this->search . '%')
-                      ->orWhere('phone', 'like', '%' . $this->search . '%');
+                        ->orWhere('email', 'like', '%' . $this->search . '%')
+                        ->orWhere('phone', 'like', '%' . $this->search . '%');
                 });
             })
             ->withCount('orders')

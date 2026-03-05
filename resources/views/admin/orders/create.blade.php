@@ -122,18 +122,72 @@
                     <div class="lg:col-span-1 space-y-6">
                         <!-- Client & Info -->
                         <div class="bg-white rounded-lg shadow-sm p-6">
-                            <div class="mb-4">
-                                <label for="client_id" class="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
-                                <select name="client_id" id="client_id"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
-                                    required>
-                                    <option value="">Seleccionar Cliente</option>
-                                    @foreach ($clients as $client)
-                                        <option value="{{ $client->id }}">{{ $client->name }}</option>
-                                    @endforeach
-                                </select>
-                                <a href="{{ route('admin.clients.create') }}"
-                                    class="text-xs text-brand-pink hover:underline mt-1 block">+ Crear Nuevo Cliente</a>
+                            <div class="mb-4" x-data="{ clientMode: '{{ old('new_client_name') ? 'new' : 'existing' }}' }">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Cliente</label>
+
+                                <div class="flex items-center space-x-4 mb-4">
+                                    <label class="inline-flex items-center cursor-pointer">
+                                        <input type="radio" class="text-brand-pink focus:ring-brand-pink"
+                                            x-model="clientMode" value="existing"
+                                            @change="$refs.newClientFields.querySelectorAll('input, textarea').forEach(i => i.value = '')">
+                                        <span class="ml-2 text-sm text-gray-700">Existente</span>
+                                    </label>
+                                    <label class="inline-flex items-center cursor-pointer">
+                                        <input type="radio" class="text-brand-pink focus:ring-brand-pink"
+                                            x-model="clientMode" value="new" @change="$refs.clientId.value = ''">
+                                        <span class="ml-2 text-sm text-gray-700">Nuevo Cliente</span>
+                                    </label>
+                                </div>
+
+                                <!-- Cliente Existente -->
+                                <div x-show="clientMode === 'existing'">
+                                    <select name="client_id" id="client_id" x-ref="clientId"
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
+                                        :required="clientMode === 'existing'">
+                                        <option value="">Seleccionar Cliente</option>
+                                        @foreach ($clients as $client)
+                                            <option value="{{ $client->id }}"
+                                                {{ old('client_id') == $client->id ? 'selected' : '' }}>{{ $client->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- Nuevo Cliente -->
+                                <div x-cloak x-show="clientMode === 'new'" x-ref="newClientFields"
+                                    class="space-y-3 p-3 bg-gray-50 rounded-md border border-gray-200">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Nombre Completo
+                                            *</label>
+                                        <input type="text" name="new_client_name" id="new_client_name"
+                                            value="{{ old('new_client_name') }}"
+                                            class="w-full rounded-md border-gray-300 shadow-sm text-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
+                                            :required="clientMode === 'new'">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Teléfono</label>
+                                        <input type="text" name="new_client_phone" id="new_client_phone"
+                                            value="{{ old('new_client_phone') }}"
+                                            class="w-full rounded-md border-gray-300 shadow-sm text-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Instagram (@)</label>
+                                        <input type="text" name="new_client_instagram" id="new_client_instagram"
+                                            value="{{ old('new_client_instagram') }}"
+                                            class="w-full rounded-md border-gray-300 shadow-sm text-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Email</label>
+                                        <input type="email" name="new_client_email" id="new_client_email"
+                                            value="{{ old('new_client_email') }}"
+                                            class="w-full rounded-md border-gray-300 shadow-sm text-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Notas</label>
+                                        <textarea name="new_client_notes" id="new_client_notes" rows="2"
+                                            class="w-full rounded-md border-gray-300 shadow-sm text-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">{{ old('new_client_notes') }}</textarea>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="mb-4">

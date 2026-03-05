@@ -31,13 +31,26 @@ class OrderController extends Controller
     public function store(StoreOrderRequest $request, OrderStatusTransitionHandler $handler)
     {
         DB::transaction(function () use ($request, $handler) {
+            $clientId = $request->client_id;
+
+            if (!$clientId && $request->filled('new_client_name')) {
+                $client = \App\Models\Client::create([
+                    'name' => $request->new_client_name,
+                    'phone' => $request->new_client_phone,
+                    'instagram' => $request->new_client_instagram,
+                    'email' => $request->new_client_email,
+                    'notes' => $request->new_client_notes,
+                ]);
+                $clientId = $client->id;
+            }
+
             $total = collect($request->items)
                 ->sum(fn($item) => $item['quantity'] * $item['unit_price']);
             $total += (float) ($request->shipping_cost ?? 0);
 
             // Crear el pedido siempre como "pendiente" primero
             $order = Order::create([
-                'client_id' => $request->client_id,
+                'client_id' => $clientId,
                 'date' => $request->date,
                 'status' => 'pendiente',
                 'payment_method' => $request->payment_method,
@@ -101,6 +114,19 @@ class OrderController extends Controller
         }
 
         DB::transaction(function () use ($request, $order, $handler) {
+            $clientId = $request->client_id;
+
+            if (!$clientId && $request->filled('new_client_name')) {
+                $client = \App\Models\Client::create([
+                    'name' => $request->new_client_name,
+                    'phone' => $request->new_client_phone,
+                    'instagram' => $request->new_client_instagram,
+                    'email' => $request->new_client_email,
+                    'notes' => $request->new_client_notes,
+                ]);
+                $clientId = $client->id;
+            }
+
             $oldStatus = $order->status;
             $newStatus = $request->status;
 
@@ -115,7 +141,7 @@ class OrderController extends Controller
                 $total += (float) ($request->shipping_cost ?? 0);
 
                 $order->update([
-                    'client_id' => $request->client_id,
+                    'client_id' => $clientId,
                     'date' => $request->date,
                     'status' => 'pendiente', // Se mantiene pendiente hasta pasar por handler
                     'payment_method' => $request->payment_method,
@@ -149,7 +175,7 @@ class OrderController extends Controller
                 $total = $order->items->sum('subtotal') + (float) ($request->shipping_cost ?? 0);
 
                 $order->update([
-                    'client_id' => $request->client_id,
+                    'client_id' => $clientId,
                     'date' => $request->date,
                     'payment_method' => $request->payment_method,
                     'delivery_type' => $request->delivery_type,
