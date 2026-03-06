@@ -19,6 +19,13 @@ class Order extends Model
         self::STATUS_CANCELLED,
     ];
 
+    public const STATUSES = [
+        self::STATUS_PENDING,
+        self::STATUS_RESERVED,
+        self::STATUS_DELIVERED,
+        self::STATUS_CANCELLED,
+    ];
+
     protected $fillable = [
         'client_id',
         'status',

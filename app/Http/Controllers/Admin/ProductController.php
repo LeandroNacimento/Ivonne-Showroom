@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Services\ProductService;
 use App\Services\ProductImageService;
+use App\Http\Requests\Admin\StoreProductRequest;
+use App\Http\Requests\Admin\UpdateProductRequest;
 
 class ProductController extends Controller
 {
@@ -35,29 +37,16 @@ class ProductController extends Controller
         return view('admin.products.create', compact('categories'));
     }
 
-    public function store(Request $request)
+    public function store(StoreProductRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'description' => 'nullable|string',
-            'images' => 'nullable|array',
-            'images.*' => 'nullable|array',
-            'images.*.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'variations' => 'required|array|min:1',
-            'variations.*.color' => 'required|string',
-            'variations.*.size' => 'required|string',
-            'variations.*.price' => 'required|numeric|min:0',
-            'variations.*.stock' => 'required|integer|min:0',
-            'variations.*.sku' => 'nullable|string|max:100',
-        ]);
+        $validated = $request->validated();
 
-        DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request, $validated) {
             $product = Product::create([
-                'name' => $request->name,
-                'slug' => Str::slug($request->name),
-                'category_id' => $request->category_id,
-                'description' => $request->description,
+                'name' => $validated['name'],
+                'slug' => Str::slug($validated['name']),
+                'category_id' => $validated['category_id'],
+                'description' => $validated['description'] ?? null,
                 'is_featured' => $request->has('is_featured'),
             ]);
 
@@ -79,30 +68,16 @@ class ProductController extends Controller
         return view('admin.products.edit', compact('product', 'categories'));
     }
 
-    public function update(Request $request, Product $product)
+    public function update(UpdateProductRequest $request, Product $product)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'description' => 'nullable|string',
-            'images' => 'nullable|array',
-            'images.*' => 'nullable|array',
-            'images.*.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'variations' => 'required|array|min:1',
-            'variations.*.id' => 'nullable|integer',
-            'variations.*.color' => 'required|string',
-            'variations.*.size' => 'required|string',
-            'variations.*.price' => 'required|numeric|min:0',
-            'variations.*.stock' => 'required|integer|min:0',
-            'variations.*.sku' => 'nullable|string|max:100',
-        ]);
+        $validated = $request->validated();
 
-        DB::transaction(function () use ($request, $product) {
+        DB::transaction(function () use ($request, $product, $validated) {
             $product->update([
-                'name' => $request->name,
-                'slug' => Str::slug($request->name),
-                'category_id' => $request->category_id,
-                'description' => $request->description,
+                'name' => $validated['name'],
+                'slug' => Str::slug($validated['name']),
+                'category_id' => $validated['category_id'],
+                'description' => $validated['description'] ?? null,
                 'is_featured' => $request->has('is_featured'),
             ]);
 
