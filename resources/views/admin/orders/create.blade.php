@@ -9,7 +9,17 @@
             </a>
         </div>
 
-        <div x-data="orderForm()">
+        <script>
+            window.INITIAL_ORDER_DATA = {
+                oldItems: {!! json_encode(old('items')) !!},
+                errors: {!! json_encode($errors->toArray()) !!},
+                deliveryType: @json(old('delivery_type', 'showroom')),
+                shippingCost: {!! json_encode(old('shipping_cost') ?: 0) !!},
+                freeShipping: {{ old('delivery_type') === 'shipping' && (old('shipping_cost') == 0 && old('shipping_cost') !== null) ? 'true' : 'false' }},
+                clientMode: @json(old('new_client_name') ? 'new' : 'existing')
+            };
+        </script>
+        <div x-data="orderForm(window.INITIAL_ORDER_DATA)">
             <form action="{{ route('admin.orders.store') }}" method="POST">
                 @csrf
 
@@ -20,12 +30,17 @@
                         <div class="bg-white rounded-lg shadow-sm p-6">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Ítems del Pedido</h2>
 
+
                             <div class="space-y-4">
                                 <template x-for="(item, index) in items" :key="index">
                                     <div
                                         class="grid grid-cols-1 md:grid-cols-12 gap-4 md:items-end border-b border-gray-100 pb-6 md:pb-4">
                                         <div class="md:col-span-4 md:pr-4 relative">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Producto</label>
+
+                                            <!-- Input oculto para enviar el ID del producto -->
+                                            <input type="hidden" :name="`items[${index}][product_id]`"
+                                                x-model="item.productId">
 
                                             <!-- En modo edición o tras seleccionar, mostramos la información elegida -->
                                             <div x-show="item.productId"
@@ -38,23 +53,40 @@
                                                     class="text-xs text-brand-pink hover:underline">
                                                     Cambiar
                                                 </button>
-
-                                                <input type="hidden" :name="`items[${index}][product_id]`"
-                                                    x-model="item.productId">
                                             </div>
 
                                             <!-- Si no hay producto seleccionado, mostramos el componente buscador Alpine -->
                                             <div x-show="!item.productId" class="relative">
-                                                <input type="text"
-                                                    class="w-full rounded-md border-gray-300 shadow-sm text-sm"
+                                                <input type="text" class="w-full rounded-md shadow-sm text-sm"
+                                                    :class="getError(`items.${index}.product_id`) ? 'border-red-500' :
+                                                        'border-gray-300'"
                                                     placeholder="Buscar producto..." x-model="item.productSearch"
-                                                    @input.debounce.300ms="searchProduct(index)"
+                                                    @input.debounce.300ms="searchProduct(index); clearError(`items.${index}.product_id`)"
                                                     @focus="item.showResults = true" @click.away="item.showResults = false"
                                                     autocomplete="off">
 
+                                                <template x-if="getError(`items.${index}.product_id`)">
+                                                    <div class="text-[10px] text-red-500 mt-1"
+                                                        x-text="getError(`items.${index}.product_id`)"></div>
+                                                </template>
+
                                                 <!-- Results Dropdown -->
-                                                <div x-show="item.showResults && item.searchResults.length > 0"
-                                                    class="absolute z-50 left-0 min-w-full md:min-w-[450px] bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                                <div x-show="item.showResults"
+                                                    class="absolute z-50 left-0 min-w-full md:min-w-[450px] bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
+
+                                                    <!-- Loading state -->
+                                                    <div x-show="item.isSearching"
+                                                        class="p-3 text-sm text-gray-500 text-center">
+                                                        Buscando...
+                                                    </div>
+
+                                                    <!-- No results -->
+                                                    <div x-cloak
+                                                        x-show="item.searchResults.length === 0 && item.hasSearched && !item.isSearching"
+                                                        class="p-3 text-sm text-gray-500 text-center">
+                                                        Producto no encontrado
+                                                    </div>
+
                                                     <template x-for="result in item.searchResults" :key="result.id">
                                                         <div class="p-2 hover:bg-gray-100 cursor-pointer text-sm"
                                                             @click="selectProduct(index, result)" x-text="result.name">
@@ -66,29 +98,49 @@
                                         <div class="md:col-span-3">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Variación</label>
                                             <select :name="`items[${index}][variation_id]`"
-                                                class="w-full rounded-md border-gray-300 shadow-sm text-sm"
+                                                class="w-full rounded-md shadow-sm text-sm"
+                                                :class="getError(`items.${index}.variation_id`) ? 'border-red-500' :
+                                                    'border-gray-300'"
                                                 x-model="item.variationId" :disabled="!item.productId"
-                                                @change="updatePrice(index)">
+                                                @change="updatePrice(index); clearError(`items.${index}.variation_id`)">
                                                 <option value="">Seleccionar...</option>
                                                 <template x-for="variation in item.variations" :key="variation.id">
                                                     <option :value="variation.id"
-                                                        x-text="`${variation.color !== 'N/A' ? variation.color + ' - ' : ''}${variation.size} (Stock: ${variation.stock})`">
+                                                        x-text="`${variation.color !== 'N/A' ? variation.color : ''}${variation.color !== 'N/A' && variation.size !== 'ÚNICO' ? ' - ' : ''}${variation.size !== 'ÚNICO' ? variation.size : ''} (Stock: ${variation.stock})`">
                                                     </option>
                                                 </template>
                                             </select>
+                                            <template x-if="getError(`items.${index}.variation_id`)">
+                                                <div class="text-[10px] text-red-500 mt-1"
+                                                    x-text="getError(`items.${index}.variation_id`)"></div>
+                                            </template>
                                         </div>
                                         <div class="md:col-span-1">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Cant.</label>
                                             <input type="number" :name="`items[${index}][quantity]`"
                                                 x-model="item.quantity" min="1" :max="item.maxStock"
-                                                @input="validateQuantity(index)"
-                                                class="w-full rounded-md border-gray-300 shadow-sm text-sm">
+                                                @input="validateQuantity(index); clearError(`items.${index}.quantity`)"
+                                                class="w-full rounded-md shadow-sm text-sm"
+                                                :class="getError(`items.${index}.quantity`) ? 'border-red-500' :
+                                                    'border-gray-300'">
+                                            <template x-if="getError(`items.${index}.quantity`)">
+                                                <div class="text-[10px] text-red-500 mt-1"
+                                                    x-text="getError(`items.${index}.quantity`)"></div>
+                                            </template>
                                         </div>
                                         <div class="md:col-span-2">
-                                            <label class="block text-xs font-medium text-gray-500 mb-1">Precio Unit.</label>
+                                            <label class="block text-xs font-medium text-gray-500 mb-1">Precio
+                                                Unit.</label>
                                             <input type="number" :name="`items[${index}][unit_price]`"
                                                 x-model="item.unitPrice" step="0.01"
-                                                class="w-full rounded-md border-gray-300 shadow-sm text-sm">
+                                                @input="clearError(`items.${index}.unit_price`)"
+                                                class="w-full rounded-md shadow-sm text-sm"
+                                                :class="getError(`items.${index}.unit_price`) ? 'border-red-500' :
+                                                    'border-gray-300'">
+                                            <template x-if="getError(`items.${index}.unit_price`)">
+                                                <div class="text-[10px] text-red-500 mt-1"
+                                                    x-text="getError(`items.${index}.unit_price`)"></div>
+                                            </template>
                                         </div>
                                         <div class="md:col-span-1">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Subtotal</label>
@@ -122,7 +174,7 @@
                     <div class="lg:col-span-1 space-y-6">
                         <!-- Client & Info -->
                         <div class="bg-white rounded-lg shadow-sm p-6">
-                            <div class="mb-4" x-data="{ clientMode: '{{ old('new_client_name') ? 'new' : 'existing' }}' }">
+                            <div class="mb-4">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Cliente</label>
 
                                 <div class="flex items-center space-x-4 mb-4">
@@ -142,15 +194,19 @@
                                 <!-- Cliente Existente -->
                                 <div x-show="clientMode === 'existing'">
                                     <select name="client_id" id="client_id" x-ref="clientId"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
+                                        class="w-full rounded-md border-[{{ $errors->has('client_id') ? 'red-500' : 'gray-300' }}] shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
                                         :required="clientMode === 'existing'">
                                         <option value="">Seleccionar Cliente</option>
                                         @foreach ($clients as $client)
                                             <option value="{{ $client->id }}"
-                                                {{ old('client_id') == $client->id ? 'selected' : '' }}>{{ $client->name }}
+                                                {{ old('client_id') == $client->id ? 'selected' : '' }}>
+                                                {{ $client->name }}
                                             </option>
                                         @endforeach
                                     </select>
+                                    @error('client_id')
+                                        <div class="text-xs text-red-500 mt-1">{{ $message }}</div>
+                                    @enderror
                                 </div>
 
                                 <!-- Nuevo Cliente -->
@@ -161,31 +217,46 @@
                                             *</label>
                                         <input type="text" name="new_client_name" id="new_client_name"
                                             value="{{ old('new_client_name') }}"
-                                            class="w-full rounded-md border-gray-300 shadow-sm text-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
+                                            class="w-full rounded-md border-[{{ $errors->has('new_client_name') ? 'red-500' : 'gray-300' }}] shadow-sm text-sm focus:border-brand-pink focus:ring-brand-pink focus:ring-opacity-50"
                                             :required="clientMode === 'new'">
+                                        @error('new_client_name')
+                                            <div class="text-xs text-red-500 mt-1">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Teléfono</label>
                                         <input type="text" name="new_client_phone" id="new_client_phone"
                                             value="{{ old('new_client_phone') }}"
-                                            class="w-full rounded-md border-gray-300 shadow-sm text-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
+                                            class="w-full rounded-md border-[{{ $errors->has('new_client_phone') ? 'red-500' : 'gray-300' }}] shadow-sm text-sm focus:border-brand-pink focus:ring-brand-pink focus:ring-opacity-50">
+                                        @error('new_client_phone')
+                                            <div class="text-xs text-red-500 mt-1">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Instagram (@)</label>
                                         <input type="text" name="new_client_instagram" id="new_client_instagram"
                                             value="{{ old('new_client_instagram') }}"
-                                            class="w-full rounded-md border-gray-300 shadow-sm text-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
+                                            class="w-full rounded-md border-[{{ $errors->has('new_client_instagram') ? 'red-500' : 'gray-300' }}] shadow-sm text-sm focus:border-brand-pink focus:ring-brand-pink focus:ring-opacity-50">
+                                        @error('new_client_instagram')
+                                            <div class="text-xs text-red-500 mt-1">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Email</label>
                                         <input type="email" name="new_client_email" id="new_client_email"
                                             value="{{ old('new_client_email') }}"
-                                            class="w-full rounded-md border-gray-300 shadow-sm text-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
+                                            class="w-full rounded-md border-[{{ $errors->has('new_client_email') ? 'red-500' : 'gray-300' }}] shadow-sm text-sm focus:border-brand-pink focus:ring-brand-pink focus:ring-opacity-50">
+                                        @error('new_client_email')
+                                            <div class="text-xs text-red-500 mt-1">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Notas</label>
                                         <textarea name="new_client_notes" id="new_client_notes" rows="2"
-                                            class="w-full rounded-md border-gray-300 shadow-sm text-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">{{ old('new_client_notes') }}</textarea>
+                                            class="w-full rounded-md border-[{{ $errors->has('new_client_notes') ? 'red-500' : 'gray-300' }}] shadow-sm text-sm focus:border-brand-pink focus:ring-brand-pink focus:ring-opacity-50">{{ old('new_client_notes') }}</textarea>
+                                        @error('new_client_notes')
+                                            <div class="text-xs text-red-500 mt-1">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                 </div>
                             </div>
@@ -193,19 +264,29 @@
                             <div class="mb-4">
                                 <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
                                 <input type="datetime-local" name="date" id="date"
-                                    value="{{ now()->format('Y-m-d\TH:i') }}"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
+                                    value="{{ old('date', now()->format('Y-m-d\TH:i')) }}"
+                                    max="{{ now()->format('Y-m-d\TH:i') }}"
+                                    class="w-full rounded-md border-[{{ $errors->has('date') ? 'red-500' : 'gray-300' }}] shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
                                     required>
+                                @error('date')
+                                    <div class="text-xs text-red-500 mt-1">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <div class="mb-4">
                                 <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
                                 <select name="status" id="status"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
+                                    class="w-full rounded-md border-[{{ $errors->has('status') ? 'red-500' : 'gray-300' }}] shadow-sm focus:border-brand-pink focus:ring-brand-pink focus:ring-opacity-50"
                                     required>
-                                    <option value="pendiente" selected>Pendiente</option>
-                                    <option value="reservado">Reservado</option>
+                                    <option value="pendiente"
+                                        {{ old('status', 'pendiente') === 'pendiente' ? 'selected' : '' }}>Pendiente
+                                    </option>
+                                    <option value="reservado" {{ old('status') === 'reservado' ? 'selected' : '' }}>
+                                        Reservado</option>
                                 </select>
+                                @error('status')
+                                    <div class="text-xs text-red-500 mt-1">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
 
@@ -215,31 +296,58 @@
                                 <label for="payment_method" class="block text-sm font-medium text-gray-700 mb-1">Método de
                                     Pago</label>
                                 <select name="payment_method" id="payment_method"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
+                                    class="w-full rounded-md border-[{{ $errors->has('payment_method') ? 'red-500' : 'gray-300' }}] shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
+                                    required>
                                     <option value="">Seleccionar...</option>
-                                    <option value="cash">Efectivo</option>
-                                    <option value="transfer">Transferencia</option>
-                                    <option value="mercadopago">Mercado Pago</option>
-                                    <option value="other">Otro</option>
+                                    <option value="cash" {{ old('payment_method') == 'cash' ? 'selected' : '' }}>
+                                        Efectivo</option>
+                                    <option value="transfer" {{ old('payment_method') == 'transfer' ? 'selected' : '' }}>
+                                        Transferencia</option>
+                                    <option value="mercadopago"
+                                        {{ old('payment_method') == 'mercadopago' ? 'selected' : '' }}>Mercado Pago
+                                    </option>
+                                    <option value="other" {{ old('payment_method') == 'other' ? 'selected' : '' }}>Otro
+                                    </option>
                                 </select>
+                                @error('payment_method')
+                                    <div class="text-xs text-red-500 mt-1">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <div class="mb-4">
                                 <label for="delivery_type"
                                     class="block text-sm font-medium text-gray-700 mb-1">Entrega</label>
-                                <select name="delivery_type" id="delivery_type"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
-                                    <option value="showroom">Retiro en Showroom</option>
-                                    <option value="shipping">Envío</option>
+                                <select name="delivery_type" id="delivery_type" x-model="deliveryType"
+                                    class="w-full rounded-md border-[{{ $errors->has('delivery_type') ? 'red-500' : 'gray-300' }}] shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
+                                    required>
+                                    <option value="showroom" {{ old('delivery_type') == 'showroom' ? 'selected' : '' }}>
+                                        Retiro en Showroom</option>
+                                    <option value="shipping" {{ old('delivery_type') == 'shipping' ? 'selected' : '' }}>
+                                        Envío</option>
                                 </select>
+                                @error('delivery_type')
+                                    <div class="text-xs text-red-500 mt-1">{{ $message }}</div>
+                                @enderror
                             </div>
 
-                            <div class="mb-4">
+                            <div class="mb-4" x-cloak x-show="deliveryType === 'shipping'">
                                 <label for="shipping_cost" class="block text-sm font-medium text-gray-700 mb-1">Costo de
                                     Envío</label>
                                 <input type="number" name="shipping_cost" x-model="shippingCost" min="0"
-                                    step="0.01"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
+                                    step="0.01" :readonly="freeShipping"
+                                    :required="deliveryType === 'shipping' && !freeShipping"
+                                    class="w-full rounded-md border-[{{ $errors->has('shipping_cost') ? 'red-500' : 'gray-300' }}] shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50 disabled:bg-gray-100 disabled:text-gray-500">
+
+                                <div class="mt-2 flex items-center">
+                                    <input type="checkbox" id="free_shipping" x-model="freeShipping"
+                                        class="rounded border-gray-300 text-brand-pink focus:ring-brand-pink"
+                                        @change="if(freeShipping) shippingCost = 0">
+                                    <label for="free_shipping" class="ml-2 text-sm text-gray-600">No se cobró
+                                        envío</label>
+                                </div>
+                                @error('shipping_cost')
+                                    <div class="text-xs text-red-500 mt-1">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
 
@@ -247,7 +355,7 @@
                         <div class="bg-white rounded-lg shadow-sm p-6">
                             <div class="flex justify-between items-center text-lg font-bold text-gray-900">
                                 <span>Total:</span>
-                                <span x-text="formatCurrency(calculateTotal())">$0</span>
+                                <span x-text="formatCurrency(total)">$0</span>
                             </div>
                             <button type="submit"
                                 class="w-full mt-4 bg-brand-pink text-white px-6 py-3 rounded-md hover:bg-brand-heart transition-colors font-medium">
@@ -259,124 +367,6 @@
             </form>
         </div>
 
-        <script>
-            function orderForm() {
-                return {
-                    items: [{
-                        productId: '',
-                        productName: '',
-                        productSearch: '',
-                        variationId: '',
-                        quantity: 1,
-                        unitPrice: 0,
-                        maxStock: null,
-                        showResults: false,
-                        searchResults: [],
-                        variations: []
-                    }],
-                    shippingCost: 0,
-
-                    addItem() {
-                        this.items.push({
-                            productId: '',
-                            productName: '',
-                            productSearch: '',
-                            variationId: '',
-                            quantity: 1,
-                            unitPrice: 0,
-                            maxStock: null,
-                            showResults: false,
-                            searchResults: [],
-                            variations: []
-                        });
-                    },
-
-                    removeItem(index) {
-                        this.items.splice(index, 1);
-                    },
-
-                    clearProduct(index) {
-                        let item = this.items[index];
-                        item.productId = '';
-                        item.productName = '';
-                        item.productSearch = '';
-                        item.variationId = '';
-                        item.unitPrice = 0;
-                        item.maxStock = null;
-                        item.showResults = false;
-                        item.searchResults = [];
-                        item.variations = [];
-                    },
-
-                    searchProduct(index) {
-                        let item = this.items[index];
-                        if (item.productSearch.length < 2) {
-                            item.searchResults = [];
-                            return;
-                        }
-
-                        fetch(`{{ route('admin.products.search') }}?q=${encodeURIComponent(item.productSearch)}`)
-                            .then(res => res.json())
-                            .then(data => {
-                                item.searchResults = data;
-                                item.showResults = true;
-                            });
-                    },
-
-                    selectProduct(index, product) {
-                        let item = this.items[index];
-                        item.productId = product.id;
-                        item.productName = product.name;
-                        item.productSearch = '';
-                        item.unitPrice = product.price || 0;
-                        item.maxStock = null;
-                        item.variationId = '';
-                        item.showResults = false;
-                        item.searchResults = [];
-                        item.variations = product.variations || [];
-                    },
-
-                    updatePrice(index) {
-                        let item = this.items[index];
-                        if (item.variationId && item.variations) {
-                            let variation = item.variations.find(v => v.id == item.variationId);
-                            if (variation) {
-                                item.unitPrice = variation.price;
-                                item.maxStock = variation.stock;
-
-                                this.validateQuantity(index);
-                            }
-                        }
-                    },
-
-                    validateQuantity(index) {
-                        let item = this.items[index];
-                        if (item.maxStock !== null && item.quantity > item.maxStock) {
-                            item.quantity = item.maxStock;
-                        }
-                        if (item.quantity !== '' && item.quantity < 1) {
-                            item.quantity = 1;
-                        }
-                    },
-
-                    calculateTotal() {
-                        let itemsTotal = this.items.reduce((sum, item) => {
-                            let q = parseFloat(item.quantity) || 0;
-                            let p = parseFloat(item.unitPrice) || 0;
-                            return sum + (q * p);
-                        }, 0);
-                        let shipping = parseFloat(this.shippingCost) || 0;
-                        return itemsTotal + shipping;
-                    },
-
-                    formatCurrency(value) {
-                        return new Intl.NumberFormat('es-AR', {
-                            style: 'currency',
-                            currency: 'ARS'
-                        }).format(value);
-                    }
-                }
-            }
-        </script>
-        </script>
-    @endsection
+    </div>
+    </div>
+@endsection

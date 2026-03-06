@@ -23,16 +23,16 @@ class UpdateOrderRequest extends FormRequest
             'new_client_email' => ['nullable', 'email', 'max:255'],
             'new_client_notes' => ['nullable', 'string', 'max:1000'],
 
-            'date' => ['required', 'date'],
+            'date' => ['required', 'date', 'before_or_equal:now'],
             'status' => ['required', Rule::in(['pendiente', 'reservado', 'entregado', 'cancelado'])],
-            'payment_method' => ['nullable', Rule::in(['cash', 'transfer', 'mercadopago', 'other'])],
-            'delivery_type' => ['nullable', Rule::in(['showroom', 'shipping'])],
-            'shipping_cost' => ['nullable', 'numeric', 'min:0'],
+            'payment_method' => ['required', Rule::in(['cash', 'transfer', 'mercadopago', 'other'])],
+            'delivery_type' => ['required', Rule::in(['showroom', 'shipping'])],
+            'shipping_cost' => ['required_if:delivery_type,shipping', 'nullable', 'numeric', 'min:0'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'exists:products,id'],
             'items.*.variation_id' => ['required', 'exists:product_variations,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
-            'items.*.unit_price' => ['required', 'numeric', 'min:0'],
+            'items.*.unit_price' => ['required', 'numeric', 'gt:0'],
         ];
     }
 
@@ -43,7 +43,35 @@ class UpdateOrderRequest extends FormRequest
 
             $this->validateNoDuplicateVariations($validator, $items);
             $this->validateVariationBelongsToProduct($validator, $items);
+            $this->validateStockAvailability($validator, $items);
         });
+    }
+
+    private function validateStockAvailability($validator, array $items): void
+    {
+        $order = $this->route('order');
+
+        // Si el pedido ya está en estado reservado, el stock ya fue descontado.
+        // Los ítems vienen readonly en el form, por lo que no validaremos contra el stock *restante*.
+        if ($order && in_array($order->status, ['reservado', 'entregado'])) {
+            return;
+        }
+
+        foreach ($items as $index => $item) {
+            $variationId = $item['variation_id'] ?? null;
+            $quantity = (int) ($item['quantity'] ?? 0);
+
+            if ($variationId && $quantity > 0) {
+                $variation = ProductVariation::find($variationId);
+                // Si la variación existe, comprobamos el stock
+                if ($variation && $quantity > $variation->stock) {
+                    $validator->errors()->add(
+                        "items.{$index}.quantity",
+                        "La cantidad solicitada ({$quantity}) supera el stock disponible ({$variation->stock}) para esta variante."
+                    );
+                }
+            }
+        }
     }
 
     private function validateNoDuplicateVariations($validator, array $items): void
@@ -84,7 +112,16 @@ class UpdateOrderRequest extends FormRequest
             'items.required' => 'El pedido debe tener al menos un ítem.',
             'items.min' => 'El pedido debe tener al menos un ítem.',
             'items.*.variation_id.required' => 'Debe seleccionar una variación para cada ítem.',
-            'items.*.quantity.min' => 'La cantidad mínima por ítem es 1.',
+            'items.*.product_id.required' => 'Debe seleccionar un producto válido usando el buscador.',
+            'items.*.product_id.exists' => 'El producto seleccionado ya no existe en la base de datos.',
+            'items.*.quantity.required' => 'Debe indicar la cantidad solicitada.',
+            'items.*.quantity.min' => 'La cantidad mínima es 1.',
+            'date.before_or_equal' => 'La fecha del pedido no puede ser futura.',
+            'payment_method.required' => 'Debe seleccionar un método de pago.',
+            'delivery_type.required' => 'Debe seleccionar un tipo de entrega.',
+            'shipping_cost.required_if' => 'Debe indicar el costo de envío si el método de entrega es Envío (puede ser 0).',
+            'items.*.unit_price.required' => 'El precio del producto no puede quedar vacío.',
+            'items.*.unit_price.gt' => 'El precio del producto debe ser mayor a 0.',
         ];
     }
 }
