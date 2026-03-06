@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Queries\CategoriesReportQuery;
+use App\Queries\ProductsReportQuery;
+use App\Queries\SalesReportQuery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -21,9 +24,9 @@ class ReportController extends Controller
         $reportType = $request->input('report_type', 'sales');
 
         $data = match ($reportType) {
-            'sales' => $this->getSalesData($dateFrom, $dateTo),
-            'products' => $this->getProductsData($dateFrom, $dateTo),
-            'categories' => $this->getCategoriesData($dateFrom, $dateTo),
+            'sales' => app(SalesReportQuery::class)->run($dateFrom, $dateTo),
+            'products' => app(ProductsReportQuery::class)->run($dateFrom, $dateTo),
+            'categories' => app(CategoriesReportQuery::class)->run($dateFrom, $dateTo),
             default => collect(),
         };
 
@@ -51,21 +54,21 @@ class ReportController extends Controller
 
             if ($reportType === 'sales') {
                 fputcsv($file, ['Fecha', 'Cantidad Pedidos', 'Total Ventas']);
-                $data = $this->getSalesData($dateFrom, $dateTo);
+                $data = app(SalesReportQuery::class)->run($dateFrom, $dateTo);
 
                 foreach ($data as $row) {
                     fputcsv($file, [$row->date, $row->total_orders, $row->total_sales]);
                 }
             } elseif ($reportType === 'products') {
                 fputcsv($file, ['Producto', 'Cantidad Vendida', 'Ingresos Totales']);
-                $data = $this->getProductsData($dateFrom, $dateTo);
+                $data = app(ProductsReportQuery::class)->run($dateFrom, $dateTo);
 
                 foreach ($data as $row) {
                     fputcsv($file, [$row->name, $row->total_quantity, $row->total_revenue]);
                 }
             } elseif ($reportType === 'categories') {
                 fputcsv($file, ['Categoría', 'Cantidad Vendida', 'Ingresos Totales']);
-                $data = $this->getCategoriesData($dateFrom, $dateTo);
+                $data = app(CategoriesReportQuery::class)->run($dateFrom, $dateTo);
 
                 foreach ($data as $row) {
                     fputcsv($file, [$row->name, $row->total_quantity, $row->total_revenue]);
@@ -76,52 +79,5 @@ class ReportController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
-    }
-
-    private function getSalesData(string $dateFrom, string $dateTo)
-    {
-        return Order::select(
-            DB::raw('DATE(date) as date'),
-            DB::raw('COUNT(*) as total_orders'),
-            DB::raw('SUM(total) as total_sales')
-        )
-            ->whereBetween('date', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
-            ->where('status', '!=', Order::STATUS_CANCELLED)
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
-    }
-
-    private function getProductsData(string $dateFrom, string $dateTo)
-    {
-        return OrderItem::join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->join('products', 'order_items.product_id', '=', 'products.id')
-            ->select(
-                'products.name',
-                DB::raw('SUM(order_items.quantity) as total_quantity'),
-                DB::raw('SUM(order_items.subtotal) as total_revenue')
-            )
-            ->whereBetween('orders.date', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
-            ->where('orders.status', '!=', Order::STATUS_CANCELLED)
-            ->groupBy('products.id', 'products.name')
-            ->orderByDesc('total_quantity')
-            ->get();
-    }
-
-    private function getCategoriesData(string $dateFrom, string $dateTo)
-    {
-        return OrderItem::join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->join('products', 'order_items.product_id', '=', 'products.id')
-            ->join('categories', 'products.category_id', '=', 'categories.id')
-            ->select(
-                'categories.name',
-                DB::raw('SUM(order_items.quantity) as total_quantity'),
-                DB::raw('SUM(order_items.subtotal) as total_revenue')
-            )
-            ->whereBetween('orders.date', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
-            ->where('orders.status', '!=', Order::STATUS_CANCELLED)
-            ->groupBy('categories.id', 'categories.name')
-            ->orderByDesc('total_revenue')
-            ->get();
     }
 }

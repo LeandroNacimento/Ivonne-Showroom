@@ -9,6 +9,7 @@ use App\Models\Client;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Services\OrderStatusTransitionHandler;
+use App\Services\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -27,71 +28,9 @@ class OrderController extends Controller
         return view('admin.orders.create', compact('clients'));
     }
 
-    public function store(StoreOrderRequest $request, OrderStatusTransitionHandler $handler)
+    public function store(StoreOrderRequest $request, OrderService $orderService)
     {
-        DB::transaction(function () use ($request, $handler) {
-            $clientId = $request->client_id;
-
-            if (!$clientId && $request->filled('new_client_name')) {
-                $client = \App\Models\Client::create([
-                    'name' => $request->new_client_name,
-                    'phone' => $request->new_client_phone,
-                    'instagram' => $request->new_client_instagram,
-                    'email' => $request->new_client_email,
-                    'notes' => $request->new_client_notes,
-                ]);
-                $clientId = $client->id;
-            }
-
-            // Asegurar precios usando el backend
-            $total = 0;
-            $itemsData = [];
-
-            foreach ($request->items as $item) {
-                $variation = \App\Models\ProductVariation::with(['productColor', 'product'])->findOrFail($item['variation_id']);
-
-                $price = collect([$variation->price, $variation->product?->price])->filter()->first() ?? 0;
-                $subtotal = $price * $item['quantity'];
-
-                $itemsData[] = [
-                    'product_id' => $item['product_id'],
-                    'variation_id' => $item['variation_id'],
-                    'color' => $variation->productColor?->name ?? 'N/A',
-                    'size' => $variation->size,
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $price,
-                    'subtotal' => $subtotal,
-                ];
-
-                $total += $subtotal;
-            }
-
-            $total += (float) ($request->shipping_cost ?? 0);
-
-            // Crear el pedido siempre como "pendiente" primero
-            $order = Order::create([
-                'client_id' => $clientId,
-                'date' => $request->date,
-                'status' => Order::STATUS_PENDING,
-                'payment_method' => $request->payment_method,
-                'delivery_type' => $request->delivery_type,
-                'shipping_cost' => (float) ($request->shipping_cost ?? 0),
-                'total' => $total,
-            ]);
-
-            // Persistir ítems
-            foreach ($itemsData as $data) {
-                $data['order_id'] = $order->id;
-                OrderItem::create($data);
-            }
-
-            // Si el estado deseado es "reservado", ejecutar la transición vía handler
-            if ($request->status === Order::STATUS_RESERVED) {
-                $order->load(['items.variation.productColor', 'items.product']);
-                $handler->handle($order, Order::STATUS_PENDING, Order::STATUS_RESERVED);
-                $order->update(['status' => Order::STATUS_RESERVED]);
-            }
-        });
+        $orderService->create($request->validated());
 
         return redirect()->route('admin.orders.index')->with('success', 'Pedido creado con éxito.');
     }
