@@ -132,7 +132,11 @@ class ProductController extends Controller
 
     public function search(Request $request)
     {
-        $query = $request->get('q');
+        $validated = $request->validate([
+            'q' => ['required', 'string', 'min:2', 'max:50'],
+        ]);
+
+        $query = $validated['q'];
 
         $products = Product::where('name', 'like', "%{$query}%")
             ->orWhere('id', 'like', "%{$query}%")

@@ -44,8 +44,29 @@ class OrderController extends Controller
                 $clientId = $client->id;
             }
 
-            $total = collect($request->items)
-                ->sum(fn($item) => $item['quantity'] * $item['unit_price']);
+            // Asegurar precios usando el backend
+            $total = 0;
+            $itemsData = [];
+
+            foreach ($request->items as $item) {
+                $variation = \App\Models\ProductVariation::with(['productColor', 'product'])->findOrFail($item['variation_id']);
+
+                $price = collect([$variation->price, $variation->product?->price])->filter()->first() ?? 0;
+                $subtotal = $price * $item['quantity'];
+
+                $itemsData[] = [
+                    'product_id' => $item['product_id'],
+                    'variation_id' => $item['variation_id'],
+                    'color' => $variation->productColor?->name ?? 'N/A',
+                    'size' => $variation->size,
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $price,
+                    'subtotal' => $subtotal,
+                ];
+
+                $total += $subtotal;
+            }
+
             $total += (float) ($request->shipping_cost ?? 0);
 
             // Crear el pedido siempre como "pendiente" primero
@@ -59,20 +80,10 @@ class OrderController extends Controller
                 'total' => $total,
             ]);
 
-            // Crear ítems
-            foreach ($request->items as $item) {
-                $variation = \App\Models\ProductVariation::with('productColor')->findOrFail($item['variation_id']);
-
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item['product_id'],
-                    'variation_id' => $item['variation_id'],
-                    'color' => $variation->productColor?->name ?? 'N/A',
-                    'size' => $variation->size,
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['unit_price'],
-                    'subtotal' => $item['quantity'] * $item['unit_price'],
-                ]);
+            // Persistir ítems
+            foreach ($itemsData as $data) {
+                $data['order_id'] = $order->id;
+                OrderItem::create($data);
             }
 
             // Si el estado deseado es "reservado", ejecutar la transición vía handler
@@ -136,8 +147,28 @@ class OrderController extends Controller
                 $order->items()->delete();
                 $order->unsetRelation('items');
 
-                $total = collect($request->items)
-                    ->sum(fn($item) => $item['quantity'] * $item['unit_price']);
+                $total = 0;
+                $itemsData = [];
+
+                foreach ($request->items as $item) {
+                    $variation = \App\Models\ProductVariation::with(['productColor', 'product'])->findOrFail($item['variation_id']);
+
+                    $price = collect([$variation->price, $variation->product?->price])->filter()->first() ?? 0;
+                    $subtotal = $price * $item['quantity'];
+
+                    $itemsData[] = [
+                        'product_id' => $item['product_id'],
+                        'variation_id' => $item['variation_id'],
+                        'color' => $variation->productColor?->name ?? 'N/A',
+                        'size' => $variation->size,
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $price,
+                        'subtotal' => $subtotal,
+                    ];
+
+                    $total += $subtotal;
+                }
+
                 $total += (float) ($request->shipping_cost ?? 0);
 
                 $order->update([
@@ -150,18 +181,9 @@ class OrderController extends Controller
                     'total' => $total,
                 ]);
 
-                foreach ($request->items as $item) {
-                    $variation = \App\Models\ProductVariation::with('productColor')->findOrFail($item['variation_id']);
-                    OrderItem::create([
-                        'order_id' => $order->id,
-                        'product_id' => $item['product_id'],
-                        'variation_id' => $item['variation_id'],
-                        'color' => $variation->productColor?->name ?? 'N/A',
-                        'size' => $variation->size,
-                        'quantity' => $item['quantity'],
-                        'unit_price' => $item['unit_price'],
-                        'subtotal' => $item['quantity'] * $item['unit_price'],
-                    ]);
+                foreach ($itemsData as $data) {
+                    $data['order_id'] = $order->id;
+                    OrderItem::create($data);
                 }
 
                 // Ejecutar transición de estado si cambió

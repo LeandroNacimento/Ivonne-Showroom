@@ -39,7 +39,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('categories', CategoryController::class);
 
         // Products CRUD
-        Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
+        Route::get('/products/search', [ProductController::class, 'search'])
+            ->name('products.search')
+            ->middleware('throttle:30,1');
         Route::resource('products', ProductController::class);
 
         // Clients CRUD

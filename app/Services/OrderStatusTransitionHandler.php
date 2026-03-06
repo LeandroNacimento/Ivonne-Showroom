@@ -68,17 +68,19 @@ class OrderStatusTransitionHandler
     private function decreaseOrderStock(Order $order): void
     {
         foreach ($order->items as $item) {
-            $variation = $item->variation;
+            // Aplicar bloqueo pesimista (row-level lock) para evitar condiciones de carrera (ventas simultáneas)
+            $variation = \App\Models\ProductVariation::lockForUpdate()->find($item->variation_id);
 
             if (!$variation) {
                 throw ValidationException::withMessages([
-                    'stock' => "La variación del producto '{$item->product?->name}' ya no existe.",
+                    'items' => "La variación del producto '{$item->product?->name}' ya no existe.",
                 ]);
             }
 
             if (!$variation->hasStock($item->quantity)) {
+                $colorName = $variation->productColor?->name ?? 'N/A';
                 throw ValidationException::withMessages([
-                    'stock' => "Sin stock suficiente para '{$item->product?->name}' (Talle: {$item->size}, Color: {$item->color}). Requerido: {$item->quantity}, Disponible: {$variation->stock}.",
+                    'items' => "Stock insuficiente para '{$item->product?->name}' (Talle: {$variation->size}, Color: {$colorName}).",
                 ]);
             }
 
