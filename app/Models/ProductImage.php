@@ -19,10 +19,9 @@ class ProductImage extends Model
         'position' => 'integer',
     ];
 
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
+    /**
+     * Acceder al producto mediante: $image->productColor->product
+     */
 
     public function productColor()
     {

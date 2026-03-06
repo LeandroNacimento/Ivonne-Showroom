@@ -11,19 +11,7 @@ use Carbon\Carbon;
 
 class ReportController extends Controller
 {
-    /**
-     * Get database-agnostic DATE extraction expression.
-     * Compatible with MySQL (DATE) and SQL Server (CAST AS DATE).
-     */
-    private function getDateExpression(string $column): string
-    {
-        $driver = config('database.default');
 
-        return match ($driver) {
-            'sqlsrv' => "CAST({$column} AS DATE)",
-            default => "DATE({$column})",
-        };
-    }
 
     public function index(Request $request)
     {
@@ -35,12 +23,12 @@ class ReportController extends Controller
 
         if ($reportType === 'sales') {
             $data = Order::select(
-                DB::raw($this->getDateExpression('date') . ' as date'),
+                DB::raw('DATE(date) as date'),
                 DB::raw('COUNT(*) as total_orders'),
                 DB::raw('SUM(total) as total_sales')
             )
                 ->whereBetween('date', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
-                ->where('status', '!=', 'cancelled')
+                ->where('status', '!=', Order::STATUS_CANCELLED)
                 ->groupBy('date')
                 ->orderBy('date')
                 ->get();
@@ -53,7 +41,7 @@ class ReportController extends Controller
                     DB::raw('SUM(order_items.subtotal) as total_revenue')
                 )
                 ->whereBetween('orders.date', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
-                ->where('orders.status', '!=', 'cancelled')
+                ->where('orders.status', '!=', Order::STATUS_CANCELLED)
                 ->groupBy('products.id', 'products.name')
                 ->orderByDesc('total_quantity')
                 ->get();
@@ -67,7 +55,7 @@ class ReportController extends Controller
                     DB::raw('SUM(order_items.subtotal) as total_revenue')
                 )
                 ->whereBetween('orders.date', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
-                ->where('orders.status', '!=', 'cancelled')
+                ->where('orders.status', '!=', Order::STATUS_CANCELLED)
                 ->groupBy('categories.id', 'categories.name')
                 ->orderByDesc('total_revenue')
                 ->get();
@@ -98,12 +86,12 @@ class ReportController extends Controller
             if ($reportType === 'sales') {
                 fputcsv($file, ['Fecha', 'Cantidad Pedidos', 'Total Ventas']);
                 $data = Order::select(
-                    DB::raw($this->getDateExpression('date') . ' as date'),
+                    DB::raw('DATE(date) as date'),
                     DB::raw('COUNT(*) as total_orders'),
                     DB::raw('SUM(total) as total_sales')
                 )
                     ->whereBetween('date', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
-                    ->where('status', '!=', 'cancelled')
+                    ->where('status', '!=', Order::STATUS_CANCELLED)
                     ->groupBy('date')
                     ->orderBy('date')
                     ->get();
@@ -121,7 +109,7 @@ class ReportController extends Controller
                         DB::raw('SUM(order_items.subtotal) as total_revenue')
                     )
                     ->whereBetween('orders.date', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
-                    ->where('orders.status', '!=', 'cancelled')
+                    ->where('orders.status', '!=', Order::STATUS_CANCELLED)
                     ->groupBy('products.id', 'products.name')
                     ->orderByDesc('total_quantity')
                     ->get();
@@ -140,7 +128,7 @@ class ReportController extends Controller
                         DB::raw('SUM(order_items.subtotal) as total_revenue')
                     )
                     ->whereBetween('orders.date', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
-                    ->where('orders.status', '!=', 'cancelled')
+                    ->where('orders.status', '!=', Order::STATUS_CANCELLED)
                     ->groupBy('categories.id', 'categories.name')
                     ->orderByDesc('total_revenue')
                     ->get();

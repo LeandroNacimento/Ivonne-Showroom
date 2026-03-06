@@ -72,6 +72,10 @@ class ClientController extends Controller
 
     public function destroy(Client $client)
     {
+        if ($client->orders()->exists()) {
+            return back()->with('error', 'No se puede eliminar un cliente con pedidos registrados.');
+        }
+
         $client->delete();
         return redirect()->route('admin.clients.index')->with('success', 'Cliente eliminado con éxito.');
     }

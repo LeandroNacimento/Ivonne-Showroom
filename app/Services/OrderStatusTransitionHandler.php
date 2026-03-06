@@ -7,17 +7,14 @@ use Illuminate\Validation\ValidationException;
 
 class OrderStatusTransitionHandler
 {
-    /**
-     * Estados terminales que no permiten ninguna transición.
-     */
-    private const TERMINAL_STATES = ['entregado', 'cancelado'];
+    private const TERMINAL_STATES = Order::TERMINAL_STATES;
 
     /**
      * Transiciones permitidas: [oldStatus => [allowedNewStatuses]]
      */
     private const ALLOWED_TRANSITIONS = [
-        'pendiente' => ['reservado', 'cancelado'],
-        'reservado' => ['entregado', 'cancelado'],
+        Order::STATUS_PENDING => [Order::STATUS_RESERVED, Order::STATUS_CANCELLED],
+        Order::STATUS_RESERVED => [Order::STATUS_DELIVERED, Order::STATUS_CANCELLED],
     ];
 
     /**
@@ -49,12 +46,12 @@ class OrderStatusTransitionHandler
         }
 
         // pendiente → reservado: descontar stock
-        if ($oldStatus === 'pendiente' && $newStatus === 'reservado') {
+        if ($oldStatus === Order::STATUS_PENDING && $newStatus === Order::STATUS_RESERVED) {
             $this->decreaseOrderStock($order);
         }
 
         // reservado → cancelado: devolver stock
-        if ($oldStatus === 'reservado' && $newStatus === 'cancelado') {
+        if ($oldStatus === Order::STATUS_RESERVED && $newStatus === Order::STATUS_CANCELLED) {
             $this->increaseOrderStock($order);
         }
 

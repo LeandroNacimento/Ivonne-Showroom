@@ -5,6 +5,7 @@ namespace App\Http\Requests\Admin;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use App\Models\ProductVariation;
+use App\Models\Order;
 
 class UpdateOrderRequest extends FormRequest
 {
@@ -24,7 +25,7 @@ class UpdateOrderRequest extends FormRequest
             'new_client_notes' => ['nullable', 'string', 'max:1000'],
 
             'date' => ['required', 'date', 'before_or_equal:now'],
-            'status' => ['required', Rule::in(['pendiente', 'reservado', 'entregado', 'cancelado'])],
+            'status' => ['required', Rule::in([Order::STATUS_PENDING, Order::STATUS_RESERVED, Order::STATUS_DELIVERED, Order::STATUS_CANCELLED])],
             'payment_method' => ['required', Rule::in(['cash', 'transfer', 'mercadopago', 'other'])],
             'delivery_type' => ['required', Rule::in(['showroom', 'shipping'])],
             'shipping_cost' => ['required_if:delivery_type,shipping', 'nullable', 'numeric', 'min:0'],
@@ -53,7 +54,7 @@ class UpdateOrderRequest extends FormRequest
 
         // Si el pedido ya está en estado reservado, el stock ya fue descontado.
         // Los ítems vienen readonly en el form, por lo que no validaremos contra el stock *restante*.
-        if ($order && in_array($order->status, ['reservado', 'entregado'])) {
+        if ($order && in_array($order->status, [Order::STATUS_RESERVED, Order::STATUS_DELIVERED])) {
             return;
         }
 

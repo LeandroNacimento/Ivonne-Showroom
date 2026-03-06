@@ -5,6 +5,7 @@ namespace App\Http\Requests\Admin;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use App\Models\ProductVariation;
+use App\Models\Order;
 
 class StoreOrderRequest extends FormRequest
 {
@@ -24,7 +25,7 @@ class StoreOrderRequest extends FormRequest
             'new_client_notes' => ['nullable', 'string', 'max:1000'],
 
             'date' => ['required', 'date', 'before_or_equal:now'],
-            'status' => ['required', Rule::in(['pendiente', 'reservado'])],
+            'status' => ['required', Rule::in([Order::STATUS_PENDING, Order::STATUS_RESERVED])],
             'payment_method' => ['required', Rule::in(['cash', 'transfer', 'mercadopago', 'other'])],
             'delivery_type' => ['required', Rule::in(['showroom', 'shipping'])],
             'shipping_cost' => ['required_if:delivery_type,shipping', 'nullable', 'numeric', 'min:0'],

@@ -82,6 +82,10 @@ class CategoryController extends Controller
 
     public function destroy(Category $category)
     {
+        if ($category->products()->exists()) {
+            return back()->with('error', 'No se puede eliminar una categoría con productos.');
+        }
+
         if ($category->image) {
             Storage::disk('public')->delete($category->image);
         }

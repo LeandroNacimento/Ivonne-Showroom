@@ -15,11 +15,11 @@ class ImagesForm extends Component
     {
         if ($product && $product->exists) {
             $this->productId = $product->id;
-            $product->load('images');
+            $product->load('images.productColor');
 
-            // Group existing images by color
+            // Group existing images by color name from the relation
             $this->existingImages = $product->images
-                ->groupBy('color')
+                ->groupBy(fn($img) => $img->productColor?->name ?? 'Sin color')
                 ->map(fn($imgs) => $imgs->map(fn($img) => [
                     'id' => $img->id,
                     'url' => asset('storage/' . $img->path),

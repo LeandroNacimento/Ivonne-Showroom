@@ -19,15 +19,15 @@ class DashboardController extends Controller
 
         // Stats
         $todaySales = Order::whereDate('date', Carbon::today())
-            ->where('status', '!=', 'cancelled')
+            ->where('status', '!=', Order::STATUS_CANCELLED)
             ->sum('total');
 
         $monthSales = Order::whereMonth('date', Carbon::now()->month)
             ->whereYear('date', Carbon::now()->year)
-            ->where('status', '!=', 'cancelled')
+            ->where('status', '!=', Order::STATUS_CANCELLED)
             ->sum('total');
 
-        $pendingOrders = Order::whereIn('status', ['draft', 'reserved'])->count();
+        $pendingOrders = Order::whereIn('status', [Order::STATUS_PENDING, Order::STATUS_RESERVED])->count();
 
         // Low Stock
         // Since total_stock is an accessor, we fetch products and filter. 
