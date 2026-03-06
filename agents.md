@@ -94,18 +94,18 @@ Reglas del Agente
 
 6. Convención de Commits
 
-Idioma: Español
+Idioma: Inglés
 Formato: Conventional Commits
 
 Ejemplos válidos:
 
-feat: agregar validación de stock por talle
-fix: corregir cálculo de total en carrito
-refactor: optimizar consulta de productos
-chore: ajustar configuración de vite
+feat: add stock validation by size
+fix: correct total calculation in cart
+refactor: optimize product query
+chore: adjust vite configuration
 
 🚫 Commits genéricos
-🚫 Commits en inglés
+🚫 Commits en español
 🚫 Commits automáticos
 
 7. Uso de JavaScript (Principio Rector)
