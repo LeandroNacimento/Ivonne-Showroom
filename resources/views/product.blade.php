@@ -1,68 +1,7 @@
 <x-layouts.app>
     <div class="bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div class="lg:grid lg:grid-cols-2 lg:gap-x-8 lg:items-start" x-data="{
-                allImages: @js($imagesByColor),
-                allVariations: @js(
-    $product->variations
-        ->where('stock', '>', 0)
-        ->sortBy(function ($v) {
-            $sizes = ['XS' => 1, 'S' => 2, 'M' => 3, 'L' => 4, 'XL' => 5, 'XXL' => 6];
-            return $sizes[strtoupper($v->size)] ?? 99;
-        })
-        ->map(
-            fn($v) => [
-                'id' => $v->id,
-                'color' => $v->productColor->name ?? 'Único',
-                'size' => $v->size,
-                'price' => $v->price,
-                'stock' => $v->stock,
-            ],
-        )
-        ->values(),
-),
-                activeColor: @js($product->variations->where('stock', '>', 0)->first()?->productColor?->name ?? ($product->colors->first()?->name ?? 'Único')),
-                selectedVariation: null,
-                currentSlide: 0,
-            
-                get colorNames() {
-                    return [...new Set(this.allVariations.map(v => v.color))];
-                },
-                get activeImages() {
-                    if (this.allImages[this.activeColor] && this.allImages[this.activeColor].length > 0) {
-                        return this.allImages[this.activeColor];
-                    }
-                    // Fallback: first available images from any color
-                    const firstColor = Object.keys(this.allImages)[0];
-                    return firstColor ? this.allImages[firstColor] : ['{{ $product->colors->where('is_main', true)->first()?->image ?? ($product->colors->first()?->image ?? 'https://via.placeholder.com/600x750') }}'];
-                },
-                get activeVariations() {
-                    return this.allVariations.filter(v => v.color === this.activeColor);
-                },
-                get selectedPrice() {
-                    if (!this.selectedVariation) return null;
-                    const v = this.allVariations.find(v => v.id == this.selectedVariation);
-                    return v ? v.price : null;
-                },
-                get selectedStock() {
-                    if (!this.selectedVariation) return null;
-                    const v = this.allVariations.find(v => v.id == this.selectedVariation);
-                    return v ? v.stock : null;
-                },
-                get minPrice() {
-                    if (this.activeVariations.length === 0) return 0;
-                    return Math.min(...this.activeVariations.map(v => v.price));
-                },
-            
-                selectColor(color) {
-                    this.activeColor = color;
-                    this.selectedVariation = null;
-                    this.currentSlide = 0;
-                },
-                formatPrice(price) {
-                    return '$' + Number(price).toLocaleString('es-AR', { minimumFractionDigits: 0 });
-                }
-            }">
+            <div class="lg:grid lg:grid-cols-2 lg:gap-x-8 lg:items-start" x-data="productGallery(@js($imagesByColor), @js($sortedVariations), @js($initialColor))">
 
                 <!-- Image gallery -->
                 <div class="flex flex-col-reverse relative">

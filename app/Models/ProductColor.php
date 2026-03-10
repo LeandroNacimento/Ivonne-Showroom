@@ -41,4 +41,18 @@ class ProductColor extends Model
     {
         return $this->images()->first();
     }
+
+    /**
+     * Resolve image to a full URL (handles external URLs and storage paths).
+     */
+    public function getImageUrlAttribute(): string
+    {
+        if (!$this->image) {
+            return 'https://via.placeholder.com/600x750';
+        }
+
+        return str_starts_with($this->image, 'http')
+            ? $this->image
+            : asset('storage/' . $this->image);
+    }
 }

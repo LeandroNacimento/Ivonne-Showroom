@@ -30,15 +30,32 @@ class ShowroomController extends Controller
             ->take(4)
             ->get();
 
+        // Prepare sorted variations for Alpine (business logic belongs here, not in Blade)
+        $sortedVariations = $product->variations
+            ->where('stock', '>', 0)
+            ->sortBy(fn($v) => Product::SIZE_ORDER[strtoupper($v->size)] ?? 99)
+            ->map(fn($v) => [
+                'id' => $v->id,
+                'color' => $v->productColor->name ?? 'Único',
+                'size' => $v->size,
+                'price' => $v->price,
+                'stock' => $v->stock,
+            ])
+            ->values();
+
         // Group images by color for Alpine.js dynamic gallery
         $imagesByColor = [];
         foreach ($product->colors as $color) {
             if ($color->image) {
-                $imagesByColor[$color->name] = [$color->image];
+                $imagesByColor[$color->name] = [$color->image_url];
             }
         }
 
-        return view('product', compact('product', 'relatedProducts', 'imagesByColor'));
+        // Initial active color
+        $initialColor = $product->variations->where('stock', '>', 0)->first()?->productColor?->name
+            ?? ($product->colors->first()?->name ?? 'Único');
+
+        return view('product', compact('product', 'relatedProducts', 'imagesByColor', 'sortedVariations', 'initialColor'));
     }
 
     public function cart()

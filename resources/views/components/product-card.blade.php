@@ -1,42 +1,28 @@
 @props(['product'])
 
 @php
-    $images = collect();
-    $colorsData = [];
+    // Build image list using the accessor
+    $images = $product->colors->map(fn($color) => $color->image_url)->toArray();
+    $colorsData = $product->colors
+        ->map(
+            fn($color) => [
+                'id' => $color->id,
+                'name' => $color->name,
+                'image' => $color->image_url,
+            ],
+        )
+        ->toArray();
 
-    // Optimize images and data for Alpine
-    foreach ($product->colors as $index => $color) {
-        $imgUrl = $color->image
-            ? (str_starts_with($color->image, 'http')
-                ? $color->image
-                : asset('storage/' . $color->image))
-            : 'https://via.placeholder.com/600x750';
-        $images->push($imgUrl);
-        $colorsData[] = ['id' => $color->id, 'name' => $color->name, 'image' => $imgUrl];
-    }
-
-    $images = $images->toArray();
     $uniqueColors = $product->colors->unique('name');
     $visibleColors = $uniqueColors->take(4);
     $extraColorsCount = $uniqueColors->count() - 4;
-
-    // Smart Badges Logic
-    $isNew = $product->created_at->diffInDays(now()) <= 15;
-    $totalStock = collect($product->variations)->sum('stock');
-    $isLowStock = $totalStock <= 3 && $totalStock > 0;
-
-    // Quick Add Logic
-    $availableVariations = $product->variations->where('stock', '>', 0)->values();
-    $defaultSelectedVariation = $availableVariations->count() === 1 ? $availableVariations->first()->id : 'null';
 @endphp
 
 <div x-data="{
     images: {{ json_encode($images) }},
     currentIndex: 0,
     timer: null,
-    previewIndex: null, // For Hover Preview
-    showQuickAdd: false,
-    selectedVariation: {{ $defaultSelectedVariation }},
+    previewIndex: null,
     startCarousel() {
         if (this.images.length <= 1 || this.previewIndex !== null) return;
         this.timer = setInterval(() => {
@@ -54,24 +40,18 @@
     clearPreview() {
         this.previewIndex = null;
         this.startCarousel();
-    },
-    addToCart(productId) {
-        if (this.selectedVariation) {
-            $wire.addToCart(productId, this.selectedVariation);
-            this.showQuickAdd = false;
-        }
     }
-}" @mouseenter="startCarousel()" @mouseleave="stopCarousel(); showQuickAdd = false"
+}" @mouseenter="startCarousel()" @mouseleave="stopCarousel()"
     class="group flex flex-col h-full bg-white rounded-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02] relative">
 
     {{-- Smart Badges --}}
     <div class="absolute top-2 left-2 z-30 flex flex-col gap-1 pointer-events-none">
-        @if ($isLowStock)
+        @if ($product->is_low_stock)
             <span
                 class="bg-red-50 text-red-600 text-[10px] font-bold px-2 py-1 rounded shadow-sm border border-red-100 uppercase tracking-wide">
                 Últimas unidades
             </span>
-        @elseif ($isNew)
+        @elseif ($product->is_new)
             <span
                 class="bg-brand-gold text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm uppercase tracking-wide">
                 Nuevo
@@ -107,16 +87,8 @@
                         title="{{ $color->name }}"
                         @mouseenter="setPreview({{ collect($colorsData)->search(fn($c) => $c['id'] == $color->id) }})"
                         @mouseleave="clearPreview()">
-                        @php
-                            $colorImgRaw = $color->image;
-                            $colorImg = $colorImgRaw
-                                ? (str_starts_with($colorImgRaw, 'http')
-                                    ? $colorImgRaw
-                                    : asset('storage/' . $colorImgRaw))
-                                : null;
-                        @endphp
-                        @if ($colorImg)
-                            <img src="{{ $colorImg }}" class="w-full h-full object-cover"
+                        @if ($color->image)
+                            <img src="{{ $color->image_url }}" class="w-full h-full object-cover"
                                 alt="{{ $color->name }}">
                         @else
                             <div class="w-full h-full bg-gray-200"></div>
