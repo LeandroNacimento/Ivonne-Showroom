@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Product;
+use App\Services\CartService;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -80,5 +81,17 @@ class CatalogPage extends Component
             'products' => $this->products,
             'categories' => Category::select('id', 'name')->orderBy('name')->get(),
         ]);
+    }
+
+    public function addToCart($productId, $variationId, CartService $cartService)
+    {
+        $success = $cartService->addToCart($productId, $variationId, 1);
+
+        if ($success) {
+            $this->dispatch('product-added');
+            $this->dispatch('cart-updated');
+        } else {
+            $this->dispatch('product-add-error');
+        }
     }
 }
