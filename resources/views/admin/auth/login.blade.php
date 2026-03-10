@@ -54,7 +54,7 @@
 
             <div>
                 <button type="submit"
-                    class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-brand-pink hover:bg-pink-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-pink transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-brand-pink hover:bg-brand-pink/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-pink transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
                     <span class="absolute left-0 inset-y-0 flex items-center pl-3">
                         <svg class="h-5 w-5 text-pink-300 group-hover:text-pink-200 transition-colors"
                             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"

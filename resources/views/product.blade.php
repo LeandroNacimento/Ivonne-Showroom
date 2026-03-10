@@ -59,7 +59,7 @@
                                 <button type="button" @click="selectColor(color)"
                                     class="px-4 py-1.5 rounded-full border text-sm font-medium transition-all duration-200 transform hover:scale-110"
                                     :class="activeColor === color ?
-                                        'ring-2 ring-pink-500 border-pink-500 bg-pink-50 text-pink-600' :
+                                        'ring-2 ring-brand-pink border-brand-pink bg-brand-blush text-brand-pink' :
                                         'border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50'"
                                     x-text="color">
                                 </button>
@@ -83,7 +83,7 @@
                                             <label
                                                 class="px-5 py-2 min-w-[3.5rem] border rounded-lg text-sm transition-all duration-200 cursor-pointer focus:outline-none flex items-center justify-center"
                                                 :class="{
-                                                    'ring-2 ring-brand-pink border-brand-pink bg-pink-50 text-brand-pink': selectedVariation ==
+                                                    'ring-2 ring-brand-pink border-brand-pink bg-brand-blush text-brand-pink': selectedVariation ==
                                                         variation.id,
                                                     'border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50': selectedVariation !=
                                                         variation.id
