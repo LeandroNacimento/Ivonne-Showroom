@@ -27,10 +27,7 @@
         <a href="{{ route('cart') }}"
             class="bg-brand-pink text-white shadow-luxury rounded-full h-14 w-14 flex items-center justify-center hover:scale-105 transition-transform duration-300 relative group">
 
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-            </svg>
+            <x-icon name="bag" class="w-6 h-6" />
 
             <!-- Badge rotulado cantidad -->
             <span class="absolute top-0 right-0 -mt-1 -mr-1 flex h-5 w-5">

@@ -153,29 +153,7 @@
                         puede interesar</h2>
                     <div class="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-4 xl:gap-x-8">
                         @foreach ($relatedProducts as $related)
-                            <div class="group relative">
-                                <div
-                                    class="w-full min-h-80 bg-gray-200 aspect-[4/5] rounded-md overflow-hidden group-hover:opacity-75 lg:h-80 flex items-center justify-center">
-                                    @if ($related->colors->first() && $related->colors->first()->image)
-                                        <img src="{{ $related->colors->where('is_main', true)->first()?->image ?? $related->colors->first()->image }}"
-                                            alt="{{ $related->name }}" class="w-full h-full object-center object-cover">
-                                    @else
-                                        <span class="text-gray-400">Imagen</span>
-                                    @endif
-                                </div>
-                                <div class="mt-4 flex justify-between">
-                                    <div>
-                                        <h3 class="text-sm text-gray-700">
-                                            <a href="{{ route('product.show', $related->slug) }}">
-                                                <span aria-hidden="true" class="absolute inset-0"></span>
-                                                {{ $related->name }}
-                                            </a>
-                                        </h3>
-                                    </div>
-                                    <p class="text-sm font-medium text-gray-900">
-                                        ${{ number_format($related->min_price, 0, ',', '.') }}</p>
-                                </div>
-                            </div>
+                            <x-product-card :product="$related" />
                         @endforeach
                     </div>
                 </div>
