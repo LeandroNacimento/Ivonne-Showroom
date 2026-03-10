@@ -114,7 +114,7 @@
         {{-- Precio y Disponibilidad --}}
         <div class="mt-auto pt-3 flex flex-col items-start gap-1">
             <p class="text-base font-semibold text-text-dark">
-                ${{ number_format($product->variations_min_price, 0, ',', '.') }}
+                ${{ number_format($product->min_price, 0, ',', '.') }}
             </p>
             <p class="text-[10px] text-gray-500 uppercase tracking-wider font-medium">
                 {{ $product->availability_label }}
