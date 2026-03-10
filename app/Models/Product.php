@@ -162,4 +162,21 @@ class Product extends Model
 
         return 'Disponible en ' . implode(' - ', $sizes);
     }
+
+    /**
+     * Whether the product was created within the last 15 days.
+     */
+    public function getIsNewAttribute(): bool
+    {
+        return $this->created_at->diffInDays(now()) <= 15;
+    }
+
+    /**
+     * Whether the product has low stock (1-3 units total).
+     */
+    public function getIsLowStockAttribute(): bool
+    {
+        $total = $this->total_stock;
+        return $total > 0 && $total <= 3;
+    }
 }

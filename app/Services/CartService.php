@@ -19,11 +19,16 @@ class CartService
         $product = Product::with('images')->find($productId);
         $variation = ProductVariation::with('productColor')->find($variationId);
 
-        if (!$product || !$variation) {
+        if (!$product || !$variation || $variation->stock <= 0) {
             return false;
         }
 
         $cartKey = $productId . '-' . $variationId;
+        $currentCartQuantity = isset($cart[$cartKey]) ? $cart[$cartKey]['quantity'] : 0;
+
+        if ($currentCartQuantity + $quantity > $variation->stock) {
+            return false; // Validar que la cantidad en carrito + nueva no supere el stock
+        }
 
         if (isset($cart[$cartKey])) {
             $cart[$cartKey]['quantity'] += $quantity;

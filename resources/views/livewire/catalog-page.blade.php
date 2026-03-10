@@ -42,55 +42,38 @@
             </div>
         </div>
 
-        {{-- Indicador de carga sutil --}}
-        <div wire:loading class="text-xs font-light tracking-widest text-gray-400 mb-6 uppercase">
-            Actualizando catálogo...
+        {{-- Skeleton Loader para Livewire --}}
+        <div wire:loading class="w-full">
+            <div
+                class="grid grid-cols-2 gap-x-4 gap-y-12 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-10 lg:gap-y-16">
+                @for ($i = 0; $i < 8; $i++)
+                    <div class="flex flex-col h-full bg-white rounded-md">
+                        <div class="w-full aspect-[4/5] bg-gray-200 rounded-t-md animate-pulse"></div>
+                        <div class="p-4 space-y-4">
+                            <div class="flex space-x-1.5 mb-2">
+                                <div class="w-4 h-4 rounded-full bg-gray-200 animate-pulse"></div>
+                                <div class="w-4 h-4 rounded-full bg-gray-200 animate-pulse"></div>
+                                <div class="w-4 h-4 rounded-full bg-gray-200 animate-pulse"></div>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="h-4 bg-gray-200 rounded animate-pulse w-full"></div>
+                                <div class="h-4 bg-gray-200 rounded animate-pulse w-2/3"></div>
+                            </div>
+                            <div class="space-y-2 mt-4 pt-2">
+                                <div class="h-5 bg-gray-200 rounded animate-pulse w-1/3"></div>
+                                <div class="h-3 bg-gray-200 rounded animate-pulse w-1/2"></div>
+                            </div>
+                        </div>
+                    </div>
+                @endfor
+            </div>
         </div>
 
         {{-- Grid de Productos --}}
-        <div class="grid grid-cols-2 gap-x-4 gap-y-12 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-10 lg:gap-y-16 transition-opacity duration-300"
-            wire:loading.class="opacity-50">
+        <div wire:loading.remove
+            class="grid grid-cols-2 gap-x-4 gap-y-12 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-10 lg:gap-y-16">
             @forelse($products as $product)
-                {{-- Product Card: Transición opacity sutil on hover --}}
-                <a href="{{ route('product.show', $product->slug) }}"
-                    class="group flex flex-col h-full focus:outline-none transition duration-300 ease-in-out hover:-translate-y-1 hover:shadow-lg">
-
-                    {{-- A) Imagen Principal --}}
-                    <div class="relative w-full aspect-[4/5] overflow-hidden bg-stone-50">
-                        <img src="{{ $product->mainColor?->image ?? ($product->colors->first()?->image ?? 'https://via.placeholder.com/600x750') }}"
-                            loading="lazy" alt="{{ $product->name }}"
-                            class="w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.03]">
-                    </div>
-
-                    {{-- Cuerpo de Información --}}
-                    <div class="flex flex-col flex-grow bg-white/90 backdrop-blur-sm p-4 rounded-b-md space-y-1">
-
-                        {{-- B) Nombre del Producto --}}
-                        <div class="flex-grow">
-                            <h3 class="text-lg font-semibold text-neutral-900 line-clamp-2 leading-relaxed">
-                                {{ $product->name }}
-                            </h3>
-                        </div>
-
-                        {{-- C) Precio Mínimo --}}
-                        <div class="mt-1">
-                            <p class="text-base font-semibold text-neutral-800">
-                                Desde ${{ number_format($product->variations_min_price, 0, ',', '.') }}
-                            </p>
-                        </div>
-
-                        {{-- Atributos Disponibles --}}
-                        <div class="mt-2 space-y-1">
-                            <p class="text-sm font-medium text-neutral-700 mt-2">
-                                {{ $product->availability_label }}
-                            </p>
-
-                            <p class="text-xs text-neutral-500 mt-1">
-                                {{ $product->colors->count() }} colores disponibles
-                            </p>
-                        </div>
-                    </div>
-                </a>
+                <x-product-card :product="$product" />
             @empty
                 {{-- Estado Empty Premium --}}
                 <div class="col-span-full py-32 text-center">
@@ -104,6 +87,26 @@
         {{-- Paginación --}}
         <div class="mt-16 sm:mt-24">
             {{ $products->links() }}
+        </div>
+    </div>
+
+    {{-- Componente Sticky Mini Cart --}}
+    @livewire('mini-cart')
+
+    {{-- Toast Animado al agregar producto --}}
+    <div x-data="{ show: false }" @product-added.window="show = true; setTimeout(() => show = false, 2500)"
+        class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+
+        <div x-show="show" style="display: none;" x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 translate-y-10" x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 translate-y-10"
+            class="bg-brand-pink text-white px-6 py-3 rounded-full shadow-2xl flex items-center space-x-3">
+
+            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span class="text-sm font-medium tracking-wide">Prenda agregada al pedido</span>
         </div>
     </div>
 </div>
