@@ -13,6 +13,11 @@ class CartService
         return Session::get('cart', []);
     }
 
+    public function count(): int
+    {
+        return count($this->getCart());
+    }
+
     public function addToCart($productId, $variationId, $quantity = 1)
     {
         $cart = $this->getCart();

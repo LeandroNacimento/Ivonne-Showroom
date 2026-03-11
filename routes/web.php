@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [ShowroomController::class, 'index'])->name('home');
 Route::get('/catalogo', [ShowroomController::class, 'catalog'])->name('catalog');
-Route::get('/producto/{slug}', [ShowroomController::class, 'product'])->name('product.show');
+Route::get('/producto/{slug}', \App\Livewire\ProductPage::class)->name('product.show');
 Route::get('/carrito', [ShowroomController::class, 'cart'])->name('cart');
 Route::middleware(['throttle:60,1'])->group(function () {
     Route::post('/carrito/agregar', [ShowroomController::class, 'addToCart'])->name('cart.add');

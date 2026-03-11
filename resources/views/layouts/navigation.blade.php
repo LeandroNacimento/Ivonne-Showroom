@@ -22,13 +22,7 @@
             <div class="flex items-center space-x-4">
                 <a href="{{ route('cart') }}"
                     class="relative p-2 text-gray-600 hover:text-brand-gold transition-colors">
-                    <x-icon name="bag" />
-                    @if (session('cart') && count(session('cart')) > 0)
-                        <span
-                            class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-brand-pink rounded-full">
-                            {{ count(session('cart')) }}
-                        </span>
-                    @endif
+                    <livewire:cart-badge />
                 </a>
 
                 <!-- Mobile menu button -->

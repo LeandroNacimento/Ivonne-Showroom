@@ -91,22 +91,4 @@
     </div>
 
     {{-- Componente Sticky Mini Cart --}}
-    @livewire('mini-cart')
-
-    {{-- Toast Animado al agregar producto --}}
-    <div x-data="{ show: false }" @product-added.window="show = true; setTimeout(() => show = false, 2500)"
-        class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-
-        <div x-show="show" style="display: none;" x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 translate-y-10" x-transition:enter-end="opacity-100 translate-y-0"
-            x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100 translate-y-0"
-            x-transition:leave-end="opacity-0 translate-y-10"
-            class="bg-brand-pink text-white px-6 py-3 rounded-full shadow-2xl flex items-center space-x-3">
-
-            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            <span class="text-sm font-medium tracking-wide">Prenda agregada al pedido</span>
-        </div>
-    </div>
 </div>
