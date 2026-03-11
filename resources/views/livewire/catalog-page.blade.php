@@ -85,7 +85,7 @@
         </div>
 
         {{-- Paginación --}}
-        <div class="mt-16 sm:mt-24">
+        <div class="mt-16 sm:mt-24 [&_nav_p]:hidden">
             {{ $products->links() }}
         </div>
     </div>
