@@ -105,4 +105,12 @@ class ProductVariation extends Model
     {
         return $this->belongsTo(ProductColor::class);
     }
+
+    public function getCartImageAttribute()
+    {
+        $colorImage = $this->productColor?->images?->first();
+        $productImage = $this->product?->images?->first();
+
+        return $colorImage?->path ?? $productImage?->path;
+    }
 }

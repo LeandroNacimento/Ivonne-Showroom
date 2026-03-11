@@ -29,7 +29,12 @@
                             wire:target="increment('{{ $key }}'), decrement('{{ $key }}'), removeFromCart('{{ $key }}')">
                             <div class="flex-shrink-0 h-16 w-16 rounded-md overflow-hidden bg-gray-100">
                                 @if ($item['image'])
-                                    <img src="{{ asset('storage/' . $item['image']) }}" alt="{{ $item['name'] }}"
+                                    @php
+                                        $imgSrc = str_starts_with($item['image'], 'http')
+                                            ? $item['image']
+                                            : asset('storage/' . $item['image']);
+                                    @endphp
+                                    <img src="{{ $imgSrc }}" alt="{{ $item['name'] }}"
                                         class="h-full w-full object-cover">
                                 @else
                                     <span

@@ -21,8 +21,8 @@ class CartService
     public function addToCart($productId, $variationId, $quantity = 1)
     {
         $cart = $this->getCart();
-        $product = Product::with('images')->find($productId);
-        $variation = ProductVariation::with('productColor')->find($variationId);
+        $product = Product::find($productId);
+        $variation = ProductVariation::with(['product.images', 'productColor.images'])->find($variationId);
 
         if (!$product || !$variation || $variation->stock <= 0) {
             return false;
@@ -46,7 +46,7 @@ class CartService
                 'color' => $variation->productColor->name,
                 'size' => $variation->size,
                 'stock' => $variation->stock,
-                'image' => $product->images->first() ? $product->images->first()->path : null,
+                'image' => $variation->cart_image,
                 'quantity' => $quantity,
             ];
         }
