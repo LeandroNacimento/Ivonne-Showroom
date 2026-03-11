@@ -41,10 +41,17 @@ class ProductController extends Controller
     {
         $validated = $request->validated();
 
-        DB::transaction(function () use ($request, $validated) {
+        $baseSlug = Str::slug($validated['name']);
+        $slug = $baseSlug;
+        $i = 1;
+        while (Product::withTrashed()->where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $i++;
+        }
+
+        DB::transaction(function () use ($request, $validated, $slug) {
             $product = Product::create([
                 'name' => $validated['name'],
-                'slug' => Str::slug($validated['name']),
+                'slug' => $slug,
                 'category_id' => $validated['category_id'],
                 'description' => $validated['description'] ?? null,
                 'is_featured' => $request->has('is_featured'),
@@ -72,10 +79,17 @@ class ProductController extends Controller
     {
         $validated = $request->validated();
 
-        DB::transaction(function () use ($request, $product, $validated) {
+        $baseSlug = Str::slug($validated['name']);
+        $slug = $baseSlug;
+        $i = 1;
+        while (Product::withTrashed()->where('slug', $slug)->where('id', '!=', $product->id)->exists()) {
+            $slug = $baseSlug . '-' . $i++;
+        }
+
+        DB::transaction(function () use ($request, $product, $validated, $slug) {
             $product->update([
                 'name' => $validated['name'],
-                'slug' => Str::slug($validated['name']),
+                'slug' => $slug,
                 'category_id' => $validated['category_id'],
                 'description' => $validated['description'] ?? null,
                 'is_featured' => $request->has('is_featured'),

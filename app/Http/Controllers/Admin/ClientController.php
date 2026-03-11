@@ -20,7 +20,7 @@ class ClientController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
             'instagram' => 'nullable|string|max:255',
@@ -28,7 +28,7 @@ class ClientController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        Client::create($request->all());
+        Client::create($validated);
 
         return redirect()->route('admin.clients.index')->with('success', 'Cliente creado con éxito.');
     }
@@ -57,7 +57,7 @@ class ClientController extends Controller
 
     public function update(Request $request, Client $client)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
             'instagram' => 'nullable|string|max:255',
@@ -65,7 +65,7 @@ class ClientController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $client->update($request->all());
+        $client->update($validated);
 
         return redirect()->route('admin.clients.index')->with('success', 'Cliente actualizado con éxito.');
     }
