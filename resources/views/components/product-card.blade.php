@@ -81,7 +81,8 @@
         @if ($uniqueColors->count() > 0)
             <div class="flex items-center space-x-1.5 mb-3" @click.stop.prevent>
                 @foreach ($visibleColors as $color)
-                    <div class="w-4 h-4 rounded-full border shadow-sm overflow-hidden relative cursor-pointer hover:scale-110 transition-transform"
+                    <div @click.stop.prevent="window.location.assign('{{ route('product.show', $product->slug) }}?color={{ Str::slug($color->name) }}')"
+                        class="w-4 h-4 block rounded-full border shadow-sm overflow-hidden relative cursor-pointer hover:scale-110 transition-transform"
                         :class="previewIndex === {{ collect($colorsData)->search(fn($c) => $c['id'] == $color->id) }} ?
                             'border-brand-pink ring-1 ring-brand-pink' : 'border-gray-200'"
                         title="{{ $color->name }}"

@@ -47,9 +47,24 @@ class ProductPage extends Component
             }
         }
 
-        // Initial active color
-        $this->initialColor = $this->product->variations->where('stock', '>', 0)->first()?->productColor?->name
-            ?? ($this->product->colors->first()?->name ?? 'Único');
+        // Initial active color determination
+        $requestedColorSlug = request()->query('color');
+
+        if ($requestedColorSlug) {
+            $requestedVariation = $this->sortedVariations->first(function ($v) use ($requestedColorSlug) {
+                return \Illuminate\Support\Str::slug($v['color']) === $requestedColorSlug && $v['stock'] > 0;
+            });
+
+            if ($requestedVariation) {
+                $this->initialColor = $requestedVariation['color'];
+            }
+        }
+
+        // Fallback if no valid color was requested
+        if (!isset($this->initialColor)) {
+            $this->initialColor = $this->product->variations->where('stock', '>', 0)->first()?->productColor?->name
+                ?? ($this->product->colors->first()?->name ?? 'Único');
+        }
     }
 
     public function addToCart($variationId, $quantity, CartService $cartService)
