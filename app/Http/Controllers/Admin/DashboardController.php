@@ -18,7 +18,7 @@ class DashboardController extends Controller
         $minStock = Setting::where('key', 'min_stock')->value('value') ?? 5;
 
         // Stats
-        $todaySales = Order::whereDate('date', Carbon::today())
+        $todaySales = Order::whereBetween('date', [now()->startOfDay(), now()->endOfDay()])
             ->where('status', '!=', Order::STATUS_CANCELLED)
             ->sum('total');
 
@@ -32,10 +32,9 @@ class DashboardController extends Controller
         // Low Stock
         // Since total_stock is an accessor, we fetch products and filter. 
         // For better performance in large DBs, we would use a subquery or aggregate.
-        $lowStockProducts = Product::with('variations')->get()
-            ->filter(function ($product) use ($minStock) {
-                return $product->total_stock < $minStock;
-            });
+        $lowStockProducts = Product::withSum('variations', 'stock')
+            ->having('variations_sum_stock', '<', $minStock)
+            ->get();
 
         // Recent Orders
         $recentOrders = Order::with('client')->latest('date')->take(5)->get();
