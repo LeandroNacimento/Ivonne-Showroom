@@ -85,9 +85,15 @@
         </div>
 
         {{-- Paginación --}}
-        <div class="mt-16 sm:mt-24 [&_nav_p]:hidden">
+        <div class="mt-16 sm:mt-24 pagination-custom">
             {{ $products->links() }}
         </div>
+
+        <style>
+            .pagination-custom nav p {
+                display: none !important;
+            }
+        </style>
     </div>
 
     {{-- Componente Sticky Mini Cart --}}
