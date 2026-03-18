@@ -9,10 +9,22 @@ class ProductImage extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['product_id', 'path'];
+    protected $fillable = [
+        'product_color_id',
+        'path',
+        'position',
+    ];
 
-    public function product()
+    protected $casts = [
+        'position' => 'integer',
+    ];
+
+    /**
+     * Acceder al producto mediante: $image->productColor->product
+     */
+
+    public function productColor()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(ProductColor::class);
     }
 }

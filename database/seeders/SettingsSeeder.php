@@ -16,6 +16,8 @@ class SettingsSeeder extends Seeder
             'address' => 'Napoleón Uriburu 1366, Formosa Capital',
             'email' => 'contacto@ivonneshowroom.com',
             'hours' => 'Lunes a Sábado: 9:00 - 12:30 / 17:00 - 21:00',
+            'min_stock' => '5',
+            'footer_text' => 'Moda femenina elegante y exclusiva. Envíos a todo el país.',
         ];
 
         foreach ($settings as $key => $value) {

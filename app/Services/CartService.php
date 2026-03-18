@@ -13,17 +13,27 @@ class CartService
         return Session::get('cart', []);
     }
 
+    public function count(): int
+    {
+        return count($this->getCart());
+    }
+
     public function addToCart($productId, $variationId, $quantity = 1)
     {
         $cart = $this->getCart();
-        $product = Product::with('images')->find($productId);
-        $variation = ProductVariation::find($variationId);
+        $product = Product::find($productId);
+        $variation = ProductVariation::with(['product.images', 'productColor.images'])->find($variationId);
 
-        if (!$product || !$variation) {
+        if (!$product || !$variation || $variation->stock <= 0) {
             return false;
         }
 
         $cartKey = $productId . '-' . $variationId;
+        $currentCartQuantity = isset($cart[$cartKey]) ? $cart[$cartKey]['quantity'] : 0;
+
+        if ($currentCartQuantity + $quantity > $variation->stock) {
+            return false; // Validar que la cantidad en carrito + nueva no supere el stock
+        }
 
         if (isset($cart[$cartKey])) {
             $cart[$cartKey]['quantity'] += $quantity;
@@ -32,10 +42,11 @@ class CartService
                 'product_id' => $product->id,
                 'variation_id' => $variation->id,
                 'name' => $product->name,
-                'price' => $product->price,
-                'color' => $variation->color,
+                'price' => $variation->price,
+                'color' => $variation->productColor->name,
                 'size' => $variation->size,
-                'image' => $product->images->first() ? $product->images->first()->path : null,
+                'stock' => $variation->stock,
+                'image' => $variation->cart_image,
                 'quantity' => $quantity,
             ];
         }
@@ -89,7 +100,7 @@ class CartService
             $message .= "- {$item['name']} ({$item['color']} - {$item['size']}) x {$item['quantity']} = $" . number_format($item['price'] * $item['quantity'], 0, ',', '.') . "\n";
         }
         $message .= "\nTotal: $" . number_format($this->getTotal(), 0, ',', '.');
-        
+
         return urlencode($message);
     }
 }

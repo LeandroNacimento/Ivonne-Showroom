@@ -9,14 +9,26 @@ use App\Models\ProductImage;
 use App\Models\ProductVariation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Services\ProductService;
+use App\Services\ProductImageService;
+use App\Http\Requests\Admin\StoreProductRequest;
+use App\Http\Requests\Admin\UpdateProductRequest;
 
 class ProductController extends Controller
 {
+    protected ProductService $productService;
+    protected ProductImageService $imageService;
+
+    public function __construct(ProductService $productService, ProductImageService $imageService)
+    {
+        $this->productService = $productService;
+        $this->imageService = $imageService;
+    }
     public function index()
     {
-        $products = Product::with('category')->latest()->paginate(10);
-        return view('admin.products.index', compact('products'));
+        return view('admin.products.index');
     }
 
     public function create()
@@ -25,48 +37,33 @@ class ProductController extends Controller
         return view('admin.products.create', compact('categories'));
     }
 
-    public function store(Request $request)
+    public function store(StoreProductRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'price' => 'required|numeric|min:0',
-            'description' => 'nullable|string',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'variations.*.color' => 'required|string',
-            'variations.*.size' => 'required|string',
-            'variations.*.stock' => 'required|integer|min:0',
-        ]);
+        $validated = $request->validated();
 
-        $product = Product::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'category_id' => $request->category_id,
-            'price' => $request->price,
-            'description' => $request->description,
-            'is_featured' => $request->has('is_featured'),
-        ]);
-
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('products', 'public');
-                ProductImage::create([
-                    'product_id' => $product->id,
-                    'path' => $path,
-                ]);
-            }
+        $baseSlug = Str::slug($validated['name']);
+        $slug = $baseSlug;
+        $i = 1;
+        while (Product::withTrashed()->where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $i++;
         }
 
-        if ($request->has('variations')) {
-            foreach ($request->variations as $variation) {
-                ProductVariation::create([
-                    'product_id' => $product->id,
-                    'color' => $variation['color'],
-                    'size' => $variation['size'],
-                    'stock' => $variation['stock'],
-                ]);
+        DB::transaction(function () use ($request, $validated, $slug) {
+            $product = Product::create([
+                'name' => $validated['name'],
+                'slug' => $slug,
+                'category_id' => $validated['category_id'],
+                'description' => $validated['description'] ?? null,
+                'is_featured' => $request->has('is_featured'),
+            ]);
+
+            $this->productService->syncVariations($product, $request->variations);
+
+            $imagesData = $request->file('images');
+            if (!empty($imagesData) && is_array($imagesData)) {
+                $this->imageService->storeImages($product, $imagesData);
             }
-        }
+        });
 
         return redirect()->route('admin.products.index')->with('success', 'Producto creado con éxito.');
     }
@@ -78,52 +75,37 @@ class ProductController extends Controller
         return view('admin.products.edit', compact('product', 'categories'));
     }
 
-    public function update(Request $request, Product $product)
+    public function update(UpdateProductRequest $request, Product $product)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'price' => 'required|numeric|min:0',
-            'description' => 'nullable|string',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+        $validated = $request->validated();
 
-        $product->update([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'category_id' => $request->category_id,
-            'price' => $request->price,
-            'description' => $request->description,
-            'is_featured' => $request->has('is_featured'),
-        ]);
-
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('products', 'public');
-                ProductImage::create([
-                    'product_id' => $product->id,
-                    'path' => $path,
-                ]);
-            }
+        $baseSlug = Str::slug($validated['name']);
+        $slug = $baseSlug;
+        $i = 1;
+        while (Product::withTrashed()->where('slug', $slug)->where('id', '!=', $product->id)->exists()) {
+            $slug = $baseSlug . '-' . $i++;
         }
 
-        // Handle variations update/create/delete logic is complex, for simplicity we might just re-create or handle separately.
-        // For this MVP, let's assume we just add new ones or update existing if ID provided.
-        // A better approach for variations in edit is often a separate component or Vue/Livewire.
-        // I will stick to basic adding for now to keep it simple as requested.
-        
-        if ($request->has('new_variations')) {
-             foreach ($request->new_variations as $variation) {
-                if ($variation['color'] && $variation['size']) {
-                    ProductVariation::create([
-                        'product_id' => $product->id,
-                        'color' => $variation['color'],
-                        'size' => $variation['size'],
-                        'stock' => $variation['stock'],
-                    ]);
-                }
+        DB::transaction(function () use ($request, $product, $validated, $slug) {
+            $product->update([
+                'name' => $validated['name'],
+                'slug' => $slug,
+                'category_id' => $validated['category_id'],
+                'description' => $validated['description'] ?? null,
+                'is_featured' => $request->has('is_featured'),
+            ]);
+
+            $this->productService->syncVariations($product, $request->variations);
+
+            if ($request->has('delete_images')) {
+                $this->imageService->deleteImages($product, $request->delete_images);
             }
-        }
+
+            $imagesData = $request->file('images');
+            if (!empty($imagesData) && is_array($imagesData)) {
+                $this->imageService->storeImages($product, $imagesData);
+            }
+        });
 
         return redirect()->route('admin.products.index')->with('success', 'Producto actualizado con éxito.');
     }
@@ -135,5 +117,44 @@ class ProductController extends Controller
         }
         $product->delete();
         return redirect()->route('admin.products.index')->with('success', 'Producto eliminado con éxito.');
+    }
+
+    public function search(Request $request)
+    {
+        $validated = $request->validate([
+            'q' => ['required', 'string', 'min:2', 'max:50'],
+        ]);
+
+        $query = $validated['q'];
+
+        $products = Product::where('name', 'like', "%{$query}%")
+            ->orWhere('id', 'like', "%{$query}%")
+            ->with([
+                'variations' => function ($q) {
+                    $q->where('stock', '>', 0);
+                },
+                'variations.productColor'
+            ])
+            ->limit(20)
+            ->get();
+
+        $mappedProducts = $products->map(function ($product) {
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'price' => $product->price,
+                'variations' => $product->variations->map(function ($v) use ($product) {
+                    return [
+                        'id' => $v->id,
+                        'color' => $v->productColor->name ?? 'N/A',
+                        'size' => $v->size,
+                        'stock' => $v->stock,
+                        'price' => $v->price ?? $product->price,
+                    ];
+                })->values()->toArray()
+            ];
+        });
+
+        return response()->json($mappedProducts);
     }
 }

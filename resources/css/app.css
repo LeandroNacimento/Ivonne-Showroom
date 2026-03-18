@@ -2,14 +2,131 @@
 
 @theme {
     /* Colors */
-    --color-brand-blush: #F7E9ED;
-    --color-brand-pink: #E94F9B;
-    --color-brand-heart: #F59BB4;
+    --color-brand-blush: #f7e9ed;
+    --color-brand-blush-soft: #fbf4f6;
+    --color-brand-cream: #fdfafb;
+    --color-brand-pink: #e94f9b;
+    --color-brand-heart: #f59bb4;
+    --color-brand-gold: #d4af37;
     --color-text-dark: #333333;
     --color-black: #000000;
-    --color-white: #FFFFFF;
+    --color-white: #ffffff;
 
     /* Fonts */
     --font-script: "Great Vibes", cursive;
     --font-sans: "Montserrat", sans-serif;
+}
+
+@layer base {
+    /* Hide number input arrows */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+        -webkit-appearance: none; 
+        margin: 0; 
+    }
+
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+}
+
+@layer utilities {
+    /* 
+       ANIMACIONES UX - Ivonne Showroom 
+       Diseñadas para una entrada suave y premium.
+    */
+
+    /* Base de animación: Elemento invisible y desplazado hacia abajo */
+    .reveal {
+        opacity: 0;
+        transform: translateY(30px);
+        transition:
+            opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+            transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        will-change: opacity, transform;
+    }
+
+    @media (max-width: 640px) {
+        .reveal {
+            transition: opacity 0.5s ease-out;
+            transform: none !important;
+        }
+    }
+
+    /* Estado activo: Elemento en su posición final */
+    .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Opción B: Fade simple (sin movimiento) para imágenes grandes o fondos */
+    .reveal-fade {
+        opacity: 0;
+        transition: opacity 1.2s ease-out;
+        will-change: opacity;
+    }
+
+    .reveal-fade.active {
+        opacity: 1;
+    }
+
+    /* Para elementos hijos dentro de un contenedor .reveal-stagger-container */
+    .reveal-child {
+        opacity: 0;
+        transform: translateY(20px);
+        transition:
+            opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+            transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .reveal-child.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* SPA Transitions */
+    .spa-content {
+        transition:
+            opacity 0.3s ease-in-out,
+            transform 0.3s ease-in-out;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Luxury Shadows */
+    .shadow-soft {
+        box-shadow: 0 4px 20px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+    }
+
+    .shadow-luxury {
+        box-shadow: 0 20px 40px -15px rgba(233, 79, 155, 0.15), 0 10px 20px -10px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Boutique V2 Sidebar & Filters */
+    .color-dot {
+        position: relative;
+    }
+    
+    label:has(input:checked) .color-dot {
+        @apply ring-2 ring-brand-pink ring-offset-2 scale-110;
+    }
+
+    .sidebar-section-title {
+        @apply text-[11px] uppercase tracking-[0.2em] font-extrabold text-gray-600 mb-6;
+    }
+
+    /* Mobile Drawer */
+    .drawer-backdrop {
+        background-color: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(4px);
+    }
+
+    /* Transition classes for JS */
+    #filter-drawer.pointer-events-auto .drawer-panel {
+        transform: translateX(0);
+    }
+
+    #filter-drawer.pointer-events-auto .drawer-backdrop {
+        opacity: 1;
+    }
 }
