@@ -37,7 +37,10 @@ class ClientController extends Controller
     {
         $client->load([
             'orders' => function ($query) {
-                $query->latest('date');
+                $query->latest('date')->with([
+                    'items.product.images',
+                    'items.variation.productColor'
+                ]);
             }
         ]);
 

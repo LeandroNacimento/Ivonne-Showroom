@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="max-w-4xl mx-auto">
+<div class="max-w-4xl mx-auto" x-data="orderQuickView()">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Detalle del Cliente</h1>
         <a href="{{ route('admin.clients.index') }}" class="text-gray-600 hover:text-gray-900">
@@ -101,7 +101,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${{ number_format($order->total, 0, ',', '.') }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <a href="#" class="text-indigo-600 hover:text-indigo-900">Ver</a>
+                                <button @click='openOrder(@json($order))' class="text-indigo-600 hover:text-indigo-900 focus:outline-none">Ver</button>
                             </td>
                         </tr>
                         @empty
@@ -112,6 +112,121 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- Quick View Modal & Script -->
+    <script>
+    function orderQuickView() {
+        return {
+            selectedOrder: null,
+
+            openOrder(order) {
+                this.selectedOrder = order;
+                document.body.classList.add('overflow-hidden');
+            },
+
+            close() {
+                this.selectedOrder = null;
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+    }
+    </script>
+
+    <!-- Modal único con imágenes -->
+    <div 
+        x-cloak
+        x-show="selectedOrder"
+        x-transition
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+    >
+        <div 
+            @click.away="close()"
+            class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
+        >
+
+            <!-- Header -->
+            <div class="flex justify-between items-center border-b p-4">
+                <h2 class="text-lg font-semibold">
+                    Pedido #<span x-text="selectedOrder.id"></span>
+                </h2>
+
+                <button @click="close()" class="text-gray-500 hover:text-black text-xl">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-4 overflow-y-auto space-y-3">
+
+                <template x-if="selectedOrder.items && selectedOrder.items.length">
+                    <div class="space-y-3">
+                        <template x-for="item in selectedOrder.items" :key="item.id">
+                            <div class="flex gap-3 items-center border rounded-lg p-3">
+
+                                <!-- Imagen con zoom -->
+                                <div class="relative w-16 h-16 flex-shrink-0 overflow-hidden rounded-lg border bg-gray-100">
+                                    <img 
+                                        :src="item.product?.cover_url ?? '/img/placeholder-product.jpg'"
+                                        @error="$event.target.src = '/img/placeholder-product.jpg'"
+                                        loading="lazy"
+                                        alt=""
+                                        class="w-full h-full object-cover transition-transform duration-300 hover:scale-150"
+                                    >
+                                </div>
+
+                                <!-- Info -->
+                                <div class="flex-1">
+                                    <p class="font-medium" x-text="item.product?.name ?? 'Producto eliminado'"></p>
+
+                                    <p class="text-sm text-gray-500"
+                                       x-text="item.variation ? ((item.variation.product_color ? item.variation.product_color.name + ' - ' : '') + item.variation.size) : 'Sin variación'">
+                                    </p>
+                                </div>
+
+                                <!-- Cantidad y subtotal -->
+                                <div class="text-right">
+                                    <p class="text-sm">x<span x-text="item.quantity"></span></p>
+                                    <p class="font-semibold">$<span x-text="Number(item.subtotal).toLocaleString('es-AR')"></span></p>
+                                </div>
+
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <template x-if="!selectedOrder.items || !selectedOrder.items.length">
+                    <div class="py-8 text-center text-gray-500">
+                        Este pedido no tiene productos
+                    </div>
+                </template>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="border-t p-4 flex justify-between items-center bg-gray-50">
+
+                <span class="text-lg font-bold text-brand-pink">
+                    Total: $<span x-text="Number(selectedOrder.total).toLocaleString('es-AR')"></span>
+                </span>
+
+                <div class="flex gap-3">
+                    <a 
+                        :href="`/admin/orders/${selectedOrder.id}`"
+                        class="px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-lg hover:bg-gray-50 shadow-sm font-medium">
+                        Ver completo
+                    </a>
+
+                    <button 
+                        @click="close()"
+                        class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 shadow-sm font-medium">
+                        Cerrar
+                    </button>
+                </div>
+
+            </div>
+
         </div>
     </div>
 </div>
