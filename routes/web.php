@@ -22,13 +22,15 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingController;
 
 // Admin Routes
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix(env('ADMIN_PATH', 'admin'))->name('admin.')->group(function () {
     Route::redirect('/', '/admin/dashboard');
 
     // Guest Admin Routes
     Route::middleware('guest')->group(function () {
         Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
-        Route::post('/login', [AdminAuthController::class, 'login'])->name('login.submit');
+        Route::post('/login', [AdminAuthController::class, 'login'])
+            ->name('login.submit')
+            ->middleware('throttle:5,1');
     });
 
     // Authenticated Admin Routes
