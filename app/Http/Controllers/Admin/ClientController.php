@@ -79,4 +79,25 @@ class ClientController extends Controller
         $client->delete();
         return redirect()->route('admin.clients.index')->with('success', 'Cliente eliminado con éxito.');
     }
+
+    public function search(Request $request)
+    {
+        $request->validate([
+            'q' => 'nullable|string|max:100',
+        ]);
+
+        $query = trim($request->input('q'));
+
+        if (!$query) {
+            return response()->json([]);
+        }
+
+        $clients = Client::query()
+            ->where('name', 'like', "%{$query}%")
+            ->orderBy('name')
+            ->limit(10)
+            ->get(['id', 'name']);
+
+        return response()->json($clients);
+    }
 }

@@ -45,6 +45,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('products', ProductController::class);
 
         // Clients CRUD
+        Route::get('/clients/search', [ClientController::class, 'search'])
+            ->name('clients.search');
         Route::resource('clients', ClientController::class);
 
         // Orders CRUD

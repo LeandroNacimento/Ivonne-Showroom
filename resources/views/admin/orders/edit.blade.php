@@ -17,7 +17,9 @@
                 deliveryType: @json(old('delivery_type', $order->delivery_type ?? 'showroom')),
                 shippingCost: {!! json_encode(old('shipping_cost', $order->shipping_cost) ?: 0) !!},
                 freeShipping: {{ old('delivery_type', $order->delivery_type ?? '') === 'shipping' && (old('shipping_cost', $order->shipping_cost) == 0 && old('shipping_cost', $order->shipping_cost) !== null) ? 'true' : 'false' }},
-                clientMode: @json(old('new_client_name') ? 'new' : 'existing')
+                clientMode: @json(old('new_client_name') ? 'new' : 'existing'),
+                clientId: {{ old('client_id', $order->client_id ?? 'null') }},
+                clientSearch: {!! json_encode(old('clientSearch', $order->client ? $order->client->name : '')) !!}
             };
         </script>
         <div x-data="orderForm(window.INITIAL_ORDER_DATA)">
@@ -185,18 +187,42 @@
                                 </div>
 
                                 <!-- Cliente Existente -->
-                                <div x-show="clientMode === 'existing'">
-                                    <select name="client_id" id="client_id" x-ref="clientId"
-                                        class="w-full rounded-md border-[{{ $errors->has('client_id') ? 'red-500' : 'gray-300' }}] shadow-sm focus:border-brand-pink focus:ring-brand-pink focus:ring-opacity-50"
-                                        :required="clientMode === 'existing'">
-                                        <option value="">Seleccionar Cliente</option>
-                                        @foreach ($clients as $client)
-                                            <option value="{{ $client->id }}"
-                                                {{ (old('client_id') ?? $order->client_id) == $client->id ? 'selected' : '' }}>
-                                                {{ $client->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                <div x-show="clientMode === 'existing'" class="relative">
+                                    <input type="hidden" name="client_id" x-model="clientId">
+                                    
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar cliente..."
+                                        x-model="clientSearch"
+                                        @input.debounce.300ms="searchClient"
+                                        @focus="showClientResults = true"
+                                        @click.outside="showClientResults = false"
+                                        class="w-full rounded-md border-[{{ $errors->has('client_id') ? 'red-500' : 'gray-300' }}] shadow-sm text-sm focus:border-brand-pink focus:ring-brand-pink focus:ring-opacity-50"
+                                    >
+
+                                    <!-- Results dropdown -->
+                                    <div x-show="showClientResults"
+                                         class="absolute z-10 bg-white border border-gray-200 w-full mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto">
+
+                                        <!-- Loading state -->
+                                        <div x-show="isSearchingClient" class="p-3 text-sm text-gray-500 text-center">
+                                            Buscando...
+                                        </div>
+
+                                        <template x-if="clientResults.length === 0 && !isSearchingClient && clientSearch.length > 0">
+                                            <div class="p-3 text-gray-500 text-sm text-center">
+                                                No se encontraron clientes
+                                            </div>
+                                        </template>
+
+                                        <template x-for="client in clientResults" :key="client.id">
+                                            <div
+                                                @click="selectClient(client)"
+                                                class="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                                x-text="client.name"
+                                            ></div>
+                                        </template>
+                                    </div>
                                     @error('client_id')
                                         <div class="text-xs text-red-500 mt-1">{{ $message }}</div>
                                     @enderror

@@ -5,6 +5,11 @@ export default function orderForm(initialData = {}) {
         shippingCost: initialData.shippingCost || 0,
         freeShipping: initialData.freeShipping || false,
         clientMode: initialData.clientMode || 'existing',
+        clientId: initialData.clientId || null,
+        clientSearch: initialData.clientSearch || '',
+        clientResults: [],
+        showClientResults: false,
+        isSearchingClient: false,
         errors: initialData.errors || {},
 
         init() {
@@ -143,6 +148,41 @@ export default function orderForm(initialData = {}) {
             this.clearError(`items.${index}.variation_id`);
             this.clearError(`items.${index}.unit_price`);
             this.clearError(`items.${index}.quantity`);
+        },
+
+        async searchClient() {
+            if (!this.clientSearch.trim()) {
+                this.clientResults = [];
+                this.showClientResults = false;
+                return;
+            }
+
+            this.isSearchingClient = true;
+
+            try {
+                const response = await fetch(`/admin/clients/search?q=${encodeURIComponent(this.clientSearch)}`);
+                const data = await response.json();
+
+                this.clientResults = data;
+                this.showClientResults = true;
+            } catch (e) {
+                this.clientResults = [];
+            } finally {
+                this.isSearchingClient = false;
+            }
+        },
+
+        selectClient(client) {
+            this.clientId = client.id;
+            this.clientSearch = client.name;
+            this.showClientResults = false;
+            this.clearError('client_id');
+        },
+
+        clearClient() {
+            this.clientId = null;
+            this.clientSearch = '';
+            this.clientResults = [];
         },
 
         updatePrice(index) {
