@@ -44,6 +44,12 @@ class ClientController extends Controller
             }
         ]);
 
+        // Append cover_url only here so it's available in the @json() blade output
+        // without polluting global Product serialization (which would break Livewire hydration)
+        foreach ($client->orders as $order) {
+            $order->items->each(fn($item) => $item->product?->append('cover_url'));
+        }
+
         $stats = [
             'total_orders' => $client->orders->count(),
             'total_spent' => $client->orders->sum('total'),

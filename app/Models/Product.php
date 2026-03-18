@@ -27,8 +27,6 @@ class Product extends Model
         'is_featured',
     ];
 
-    protected $appends = ['cover_url'];
-
     public function category()
     {
         return $this->belongsTo(Category::class);

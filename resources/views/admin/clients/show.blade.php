@@ -169,7 +169,7 @@
                                 <div class="relative w-16 h-16 flex-shrink-0 overflow-hidden rounded-lg border bg-gray-100">
                                     <img 
                                         :src="item.product?.cover_url ?? '/img/placeholder-product.jpg'"
-                                        @error="$event.target.src = '/img/placeholder-product.jpg'"
+                                        x-on:error="$event.target.src = '/img/placeholder-product.jpg'"
                                         loading="lazy"
                                         alt=""
                                         class="w-full h-full object-cover transition-transform duration-300 hover:scale-150"
