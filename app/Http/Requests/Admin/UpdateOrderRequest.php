@@ -19,7 +19,9 @@ class UpdateOrderRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $order = $this->route('order');
+
+        $rules = [
             'client_id' => ['nullable', 'exists:clients,id', 'required_without:new_client_name'],
             'new_client_name' => ['required_without:client_id', 'nullable', 'string', 'max:255'],
             'new_client_phone' => ['nullable', 'string', 'max:50'],
@@ -32,11 +34,16 @@ class UpdateOrderRequest extends FormRequest
             'payment_method' => ['required', Rule::in(['cash', 'transfer', 'mercadopago', 'other'])],
             'delivery_type' => ['required', Rule::in(['showroom', 'shipping'])],
             'shipping_cost' => ['required_if:delivery_type,shipping', 'nullable', 'numeric', 'min:0'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'exists:products,id'],
-            'items.*.variation_id' => ['required', 'exists:product_variations,id'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
-            'items.*.unit_price' => ['required', 'numeric', 'gt:0'],
         ];
+
+        if (!$order || $order->status === Order::STATUS_PENDING) {
+            $rules['items'] = ['required', 'array', 'min:1'];
+            $rules['items.*.product_id'] = ['required', 'exists:products,id'];
+            $rules['items.*.variation_id'] = ['required', 'exists:product_variations,id'];
+            $rules['items.*.quantity'] = ['required', 'integer', 'min:1'];
+            $rules['items.*.unit_price'] = ['required', 'numeric', 'gt:0'];
+        }
+
+        return $rules;
     }
 }

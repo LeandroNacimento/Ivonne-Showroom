@@ -13,6 +13,13 @@ trait ValidatesOrderItems
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            $order = $this->route('order');
+
+            // Solo validar items si el pedido está en estado pending
+            if ($order && $order->status !== Order::STATUS_PENDING) {
+                return;
+            }
+
             $items = $this->input('items', []);
 
             $this->validateNoDuplicateVariations($validator, $items);

@@ -55,7 +55,7 @@
                                         <div class="md:col-span-4 md:pr-4 relative">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Producto</label>
                                             <input type="text"
-                                                class="w-full rounded-md border-gray-300 shadow-sm text-sm {{ $order->status === 'reservado' ? 'bg-gray-100 cursor-not-allowed' : '' }}"
+                                                class="w-full rounded-md border-gray-300 shadow-sm text-sm {{ $order->status === 'reservado' ? 'bg-gray-100 cursor-not-allowed pointer-events-none opacity-80' : '' }}"
                                                 :class="getError(`items.${index}.product_id`) ? 'border-red-500' : ''"
                                                 placeholder="Buscar producto..." x-model="item.productName"
                                                 @if ($order->status !== 'reservado') @input.debounce.300ms="searchProduct(index); clearError(`items.${index}.product_id`)"
@@ -90,13 +90,12 @@
                                         <div class="md:col-span-3">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Variación</label>
                                             <select :name="`items[${index}][variation_id]`"
-                                                class="w-full rounded-md shadow-sm text-sm"
+                                                class="w-full rounded-md shadow-sm text-sm {{ $order->status === 'reservado' ? 'bg-gray-100 cursor-not-allowed pointer-events-none opacity-80' : '' }}"
                                                 :class="getError(`items.${index}.variation_id`) ? 'border-red-500' :
                                                     'border-gray-300'"
                                                 x-model="item.variationId"
                                                 @change="updatePrice(index); clearError(`items.${index}.variation_id`)"
-                                                :disabled="!item.productId ||
-                                                    {{ $order->status === 'reservado' ? 'true' : 'false' }}">
+                                                :disabled="!item.productId">
                                                 <option value="">Seleccionar...</option>
                                                 <template x-for="variation in item.variations" :key="variation.id">
                                                     <option :value="variation.id"
@@ -114,9 +113,9 @@
                                             <input type="number" :name="`items[${index}][quantity]`"
                                                 x-model="item.quantity" min="1" :max="item.maxStock"
                                                 @input="validateQuantity(index); clearError(`items.${index}.quantity`)"
-                                                class="w-full rounded-md shadow-sm text-sm"
+                                                class="w-full rounded-md shadow-sm text-sm {{ $order->status === 'reservado' ? 'bg-gray-100 cursor-not-allowed pointer-events-none opacity-80' : '' }}"
                                                 :class="getError(`items.${index}.quantity`) ? 'border-red-500' :
-                                                    'border-gray-300 {{ $order->status === 'reservado' ? 'bg-gray-100 cursor-not-allowed' : '' }}'"
+                                                    'border-gray-300'"
                                                 {{ $order->status === 'reservado' ? 'readonly' : '' }}>
                                             <template x-if="getError(`items.${index}.quantity`)">
                                                 <div class="text-[10px] text-red-500 mt-1"
@@ -128,9 +127,9 @@
                                             <input type="number" :name="`items[${index}][unit_price]`"
                                                 x-model="item.unitPrice" step="0.01"
                                                 @input="clearError(`items.${index}.unit_price`)"
-                                                class="w-full rounded-md shadow-sm text-sm"
+                                                class="w-full rounded-md shadow-sm text-sm {{ $order->status === 'reservado' ? 'bg-gray-100 cursor-not-allowed pointer-events-none opacity-80' : '' }}"
                                                 :class="getError(`items.${index}.unit_price`) ? 'border-red-500' :
-                                                    'border-gray-300 {{ $order->status === 'reservado' ? 'bg-gray-100 cursor-not-allowed' : '' }}'"
+                                                    'border-gray-300'"
                                                 {{ $order->status === 'reservado' ? 'readonly' : '' }}>
                                             <template x-if="getError(`items.${index}.unit_price`)">
                                                 <div class="text-[10px] text-red-500 mt-1"
