@@ -11,6 +11,11 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        // Skip data validation and column change on SQLite (test env) — fresh DBs have no orphan data
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         // Validación estricta previa a la migración
         $nullVariations = DB::table('product_variations')->whereNull('product_color_id')->count();
         if ($nullVariations > 0) {

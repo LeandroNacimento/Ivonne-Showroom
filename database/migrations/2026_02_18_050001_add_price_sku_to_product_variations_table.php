@@ -14,13 +14,15 @@ return new class extends Migration {
             $table->unique(['product_id', 'color', 'size'], 'product_variations_unique_combo');
         });
 
-        // Migrate existing product prices to their variations
-        DB::statement('
-            UPDATE product_variations
-            SET price = COALESCE((
-                SELECT price FROM products WHERE products.id = product_variations.product_id
-            ), 0)
-        ');
+        // Migrate existing product prices to their variations (MySQL only — not needed on fresh SQLite test DBs)
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('
+                UPDATE product_variations
+                SET price = COALESCE((
+                    SELECT price FROM products WHERE products.id = product_variations.product_id
+                ), 0)
+            ');
+        }
     }
 
     public function down(): void

@@ -3,6 +3,7 @@
 use App\Models\Client;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductColor;
 use App\Models\ProductVariation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Services\OrderService;
@@ -12,10 +13,13 @@ uses(RefreshDatabase::class);
 it('calcula el total del pedido en backend ignorando valores del frontend', function () {
     $client = Client::factory()->create();
     $product = Product::factory()->create();
+    $color = ProductColor::factory()->create(['product_id' => $product->id]);
     $variation = ProductVariation::factory()->create([
         'product_id' => $product->id,
+        'product_color_id' => $color->id,
         'stock' => 10,
-        'price' => 1500, // True price
+        'price' => 1500.00, // True price in DB
+        'size' => 'M',
     ]);
 
     $orderData = [
@@ -36,6 +40,6 @@ it('calcula el total del pedido en backend ignorando valores del frontend', func
 
     $order = app(OrderService::class)->create($orderData);
 
-    // True total should be 1500 * 2 = 3000
-    expect($order->total)->toBe(3000.0);
+    // True total should be 1500 * 2 = 3000 (ignoring the fake unit_price)
+    expect((float) $order->total)->toBe(3000.0);
 });

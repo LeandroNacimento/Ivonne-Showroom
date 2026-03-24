@@ -11,7 +11,7 @@ class ProductFactory extends Factory
     {
         return [
             'name' => fake()->words(3, true),
-            'slug' => fake()->slug(),
+            'slug' => fake()->unique()->slug(),
             'description' => fake()->sentence(),
             'category_id' => Category::factory(),
             'is_featured' => false,

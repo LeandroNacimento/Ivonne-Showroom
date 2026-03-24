@@ -33,8 +33,9 @@ class DashboardController extends Controller
         // Since total_stock is an accessor, we fetch products and filter. 
         // For better performance in large DBs, we would use a subquery or aggregate.
         $lowStockProducts = Product::withSum('variations', 'stock')
-            ->having('variations_sum_stock', '<', $minStock)
-            ->get();
+            ->get()
+            ->filter(fn($product) => ($product->variations_sum_stock ?? 0) < $minStock)
+            ->values();
 
         // Recent Orders
         $recentOrders = Order::with('client')->latest('date')->take(5)->get();

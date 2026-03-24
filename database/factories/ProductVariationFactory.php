@@ -12,10 +12,11 @@ class ProductVariationFactory extends Factory
     {
         return [
             'product_id' => Product::factory(),
-            'product_color_id' => null, // Can be overridden
+            'product_color_id' => ProductColor::factory(),
             'size' => fake()->randomElement(['S', 'M', 'L', 'XL']),
             'stock' => fake()->numberBetween(1, 10),
             'price' => fake()->randomFloat(2, 100, 10000),
+            'sku' => null,
         ];
     }
 }

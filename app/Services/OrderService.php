@@ -36,9 +36,17 @@ class OrderService
             $total = 0;
             $itemsData = [];
 
+            if (empty($data['items'])) {
+                throw new \Exception("El pedido debe contener al menos un producto.");
+            }
+
             foreach ($data['items'] as $item) {
                 // Lock row to prevent race conditions when checking stock
                 $variation = ProductVariation::with(['productColor', 'product'])->lockForUpdate()->findOrFail($item['variation_id']);
+
+                if ($item['quantity'] <= 0) {
+                    throw new \Exception("La cantidad del producto debe ser mayor a 0.");
+                }
 
                 if ($item['quantity'] > $variation->stock) {
                     throw new \Exception("Stock insuficiente para el producto seleccionado.");
