@@ -11,8 +11,15 @@ export default function orderForm(initialData = {}) {
         showClientResults: false,
         isSearchingClient: false,
         errors: initialData.errors || {},
+        API: null,
 
         init() {
+            this.API = window.ORDER_ENDPOINTS;
+            if (!this.API) {
+                console.error('ORDER_ENDPOINTS no está definido');
+                return;
+            }
+
             const oldItems = initialData.oldItems;
             
             // Prefer old input if available (after validation error)
@@ -88,19 +95,33 @@ export default function orderForm(initialData = {}) {
             if (item.productSearch.length < 2) {
                 item.searchResults = [];
                 item.hasSearched = false;
+                item.showResults = false;
                 return;
             }
 
-            item.isSearching = true;
-            fetch(`/admin/products/search?q=${encodeURIComponent(item.productSearch)}`)
-                .then(res => res.json())
-                .then(data => {
-                    item.searchResults = data;
-                    item.hasSearched = true;
-                })
-                .finally(() => {
-                    item.isSearching = false;
-                });
+            clearTimeout(this._searchTimeout);
+
+            this._searchTimeout = setTimeout(() => {
+                item.isSearching = true;
+                fetch(`${this.API.searchProducts}?q=${encodeURIComponent(item.productSearch)}`)
+                    .then(async res => {
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        return res.json();
+                    })
+                    .then(data => {
+                        item.searchResults = data || [];
+                        item.hasSearched = true;
+                        item.showResults = true;
+                    })
+                    .catch(err => {
+                        console.error("Search error:", err);
+                        item.searchResults = [];
+                        item.hasSearched = true;
+                    })
+                    .finally(() => {
+                        item.isSearching = false;
+                    });
+            }, 300);
         },
 
         selectProduct(index, product) {
@@ -116,10 +137,13 @@ export default function orderForm(initialData = {}) {
         },
 
         loadVariationsForItem(index, productId) {
-            fetch(`/admin/products/search?q=${productId}`)
-                .then(res => res.json())
+            fetch(`${this.API.searchProducts}?q=${productId}`)
+                .then(async res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                })
                 .then(products => {
-                    const product = products.find(p => p.id == productId);
+                    const product = products.find(p => String(p.id) === String(productId));
                     if (product) {
                         let item = this.items[index];
                         item.productName = product.name;
@@ -160,12 +184,14 @@ export default function orderForm(initialData = {}) {
             this.isSearchingClient = true;
 
             try {
-                const response = await fetch(`/admin/clients/search?q=${encodeURIComponent(this.clientSearch)}`);
+                const response = await fetch(`${this.API.searchClients}?q=${encodeURIComponent(this.clientSearch)}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
 
-                this.clientResults = data;
+                this.clientResults = data || [];
                 this.showClientResults = true;
             } catch (e) {
+                console.error("Client search error:", e);
                 this.clientResults = [];
             } finally {
                 this.isSearchingClient = false;

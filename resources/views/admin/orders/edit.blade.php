@@ -10,6 +10,11 @@
         </div>
 
         <script>
+            window.ORDER_ENDPOINTS = {
+                searchProducts: "{{ route('admin.products.search') }}",
+                searchClients: "{{ route('admin.clients.search') }}"
+            };
+
             window.INITIAL_ORDER_DATA = {
                 oldItems: {!! json_encode(old('items')) !!},
                 existingItems: {!! json_encode($order->items) !!},
