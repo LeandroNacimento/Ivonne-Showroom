@@ -23,7 +23,9 @@ use App\Http\Controllers\Admin\SettingController;
 
 // Admin Routes
 Route::prefix(env('ADMIN_PATH', 'admin'))->name('admin.')->group(function () {
-    Route::redirect('/', '/admin/dashboard');
+    Route::get('/', function () {
+        return redirect()->route('admin.dashboard');
+    });
 
     // Guest Admin Routes
     Route::middleware('guest')->group(function () {
