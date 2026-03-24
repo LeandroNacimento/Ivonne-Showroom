@@ -18,6 +18,14 @@ class CatalogPage extends Component
     public ?int $categoryId = null;
     public string $sort = 'latest';
     public int $perPage = 12;
+    public $categories;
+
+    public function mount()
+    {
+        $this->categories = \Illuminate\Support\Facades\Cache::remember('categories', 3600, function () {
+            return Category::select('id', 'name')->orderBy('name')->get();
+        });
+    }
 
     public function updatingCategoryId()
     {
@@ -79,7 +87,7 @@ class CatalogPage extends Component
     {
         return view('livewire.catalog-page', [
             'products' => $this->products,
-            'categories' => Category::select('id', 'name')->orderBy('name')->get(),
+            'categories' => $this->categories,
         ]);
     }
 

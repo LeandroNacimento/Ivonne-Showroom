@@ -32,10 +32,10 @@
                                     @php
                                         $imgSrc = str_starts_with($item['image'], 'http')
                                             ? $item['image']
-                                            : asset('storage/' . $item['image']);
+                                            : \Illuminate\Support\Facades\Storage::url($item['image']);
                                     @endphp
                                     <img src="{{ $imgSrc }}" alt="{{ $item['name'] }}"
-                                        class="h-full w-full object-cover">
+                                        class="h-full w-full object-cover" loading="lazy">
                                 @else
                                     <span
                                         class="flex items-center justify-center h-full w-full text-gray-400 text-xs">Sin

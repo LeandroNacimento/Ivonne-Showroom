@@ -16,7 +16,8 @@
                                     x-transition:enter="transition ease-out duration-200"
                                     x-transition:enter-start="opacity-0 scale-95"
                                     x-transition:enter-end="opacity-100 scale-100"
-                                    class="w-full h-full object-center object-cover transform origin-center">
+                                    class="w-full h-full object-center object-cover transform origin-center"
+                                    loading="lazy">
                             </div>
                         </template>
                     </div>

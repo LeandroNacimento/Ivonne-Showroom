@@ -90,7 +90,7 @@
                         @mouseleave="clearPreview()">
                         @if ($color->image)
                             <img src="{{ $color->image_url }}" class="w-full h-full object-cover"
-                                alt="{{ $color->name }}">
+                                alt="{{ $color->name }}" loading="lazy">
                         @else
                             <div class="w-full h-full bg-gray-200"></div>
                         @endif

@@ -43,8 +43,8 @@
                     <tr wire:key="product-{{ $product->id }}">
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if ($product->images->first())
-                                <img src="{{ asset('storage/' . $product->images->first()->path) }}"
-                                    alt="{{ $product->name }}" class="h-10 w-10 rounded-md object-cover">
+                                <img src="{{ \Illuminate\Support\Facades\Storage::url($product->images->first()->path) }}"
+                                    alt="{{ $product->name }}" class="h-10 w-10 rounded-md object-cover" loading="lazy">
                             @else
                                 <span
                                     class="h-10 w-10 rounded-md bg-gray-200 flex items-center justify-center text-gray-500 text-xs">N/A</span>

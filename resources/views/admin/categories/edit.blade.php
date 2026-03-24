@@ -43,7 +43,7 @@
                     <label for="image" class="block text-sm font-medium text-gray-700 mb-1">Imagen (Opcional)</label>
                     @if ($category->image)
                         <div class="mb-2">
-                            <img src="{{ asset('storage/' . $category->image) }}" alt="Current Image"
+                            <img src="{{ \Illuminate\Support\Facades\Storage::url($category->image) }}" alt="Current Image"
                                 class="h-20 w-auto rounded-md">
                         </div>
                     @endif

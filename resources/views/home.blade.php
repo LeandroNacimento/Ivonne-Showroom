@@ -82,8 +82,8 @@
                         <div
                             class="w-full h-64 xl:h-80 bg-gray-200 rounded-lg overflow-hidden group-hover:opacity-75 relative">
                             @if ($category->image)
-                                <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}"
-                                    class="w-full h-full object-center object-cover absolute inset-0">
+                                <img src="{{ \Illuminate\Support\Facades\Storage::url($category->image) }}" alt="{{ $category->name }}"
+                                    class="w-full h-full object-center object-cover absolute inset-0" loading="lazy">
                             @else
                                 <div class="w-full h-full flex items-center justify-center">
                                     <span class="text-gray-400">{{ $category->name }}</span>
@@ -122,7 +122,7 @@
                         <div
                             class="w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-t-lg overflow-hidden group-hover:opacity-75 lg:h-80 lg:aspect-none flex items-center justify-center">
                             <img src="{{ $product->cover_url }}" alt="{{ $product->name }}"
-                                class="w-full h-full object-center object-cover">
+                                class="w-full h-full object-center object-cover" loading="lazy">
                         </div>
                         <div class="mt-4 flex justify-between px-4 pb-4">
                             <div>
