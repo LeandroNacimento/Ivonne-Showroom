@@ -30,9 +30,30 @@ COPY ./php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Install Node.js
+# Install Node.js (for Vite build)
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
 
 # Set working directory
 WORKDIR /var/www
+
+# ── Production: pre-build Vite assets at image build time ─────────────────────
+# This keeps the entrypoint fast and prevents npm from running at container
+# startup. The public/build/ directory (with manifest.json) is baked into
+# the image and served by Nginx from the volume mount.
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+COPY . .
+RUN npm run build
+
+# ── Entrypoint ────────────────────────────────────────────────────────────────
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# ── Healthcheck ───────────────────────────────────────────────────────────────
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl --fail http://localhost/up || exit 1
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["php-fpm"]

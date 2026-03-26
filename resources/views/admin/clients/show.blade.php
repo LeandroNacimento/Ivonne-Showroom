@@ -213,7 +213,7 @@
 
                 <div class="flex gap-3">
                     <a 
-                        :href="`/admin/orders/${selectedOrder.id}`"
+                        :href="`{{ route('admin.orders.show', ':id') }}`.replace(':id', selectedOrder.id)"
                         class="px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-lg hover:bg-gray-50 shadow-sm font-medium">
                         Ver completo
                     </a>

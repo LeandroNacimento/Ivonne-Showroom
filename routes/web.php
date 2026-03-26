@@ -3,6 +3,12 @@
 use App\Http\Controllers\ShowroomController;
 use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| Public Showroom Routes
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/', [ShowroomController::class, 'index'])->name('home');
 Route::get('/catalogo', [ShowroomController::class, 'catalog'])->name('catalog');
 Route::get('/producto/{slug}', \App\Livewire\ProductPage::class)->name('product.show');
@@ -12,58 +18,26 @@ Route::middleware(['throttle:60,1'])->group(function () {
 });
 Route::get('/contacto', [ShowroomController::class, 'contact'])->name('contact');
 
-use App\Http\Controllers\Admin\AuthController as AdminAuthController;
-use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\ClientController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\OrderController;
-use App\Http\Controllers\Admin\ProductController;
-use App\Http\Controllers\Admin\ReportController;
-use App\Http\Controllers\Admin\SettingController;
+/*
+|--------------------------------------------------------------------------
+| Admin Routes
+|--------------------------------------------------------------------------
+|
+| The prefix is read from config('admin.path') — NOT from env() directly.
+|
+| Why: env() returns null once the application runs from config cache
+| (php artisan config:cache). Using config() ensures the value is always
+| available, whether caches are active or not.
+|
+| Route files are loaded dynamically from routes/admin/*.php so that each
+| module (auth, products, clients, etc.) can be maintained independently.
+|
+*/
 
-// Admin Routes
-Route::prefix(env('ADMIN_PATH', 'admin'))->name('admin.')->group(function () {
-    Route::get('/', function () {
-        return redirect()->route('admin.dashboard');
+Route::prefix(config('admin.path'))
+    ->name('admin.')
+    ->group(function () {
+        foreach (glob(base_path('routes/admin/*.php')) as $file) {
+            require $file;
+        }
     });
-
-    // Guest Admin Routes
-    Route::middleware('guest')->group(function () {
-        Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
-        Route::post('/login', [AdminAuthController::class, 'login'])
-            ->name('login.submit')
-            ->middleware('throttle:5,1');
-    });
-
-    // Authenticated Admin Routes
-    Route::middleware(['auth', 'admin'])->group(function () {
-        Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
-
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-        // Categories CRUD
-        Route::resource('categories', CategoryController::class);
-
-        // Products CRUD
-        Route::get('/products/search', [ProductController::class, 'search'])
-            ->name('products.search')
-            ->middleware('throttle:30,1');
-        Route::resource('products', ProductController::class);
-
-        // Clients CRUD
-        Route::get('/clients/search', [ClientController::class, 'search'])
-            ->name('clients.search');
-        Route::resource('clients', ClientController::class);
-
-        // Orders CRUD
-        Route::resource('orders', OrderController::class);
-
-        // Reports
-        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-        Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
-
-        // Settings
-        Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
-        Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
-    });
-});
