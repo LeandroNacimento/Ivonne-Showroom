@@ -1,303 +1,150 @@
-1. Identidad del Proyecto
+# AGENTS.md - Ivonne Showroom
 
-Nombre: Ivonne Showroom
-Tipo: E-commerce / Catálogo de Moda Femenina
-Modelo: Venta conversacional vía WhatsApp
-Ubicación: Formosa, Argentina
+## Purpose
 
-Este proyecto representa una marca real.
-La prioridad es estética, confianza y fluidez, no complejidad técnica.
+Use this file as the root decision system for the project.
+Use it to decide:
 
-2. Entorno de Desarrollo (OBLIGATORIO)
+- what constraints always apply
+- what file to consult next
+- what must be stated before changing code
+- what source prevails when instructions conflict
 
-El proyecto se ejecuta en entorno Docker.
+Do not use this file as a full handbook. Consult the smallest relevant thematic file after reading this one.
 
-Todos los comandos Artisan deben ejecutarse mediante:
+## Project Identity
 
-docker compose exec app php artisan <comando>
+- Project: Ivonne Showroom
+- Type: e-commerce / catalog for women's fashion
+- Business model: conversational sales via WhatsApp
+- Location: Formosa, Argentina
 
-Ejemplos:
+Treat the project as a real brand, not a demo.
+Prioritize:
 
-docker compose exec app php artisan migrate
-docker compose exec app php artisan migrate:fresh --seed
-docker compose exec app php artisan make:migration
+- aesthetics
+- trust
+- clarity
+- fluency
 
-🚫 Nunca ejecutar php artisan directamente en host.
-🚫 Nunca asumir entorno local fuera de Docker.
+Keep the brand principle, but execute it operationally:
 
-3. Arquitectura Base (NO NEGOCIABLE)
+> Ivonne Showroom sells feeling, not technology.
+> If it is noticeable, discard it.
+> If it flows, keep it.
 
-Laravel 12
+Translate that into implementation behavior:
 
-Blade Templates
+- Prefer invisible UX over flashy behavior.
+- Reject decorative complexity that does not improve trust or clarity.
+- Keep the public experience light, elegant, and calm.
 
-Tailwind CSS v4 (@theme)
+## Hard Rules
 
-Vite
+Apply these rules globally:
 
-Arquitectura MPA tradicional
+- Use Docker as the mandatory development environment.
+- Never run `php artisan` directly on the host.
+- Treat the app as Laravel 12 + Blade + Tailwind CSS v4 + Vite + Livewire, with Alpine only for local UX.
+- Treat the app as a traditional MPA with server-rendered pages.
+- Reject solutions that introduce global SPA behavior.
+- Use MySQL 8+ with InnoDB as the only supported database engine.
+- Treat JavaScript as progressive enhancement only.
+- Keep stock and availability calculations in the backend.
+- Keep checkout ending in WhatsApp.
+- Keep a strong separation between storefront and admin.
+- Keep route and config changes compatible with `config:cache` and `route:cache`.
+- Use `config('admin.path')` for admin routes. Do not hardcode `/admin`.
+- Do not perform irreversible Git actions without explicit user instruction.
+- Treat the repository as the source of truth. Treat the VM only as runtime.
 
-🚫 No SPA global
-🚫 No frameworks JS
-🚫 No dependencias innecesarias
+## Decision Hierarchy
 
-4. Base de Datos (DECISIÓN DEFINITIVA)
+If instructions conflict, use this precedence:
 
-Motor oficial y único soportado:
+1. `agents.md`
+2. thematic documents in `.agents/`
+3. tactical skills in `.agents/skills/`
+4. general model suggestions
 
-MySQL 8+ (InnoDB)
+Apply this hierarchy strictly:
 
-Configuración obligatoria:
+- Treat this file as the root authority.
+- Treat thematic files as normative expansions.
+- Treat skills as tactical execution help.
+- Ignore lower-priority guidance when it conflicts with a higher-priority file.
 
-Engine: InnoDB
+## Navigation
 
-Charset: utf8mb4
+Consult the smallest relevant file instead of rereading the whole system:
 
-Collation: utf8mb4_unicode_ci
+- Read `architecture.md` for stack, routes, frontend rendering, Livewire, Alpine, MPA behavior, and admin/storefront boundaries.
+- Read `domain.md` for stock, cart, checkout, WhatsApp flow, product states, and image source of truth.
+- Read `operations.md` for Docker, runtime, cache, deploy, Azure VM, GitHub Actions, and infra-sensitive changes.
+- Read `git.md` for branches, Gitflow, commit conventions, and Git safety boundaries.
+- Read `security.md` for validation, authorization, middleware, policies, guards, and data exposure rules.
 
-✔ Se permite uso completo de cascadas múltiples (cascadeOnDelete)
-✔ Se permite uso de características nativas de InnoDB
-✔ Se optimiza exclusivamente para MySQL
+Use skills only after the task is already scoped:
 
-🚫 No se mantiene compatibilidad con SQL Server
-🚫 No se agregan workarounds por limitaciones de otros drivers
-🚫 No se diseñan estructuras condicionadas por Azure SQL
+- `.agents/skills/checkout_security/`
+- `.agents/skills/database_integrity/`
+- `.agents/skills/frontend_ux/`
+- `.agents/skills/laravel_backend/`
+- `.agents/skills/livewire_interactivity/`
 
-El diseño debe estar:
+## Protocol Before Changing Code
 
-Normalizado (3FN cuando aplique)
+Before touching code, state:
 
-Indexado correctamente
+1. what will change
+2. which files will be touched
+3. what will not be touched
+4. whether visual design changes
+5. whether backend, security, infrastructure, or production behavior changes
 
-Optimizado para consultas reales del frontend
+Escalate the explanation when the task touches a sensitive area.
 
-5. Control de Versiones y Flujo de Trabajo (Gitflow)
+## Sensitive Areas
 
-Ramas:
+Be more explicit when the task affects:
 
-main → producción
+- routes
+- auth
+- stock
+- cart
+- checkout
+- images
+- Docker or deploy
+- security
+- runtime or cache compatibility
 
-develop → integración
+## Global Prohibitions
 
-feature/\* → nuevas funcionalidades
+Do not:
 
-fix/\* → correcciones
+- run `php artisan` on the host
+- hardcode `/admin` when a named route or `config('admin.path')` should be used
+- place critical business logic in JavaScript
+- calculate stock or availability in the frontend
+- mix storefront marketing behavior into admin workflows
+- use the VM as the permanent source of truth
+- treat runtime/cache files as persistent configuration
+- perform destructive or irreversible Git actions without explicit instruction
 
-hotfix/\* → errores críticos
+## Documentation Maintenance
 
-Reglas del Agente
+Keep the documentation system healthy:
 
-❌ Nunca hace commit
-❌ Nunca hace push
-✅ Solo prepara cambios locales
-✅ Solo se commitea cuando el usuario lo indique explícitamente
+- Do not add a rule without stating whether it replaces, extends, or exemplifies an existing one.
+- Move rules that apply to less than 20% of tasks out of the root file.
+- Extract root sections that become too long.
+- Keep one normative source per important rule.
+- Avoid duplicating long prohibition lists across files.
+- Keep long explanations and examples out of the root file.
+- Keep all files in `.agents/` in clean UTF-8 text.
 
-6. Convención de Commits
+## Final Rule
 
-Idioma: Inglés
-Formato: Conventional Commits
+If a proposal conflicts with this file, this file prevails.
 
-Ejemplos válidos:
-
-feat: add stock validation by size
-fix: correct total calculation in cart
-refactor: optimize product query
-chore: adjust vite configuration
-
-🚫 Commits genéricos
-🚫 Commits en español
-🚫 Commits automáticos
-
-7. Uso de JavaScript (Principio Rector)
-
-JavaScript:
-
-Nunca sostiene el sitio
-
-Solo mejora la experiencia
-
-Puede eliminarse sin romper nada
-
-📌 Si algo requiere JS para lógica de negocio → no se implementa así.
-📌 Interactividad compleja → Livewire.
-📌 JS solo controla:
-
-visibilidad
-
-animaciones
-
-estados locales de UI
-
-8. Arquitectura MPA con Interactividad Livewire (NO NEGOCIABLE)
-
-🚫 No SPA global
-🚫 No fetch navigation
-🚫 No DOM replacement manual
-🚫 No Vue / React / Inertia
-
-✔ Livewire permitido y preferido
-✔ Alpine.js solo para UX local
-
-9. Animaciones Globales (UX)
-
-Tipo:
-
-Fade-in
-
-Translate Y (10–20px)
-
-Stagger leve
-
-Frecuencia:
-
-✔ Sutil
-✔ Constante
-❌ No protagonista
-
-Trigger:
-
-IntersectionObserver
-
-Agregar clase .active
-
-Nunca modificar estilos base
-
-10. Desktop vs Mobile
-
-Desktop:
-
-Animaciones completas
-
-Fluidez visual
-
-Transiciones suaves
-
-Mobile:
-
-Fade simple
-
-Sin slides
-
-Sin lógica compleja
-
-📌 Prioridad absoluta: rapidez
-
-11. Producto & Stock
-
-Stock por talle/color es crítico
-
-Estados claros
-
-Nada ambiguo
-
-Nada forzado
-
-La disponibilidad se calcula desde backend.
-Nunca desde lógica JS.
-
-12. Carrito & Checkout
-
-Carrito en sesión
-
-Sin login
-
-Checkout finaliza en WhatsApp
-
-El mensaje debe ser:
-
-✔ Claro
-✔ Humano
-✔ Fácil de leer
-
-13. Seguridad (Prioridad Absoluta)
-
-Cada cambio backend debe considerar:
-
-Validación estricta
-
-Policies
-
-Middleware
-
-Guards
-
-Prevención de:
-
-XSS
-
-CSRF
-
-Acceso no autorizado
-
-Filtrado de datos sensibles
-
-Si no puede justificarse en términos de seguridad → no se implementa.
-
-14. Panel de Administración
-
-Totalmente independiente
-
-Sin animaciones públicas
-
-Sin SPA
-
-Sin JS compartido con frontend
-
-Arquitectura limpia y orientada a gestión, no a marketing.
-
-15. Imágenes (Reglas Determinísticas)
-
-La imagen principal nunca se determina por orden implícito.
-
-La lógica vive en modelo o capa de dominio.
-
-Blade solo renderiza.
-
-URLs desacopladas del filesystem.
-
-Todas las vistas usan la misma fuente de verdad.
-
-Si no puede determinarse → usar placeholder controlado.
-
-Nunca lógica condicional dispersa en vistas.
-
-16. Flujo Obligatorio para Cambios
-
-Antes de tocar código, el agente debe:
-
-Explicar qué va a hacer
-
-Decir qué archivo toca
-
-Decir qué NO toca
-
-Confirmar que el diseño visual no cambia
-
-Si no puede cumplir esto → no implementar.
-
-17. Frontend Público — Principio Rector
-
-El frontend público es Livewire-driven.
-
-Navegación: MPA tradicional
-
-Livewire gestiona:
-
-filtros
-
-paginación
-
-estado del carrito
-
-Alpine.js solo UX local
-
-JS nunca reemplaza HTML ni navega
-
-Si algo puede resolverse con Livewire → no usar JS.
-
-18. Regla Final
-
-Ivonne Showroom vende sensación, no tecnología.
-
-Si algo se nota, se descarta.
-Si algo fluye, se queda.
+Treat this documentation system as an implementation constraint, not as optional guidance.
