@@ -1,0 +1,7 @@
+services:
+    app:
+        ports: []
+
+    db:
+        environment:
+            MYSQL_ALLOW_EMPTY_PASSWORD: "no"
