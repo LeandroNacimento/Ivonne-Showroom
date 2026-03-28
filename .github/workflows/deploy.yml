@@ -53,6 +53,32 @@ jobs:
               return 1
             }
 
+            wait_for_container_health() {
+              local container="$1"
+              local attempts="$2"
+              local delay="$3"
+              local status=""
+
+              for attempt in $(seq 1 "$attempts"); do
+                status="$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$container" 2>/dev/null || true)"
+
+                if [ "$status" = "healthy" ] || [ "$status" = "running" ]; then
+                  return 0
+                fi
+
+                if [ "$attempt" -lt "$attempts" ]; then
+                  sleep "$delay"
+                fi
+              done
+
+              echo "Container $container did not become ready. Last status: $status"
+              docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
+              docker logs --tail=100 laravel_app || true
+              docker logs --tail=100 laravel_nginx || true
+              docker logs --tail=100 laravel_db || true
+              return 1
+            }
+
             cd ~/Ivonne-Showroom
 
             git fetch --prune origin
@@ -67,9 +93,15 @@ jobs:
               exit 1
             fi
 
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml down --remove-orphans
             docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+            wait_for_container_health "laravel_db" 20 3
+            wait_for_container_health "laravel_app" 20 3
+            wait_for_container_health "laravel_nginx" 20 3
+
             docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T app php artisan migrate --force
 
-            retry_curl "http://127.0.0.1/up" 12 5
-            retry_curl "http://127.0.0.1/" 12 5
+            retry_curl "http://127.0.0.1/up" 20 3
+            retry_curl "http://127.0.0.1/" 20 3
             EOF
