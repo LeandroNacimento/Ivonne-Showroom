@@ -6,17 +6,28 @@ services:
         container_name: laravel_app
         restart: unless-stopped
         working_dir: /var/www
+        healthcheck:
+            disable: true
         volumes:
             - ./:/var/www
         ports:
             - "5173:5173"
         networks:
             - laravel
+        depends_on:
+            db:
+                condition: service_healthy
 
     web:
         image: nginx:alpine
         container_name: laravel_nginx
         restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1/up"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 10s
         ports:
             - "80:80"
         volumes:
@@ -31,6 +42,12 @@ services:
         image: mysql:8.0
         container_name: laravel_db
         restart: unless-stopped
+        healthcheck:
+            test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+            interval: 10s
+            timeout: 5s
+            retries: 6
+            start_period: 30s
         environment:
             MYSQL_DATABASE: "${DB_DATABASE}"
             MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
