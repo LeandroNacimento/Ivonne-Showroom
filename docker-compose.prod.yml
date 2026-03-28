@@ -1,4 +1,12 @@
 services:
+  web:
+    restart: unless-stopped
+
+  app:
+    restart: unless-stopped
+
+  db:
+    restart: unless-stopped
     app:
         ports: []
 

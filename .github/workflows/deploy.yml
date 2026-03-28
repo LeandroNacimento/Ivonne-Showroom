@@ -67,8 +67,8 @@ jobs:
               exit 1
             fi
 
-            docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
-            docker-compose exec -T app php artisan migrate --force
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T app php artisan migrate --force
 
             retry_curl "http://127.0.0.1/up" 12 5
             retry_curl "http://127.0.0.1/" 12 5
