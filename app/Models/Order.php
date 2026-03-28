@@ -10,8 +10,11 @@ class Order extends Model
     use HasFactory;
 
     public const STATUS_PENDING = 'pendiente';
+
     public const STATUS_RESERVED = 'reservado';
+
     public const STATUS_DELIVERED = 'entregado';
+
     public const STATUS_CANCELLED = 'cancelado';
 
     public const TERMINAL_STATES = [

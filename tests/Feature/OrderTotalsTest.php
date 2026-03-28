@@ -5,8 +5,8 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductColor;
 use App\Models\ProductVariation;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Services\OrderService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
@@ -34,8 +34,8 @@ it('calcula el total del pedido en backend ignorando valores del frontend', func
                 'variation_id' => $variation->id,
                 'quantity' => 2,
                 'unit_price' => 100, // Fake price from frontend trying to cheat
-            ]
-        ]
+            ],
+        ],
     ];
 
     $order = app(OrderService::class)->create($orderData);

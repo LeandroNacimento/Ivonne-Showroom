@@ -5,15 +5,14 @@ namespace App\Services;
 use App\Models\Product;
 use App\Models\ProductColor;
 use App\Models\ProductVariation;
-use Illuminate\Support\Str;
 
 class ProductService
 {
     /**
      * Handles the dual-write creation/update of Product colors and variations.
-     * 
-     * @param Product $product The base product instance
-     * @param array $variationsData Array of flat variations from the request
+     *
+     * @param  Product  $product  The base product instance
+     * @param  array  $variationsData  Array of flat variations from the request
      */
     public function syncVariations(Product $product, array $variationsData): void
     {
@@ -38,10 +37,11 @@ class ProductService
                 if ($productColor) {
                     $productColor->update([
                         'name' => $originalName,
-                        'position' => $position++
+                        'position' => $position++,
                     ]);
                     $colorIdMap[$normalizedName] = $productColor->id;
                     $processedIds[] = $productColor->id;
+
                     continue;
                 }
             }
@@ -53,13 +53,13 @@ class ProductService
             if ($productColor) {
                 $productColor->update([
                     'name' => $originalName,
-                    'position' => $position++
+                    'position' => $position++,
                 ]);
             } else {
                 $productColor = ProductColor::create([
                     'product_id' => $product->id,
                     'name' => $originalName,
-                    'position' => $position++
+                    'position' => $position++,
                 ]);
             }
 
@@ -89,7 +89,7 @@ class ProductService
                 'sku' => $v['sku'] ?? null,
             ];
 
-            if (!empty($v['id'])) {
+            if (! empty($v['id'])) {
                 ProductVariation::where('id', $v['id'])
                     ->where('product_id', $product->id)
                     ->update($data);
@@ -113,6 +113,7 @@ class ProductService
     {
         $normalized = strtolower(trim($colorName));
         $color = $product->colors()->whereRaw('LOWER(TRIM(name)) = ?', [$normalized])->first();
+
         return $color ? $color->id : null;
     }
 }

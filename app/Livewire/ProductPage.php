@@ -2,16 +2,20 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
 use App\Models\Product;
 use App\Services\CartService;
+use Livewire\Component;
 
 class ProductPage extends Component
 {
     public Product $product;
+
     public $relatedProducts;
+
     public $imagesByColor;
+
     public $sortedVariations;
+
     public $initialColor;
 
     public function mount($slug)
@@ -29,8 +33,8 @@ class ProductPage extends Component
         // Prepare sorted variations for Alpine
         $this->sortedVariations = $this->product->variations
             ->where('stock', '>', 0)
-            ->sortBy(fn($v) => Product::SIZE_ORDER[strtoupper($v->size)] ?? 99)
-            ->map(fn($v) => [
+            ->sortBy(fn ($v) => Product::SIZE_ORDER[strtoupper($v->size)] ?? 99)
+            ->map(fn ($v) => [
                 'id' => $v->id,
                 'color' => $v->productColor->name ?? 'Único',
                 'size' => $v->size,
@@ -61,7 +65,7 @@ class ProductPage extends Component
         }
 
         // Fallback if no valid color was requested
-        if (!isset($this->initialColor)) {
+        if (! isset($this->initialColor)) {
             $this->initialColor = $this->product->variations->where('stock', '>', 0)->first()?->productColor?->name
                 ?? ($this->product->colors->first()?->name ?? 'Único');
         }

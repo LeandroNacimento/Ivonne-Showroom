@@ -23,7 +23,7 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        $throttleKey = Str::lower($request->input('email')) . '|' . $request->ip();
+        $throttleKey = Str::lower($request->input('email')).'|'.$request->ip();
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
@@ -42,6 +42,7 @@ class AuthController extends Controller
 
             if (Auth::user()->role !== 'admin') {
                 Auth::logout();
+
                 return back()->withErrors([
                     'email' => 'No tienes permisos de administrador.',
                 ]);

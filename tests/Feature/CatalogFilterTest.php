@@ -21,7 +21,7 @@ class CatalogFilterTest extends TestCase
             'name' => 'Vestidos',
             'slug' => 'vestidos',
             'supports_size' => true,
-            'supports_color' => true
+            'supports_color' => true,
         ]);
 
         $product = Product::create([
@@ -29,13 +29,13 @@ class CatalogFilterTest extends TestCase
             'name' => 'Vestido Test',
             'slug' => 'vestido-test',
             'description' => 'Test',
-            'is_featured' => true
+            'is_featured' => true,
         ]);
 
         $color = \App\Models\ProductColor::create([
             'product_id' => $product->id,
             'name' => 'Rojo',
-            'position' => 1
+            'position' => 1,
         ]);
 
         ProductVariation::create([
@@ -44,7 +44,7 @@ class CatalogFilterTest extends TestCase
             'size' => 'M',
             'color' => 'Rojo',
             'stock' => 10,
-            'price' => 1000
+            'price' => 1000,
         ]);
 
         Livewire::withQueryParams(['category' => 'vestidos'])
@@ -62,7 +62,7 @@ class CatalogFilterTest extends TestCase
             'name' => 'Carteras',
             'slug' => 'carteras',
             'supports_size' => false,
-            'supports_color' => true
+            'supports_color' => true,
         ]);
 
         $product = Product::create([
@@ -70,13 +70,13 @@ class CatalogFilterTest extends TestCase
             'name' => 'Cartera Test',
             'slug' => 'cartera-test',
             'description' => 'Test',
-            'is_featured' => true
+            'is_featured' => true,
         ]);
 
         $color = \App\Models\ProductColor::create([
             'product_id' => $product->id,
             'name' => 'Negro',
-            'position' => 1
+            'position' => 1,
         ]);
 
         ProductVariation::create([
@@ -85,7 +85,7 @@ class CatalogFilterTest extends TestCase
             'size' => 'Unico',
             'color' => 'Negro',
             'stock' => 5,
-            'price' => 1000
+            'price' => 1000,
         ]);
 
         Livewire::withQueryParams(['category' => 'carteras'])
@@ -101,7 +101,7 @@ class CatalogFilterTest extends TestCase
             'name' => 'Carteras',
             'slug' => 'carteras',
             'supports_size' => false,
-            'supports_color' => true
+            'supports_color' => true,
         ]);
 
         // Simulate user having a size selected from previous navigation

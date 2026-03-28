@@ -12,6 +12,7 @@ class SettingController extends Controller
     public function edit()
     {
         $settings = Setting::all()->pluck('value', 'key');
+
         return view('admin.settings.edit', compact('settings'));
     }
 
@@ -30,12 +31,12 @@ class SettingController extends Controller
             // Let's store the filename and use Storage::url or asset('storage/...')
             // Actually, existing logo is in public/img/Logo.png.
             // Let's overwrite or store new one.
-            
+
             // For simplicity, let's store the path relative to storage/app/public
             $filename = $request->file('logo')->hashName();
             $request->file('logo')->storeAs('public/img', $filename);
-            
-            Setting::updateOrCreate(['key' => 'logo_path'], ['value' => 'storage/img/' . $filename]);
+
+            Setting::updateOrCreate(['key' => 'logo_path'], ['value' => 'storage/img/'.$filename]);
         }
 
         return redirect()->route('admin.settings.edit')->with('success', 'Configuración actualizada con éxito.');

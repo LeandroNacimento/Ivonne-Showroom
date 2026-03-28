@@ -1,8 +1,8 @@
 <?php
 
 use App\Models\Product;
-use App\Models\ProductVariation;
 use App\Models\ProductColor;
+use App\Models\ProductVariation;
 use Livewire\Livewire;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
@@ -30,7 +30,7 @@ it('impide agregar productos sin stock', function () {
         ->call('addToCart')
         // Usually sets an error or flash message. Let's verify it doesn't add to session.
         ->assertHasErrors(); // or whatever logic prevents it.
-        
+
     expect(session('cart'))->toBeEmpty();
 })->skip('Depende del nombre exacto del componente y variable (ej. product-page)');
 
@@ -43,7 +43,7 @@ it('no permite superar el stock al incrementar cantidad en el carrito', function
             'quantity' => 2,
             'stock' => 2,
             'price' => 1000,
-        ]
+        ],
     ];
     session(['cart' => $cart]);
 

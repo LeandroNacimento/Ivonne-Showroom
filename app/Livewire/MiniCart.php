@@ -9,6 +9,7 @@ use Livewire\Component;
 class MiniCart extends Component
 {
     public $itemCount = 0;
+
     public $total = 0;
 
     public function mount(CartService $cartService)

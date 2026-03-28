@@ -5,8 +5,8 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductColor;
 use App\Models\ProductVariation;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Services\OrderService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
@@ -33,8 +33,8 @@ it('rechaza cantidades negativas', function () {
                 'product_id' => $product->id,
                 'variation_id' => $variation->id,
                 'quantity' => -5,
-            ]
-        ]
+            ],
+        ],
     ];
 
     // Negative quantity should cause stock to go below allowed, or be rejected
@@ -68,8 +68,8 @@ it('rechaza cantidad cero', function () {
                 'product_id' => $product->id,
                 'variation_id' => $variation->id,
                 'quantity' => 0,
-            ]
-        ]
+            ],
+        ],
     ];
 
     // Zero quantity should be rejected

@@ -6,9 +6,9 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductColor;
 use App\Models\ProductVariation;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Services\OrderService;
 use App\Services\OrderStatusTransitionHandler;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
@@ -35,8 +35,8 @@ beforeEach(function () {
                 'product_id' => $this->product->id,
                 'variation_id' => $this->variation->id,
                 'quantity' => 2,
-            ]
-        ]
+            ],
+        ],
     ];
 });
 

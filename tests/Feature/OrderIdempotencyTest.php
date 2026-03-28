@@ -4,8 +4,8 @@ use App\Models\Client;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariation;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Services\OrderService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
@@ -29,14 +29,14 @@ it('no duplica pedidos ante multiples envios simultaneos', function () {
                 'product_id' => $product->id,
                 'variation_id' => $variation->id,
                 'quantity' => 2,
-            ]
+            ],
         ],
         // Mock idempotency key from header or payload
-        'idempotency_key' => 'unique-tx-12345', 
+        'idempotency_key' => 'unique-tx-12345',
     ];
 
     $service = app(OrderService::class);
-    
+
     // First request
     $order1 = $service->create($orderData);
 
@@ -51,7 +51,7 @@ it('no duplica pedidos ante multiples envios simultaneos', function () {
 
     // Verify only 1 order exists for this client today depending on logic.
     expect(Order::count())->toBe(1);
-    
+
     // Optionally:
     if ($order2) {
         expect($order1->id)->toBe($order2->id);

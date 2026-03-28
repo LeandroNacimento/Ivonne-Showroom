@@ -7,7 +7,6 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Setting;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -30,11 +29,11 @@ class DashboardController extends Controller
         $pendingOrders = Order::whereIn('status', [Order::STATUS_PENDING, Order::STATUS_RESERVED])->count();
 
         // Low Stock
-        // Since total_stock is an accessor, we fetch products and filter. 
+        // Since total_stock is an accessor, we fetch products and filter.
         // For better performance in large DBs, we would use a subquery or aggregate.
         $lowStockProducts = Product::withSum('variations', 'stock')
             ->get()
-            ->filter(fn($product) => ($product->variations_sum_stock ?? 0) < $minStock)
+            ->filter(fn ($product) => ($product->variations_sum_stock ?? 0) < $minStock)
             ->values();
 
         // Recent Orders

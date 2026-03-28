@@ -52,7 +52,7 @@ class ProductColorDualWriteTest extends TestCase
             'images' => [
                 'Red' => [UploadedFile::fake()->image('red1.jpg')],
                 'Blue' => [UploadedFile::fake()->image('blue1.jpg'), UploadedFile::fake()->image('blue2.jpg')],
-            ]
+            ],
         ]);
 
         $response->assertRedirect(route('admin.products.index'));
@@ -98,7 +98,7 @@ class ProductColorDualWriteTest extends TestCase
             ],
             'images' => [
                 'OldRed' => [UploadedFile::fake()->image('red.jpg')],
-            ]
+            ],
         ]);
 
         $product = Product::first();
@@ -117,9 +117,9 @@ class ProductColorDualWriteTest extends TestCase
                     'color' => 'NewRed', // The new string name
                     'size' => 'S',
                     'price' => 10,
-                    'stock' => 5
+                    'stock' => 5,
                 ],
-            ]
+            ],
         ]);
 
         $product->refresh();
@@ -152,7 +152,7 @@ class ProductColorDualWriteTest extends TestCase
             'images' => [
                 'Red' => [UploadedFile::fake()->image('red.jpg')],
                 'Blue' => [UploadedFile::fake()->image('blue.jpg')],
-            ]
+            ],
         ]);
 
         $product = Product::first();
@@ -164,7 +164,8 @@ class ProductColorDualWriteTest extends TestCase
 
         // 2. Update product keeping only Red
         $redVar = $product->variations()->whereHas('productColor', function ($q) {
-            $q->where('name', 'Red'); })->first();
+            $q->where('name', 'Red');
+        })->first();
         $redColor = $product->colors()->where('name', 'Red')->first();
 
         $this->put(route('admin.products.update', $product), [
@@ -177,9 +178,9 @@ class ProductColorDualWriteTest extends TestCase
                     'color' => 'Red',
                     'size' => 'S',
                     'price' => 10,
-                    'stock' => 5
+                    'stock' => 5,
                 ],
-            ]
+            ],
         ]);
 
         // 3. Assert Blue is gone, along with its cascade records
@@ -188,7 +189,8 @@ class ProductColorDualWriteTest extends TestCase
 
         $this->assertEquals(1, ProductVariation::count());
         $this->assertEquals(0, ProductVariation::whereHas('productColor', function ($q) {
-            $q->where('name', 'Blue'); })->count());
+            $q->where('name', 'Blue');
+        })->count());
 
         $this->assertEquals(1, ProductImage::count());
         // Since images cascade on DB level, they are gone
@@ -203,7 +205,7 @@ class ProductColorDualWriteTest extends TestCase
             'variations' => [
                 ['color' => 'A', 'size' => 'S', 'price' => 10, 'stock' => 10],
                 ['color' => 'B', 'size' => 'M', 'price' => 10, 'stock' => 25],
-            ]
+            ],
         ]);
 
         $product = Product::first();

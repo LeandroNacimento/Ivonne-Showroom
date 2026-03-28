@@ -2,17 +2,18 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use App\Models\Product;
 use App\Models\ProductColor;
-use App\Models\ProductVariation;
 use App\Models\ProductImage;
+use App\Models\ProductVariation;
 use Exception;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class MigrateProductColors extends Command
 {
     protected $signature = 'app:migrate-product-colors';
+
     protected $description = 'Migrate product string colors to the product_colors entity relationship.';
 
     public function handle()
@@ -40,6 +41,7 @@ class MigrateProductColors extends Command
 
         if ($initialVarsWithoutColorId === 0 && $initialVariations > 0) {
             $this->info('All variations already have a product_color_id. Migration might have run already.');
+
             return Command::SUCCESS;
         }
 
@@ -78,11 +80,12 @@ class MigrateProductColors extends Command
                 foreach ($product->variations as $variation) {
                     $normColor = strtolower(trim($variation->color));
 
-                    if (!isset($colorIdMap[$normColor])) {
+                    if (! isset($colorIdMap[$normColor])) {
                         // If color string was totally empty and wasn't processed
                         if (empty($normColor) && count($colorIdMap) === 1) {
                             // Link to the only available color
                             $variation->update(['product_color_id' => array_values($colorIdMap)[0]]);
+
                             continue;
                         }
                         throw new Exception("Variation {$variation->id} has unresolved color '{$variation->color}'");
@@ -138,7 +141,7 @@ class MigrateProductColors extends Command
             );
 
             if ($finalVariations !== $initialVariations || $initialStock !== $finalStock) {
-                throw new Exception("Critical Data Mismatch: Variations or Stock count altered during migration.");
+                throw new Exception('Critical Data Mismatch: Variations or Stock count altered during migration.');
             }
 
             if ($finalVarsWithoutColorId > 0 || $finalImagesWithoutColorId > 0) {
@@ -151,7 +154,8 @@ class MigrateProductColors extends Command
         } catch (Exception $e) {
             DB::rollBack();
             $this->error('Migration aborted! Rollback executed.');
-            $this->error('Reason: ' . $e->getMessage());
+            $this->error('Reason: '.$e->getMessage());
+
             return Command::FAILURE;
         }
 
