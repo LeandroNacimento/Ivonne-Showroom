@@ -75,7 +75,9 @@ class ProductService
 
         // 3. Sync Variations
         $keepIds = collect($variationsData)->pluck('id')->filter()->toArray();
-        $product->variations()->whereNotIn('id', $keepIds)->delete();
+        $product->variations()
+            ->whereNotIn('product_variations.id', $keepIds)
+            ->delete();
 
         foreach ($variationsData as $v) {
             $normColor = strtolower(trim($v['color']));
