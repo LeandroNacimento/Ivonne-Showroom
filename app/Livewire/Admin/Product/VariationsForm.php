@@ -10,7 +10,9 @@ use Livewire\Component;
 class VariationsForm extends Component
 {
     public array $colors = [];
+
     public string $basePrice = '';
+
     public bool $supportsSize = true;
 
     public function mount(?Product $product = null, ?int $categoryId = null): void
@@ -62,7 +64,7 @@ class VariationsForm extends Component
         $this->supportsSize = $cat ? ($cat->supports_size ?? true) : true;
 
         // Si la categoría no soporta talle, dejar solo una variación por color
-        if (!$this->supportsSize) {
+        if (! $this->supportsSize) {
             foreach ($this->colors as $cIdx => $color) {
                 if (count($color['variations']) > 1) {
                     $this->colors[$cIdx]['variations'] = [
@@ -123,7 +125,7 @@ class VariationsForm extends Component
 
     public function applyBasePrice(): void
     {
-        if (!is_numeric($this->basePrice) || $this->basePrice <= 0) {
+        if (! is_numeric($this->basePrice) || $this->basePrice <= 0) {
             return;
         }
 
@@ -152,14 +154,14 @@ class VariationsForm extends Component
 
                 if ($field === 'price') {
                     $value = $this->colors[$colorIdx]['variations'][$varIdx]['price'] ?? '';
-                    if ($value !== '' && (!is_numeric($value) || $value < 0)) {
+                    if ($value !== '' && (! is_numeric($value) || $value < 0)) {
                         $this->addError($propertyName, 'El precio debe ser mayor o igual a 0.');
                     }
                 }
 
                 if ($field === 'stock') {
                     $value = $this->colors[$colorIdx]['variations'][$varIdx]['stock'] ?? '';
-                    if ($value !== '' && (!is_numeric($value) || $value < 0)) {
+                    if ($value !== '' && (! is_numeric($value) || $value < 0)) {
                         $this->addError($propertyName, 'El stock debe ser mayor o igual a 0.');
                     }
                 }
@@ -229,7 +231,7 @@ class VariationsForm extends Component
     {
         $names = collect($this->colors)
             ->pluck('name')
-            ->filter(fn($n) => trim($n) !== '')
+            ->filter(fn ($n) => trim($n) !== '')
             ->values()
             ->toArray();
 

@@ -1,45 +1,51 @@
 <?php
 
+namespace Tests\Feature;
+
 use App\Models\Client;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductColor;
 use App\Models\ProductVariation;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Services\OrderService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
-uses(RefreshDatabase::class);
+class OrderTotalsTest extends TestCase
+{
+    use RefreshDatabase;
 
-it('calcula el total del pedido en backend ignorando valores del frontend', function () {
-    $client = Client::factory()->create();
-    $product = Product::factory()->create();
-    $color = ProductColor::factory()->create(['product_id' => $product->id]);
-    $variation = ProductVariation::factory()->create([
-        'product_id' => $product->id,
-        'product_color_id' => $color->id,
-        'stock' => 10,
-        'price' => 1500.00, // True price in DB
-        'size' => 'M',
-    ]);
+    public function test_it_calcula_el_total_del_pedido_en_backend_ignorando_valores_del_frontend(): void
+    {
+        $client = Client::factory()->create();
+        $product = Product::factory()->create();
+        $color = ProductColor::factory()->create(['product_id' => $product->id]);
+        $variation = ProductVariation::factory()->create([
+            'product_id' => $product->id,
+            'product_color_id' => $color->id,
+            'stock' => 10,
+            'price' => 1500.00,
+            'size' => 'M',
+        ]);
 
-    $orderData = [
-        'client_id' => $client->id,
-        'date' => now()->format('Y-m-d'),
-        'status' => Order::STATUS_PENDING,
-        'payment_method' => 'cash',
-        'delivery_type' => 'showroom',
-        'items' => [
-            [
-                'product_id' => $product->id,
-                'variation_id' => $variation->id,
-                'quantity' => 2,
-                'unit_price' => 100, // Fake price from frontend trying to cheat
-            ]
-        ]
-    ];
+        $orderData = [
+            'client_id' => $client->id,
+            'date' => now()->format('Y-m-d'),
+            'status' => Order::STATUS_PENDING,
+            'payment_method' => 'cash',
+            'delivery_type' => 'showroom',
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'variation_id' => $variation->id,
+                    'quantity' => 2,
+                    'unit_price' => 100,
+                ],
+            ],
+        ];
 
-    $order = app(OrderService::class)->create($orderData);
+        $order = app(OrderService::class)->create($orderData);
 
-    // True total should be 1500 * 2 = 3000 (ignoring the fake unit_price)
-    expect((float) $order->total)->toBe(3000.0);
-});
+        $this->assertSame(3000.0, (float) $order->total);
+    }
+}

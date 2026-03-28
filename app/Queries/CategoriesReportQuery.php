@@ -4,8 +4,8 @@ namespace App\Queries;
 
 use App\Models\Order;
 use App\Models\OrderItem;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class CategoriesReportQuery
 {
@@ -19,7 +19,7 @@ class CategoriesReportQuery
                 DB::raw('SUM(order_items.quantity) as total_quantity'),
                 DB::raw('SUM(order_items.subtotal) as total_revenue')
             )
-            ->whereBetween('orders.date', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
+            ->whereBetween('orders.date', [$dateFrom.' 00:00:00', $dateTo.' 23:59:59'])
             ->where('orders.status', '!=', Order::STATUS_CANCELLED)
             ->groupBy('categories.id', 'categories.name')
             ->orderByDesc('total_revenue')

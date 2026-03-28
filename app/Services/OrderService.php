@@ -22,7 +22,7 @@ class OrderService
         return DB::transaction(function () use ($data) {
             $clientId = $data['client_id'] ?? null;
 
-            if (!$clientId && !empty($data['new_client_name'])) {
+            if (! $clientId && ! empty($data['new_client_name'])) {
                 $client = Client::create([
                     'name' => $data['new_client_name'],
                     'phone' => $data['new_client_phone'] ?? null,
@@ -37,7 +37,7 @@ class OrderService
             $itemsData = [];
 
             if (empty($data['items'])) {
-                throw new \Exception("El pedido debe contener al menos un producto.");
+                throw new \Exception('El pedido debe contener al menos un producto.');
             }
 
             foreach ($data['items'] as $item) {
@@ -45,11 +45,11 @@ class OrderService
                 $variation = ProductVariation::with(['productColor', 'product'])->lockForUpdate()->findOrFail($item['variation_id']);
 
                 if ($item['quantity'] <= 0) {
-                    throw new \Exception("La cantidad del producto debe ser mayor a 0.");
+                    throw new \Exception('La cantidad del producto debe ser mayor a 0.');
                 }
 
                 if ($item['quantity'] > $variation->stock) {
-                    throw new \Exception("Stock insuficiente para el producto seleccionado.");
+                    throw new \Exception('Stock insuficiente para el producto seleccionado.');
                 }
 
                 $price = collect([$variation->price, $variation->product?->price])->filter()->first() ?? 0;

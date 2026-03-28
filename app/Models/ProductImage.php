@@ -22,7 +22,6 @@ class ProductImage extends Model
     /**
      * Acceder al producto mediante: $image->productColor->product
      */
-
     public function productColor()
     {
         return $this->belongsTo(ProductColor::class);

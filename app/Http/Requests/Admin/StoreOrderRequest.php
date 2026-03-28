@@ -2,11 +2,10 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Http\Requests\Concerns\ValidatesOrderItems;
+use App\Models\Order;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Models\ProductVariation;
-use App\Models\Order;
-use App\Http\Requests\Concerns\ValidatesOrderItems;
 
 class StoreOrderRequest extends FormRequest
 {

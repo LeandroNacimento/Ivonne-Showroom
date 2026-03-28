@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariation;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 class ProductSeeder extends Seeder
@@ -126,7 +126,7 @@ class ProductSeeder extends Seeder
                             'product_id' => $product->id,
                             'name' => ucfirst($faker->unique()->safeColorName()),
                             'is_main' => ($i === 0),
-                            'image' => 'https://picsum.photos/seed/product-' . $product->id . '-color-' . $i . '/600/750'
+                            'image' => 'https://picsum.photos/seed/product-'.$product->id.'-color-'.$i.'/600/750',
                         ]);
 
                         \App\Models\ProductImage::firstOrCreate(
@@ -183,7 +183,7 @@ class ProductSeeder extends Seeder
                             'product_id' => $product->id,
                             'name' => ucfirst($faker->unique()->safeColorName()),
                             'is_main' => ($i === 0),
-                            'image' => 'https://picsum.photos/seed/product-' . $product->id . '-color-' . $i . '/600/750'
+                            'image' => 'https://picsum.photos/seed/product-'.$product->id.'-color-'.$i.'/600/750',
                         ]);
 
                         \App\Models\ProductImage::firstOrCreate(

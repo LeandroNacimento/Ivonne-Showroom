@@ -8,15 +8,13 @@ use App\Http\Requests\Admin\UpdateOrderRequest;
 use App\Models\Client;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Services\OrderStatusTransitionHandler;
 use App\Services\OrderService;
+use App\Services\OrderStatusTransitionHandler;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
-
-
     public function index(Request $request)
     {
         return view('admin.orders.index');
@@ -25,6 +23,7 @@ class OrderController extends Controller
     public function create()
     {
         $clients = Client::orderBy('name')->get();
+
         return view('admin.orders.create', compact('clients'));
     }
 
@@ -38,6 +37,7 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         $order->load(['client', 'items.product']);
+
         return view('admin.orders.show', compact('order'));
     }
 
@@ -65,7 +65,7 @@ class OrderController extends Controller
         DB::transaction(function () use ($request, $order, $handler) {
             $clientId = $request->client_id;
 
-            if (!$clientId && $request->filled('new_client_name')) {
+            if (! $clientId && $request->filled('new_client_name')) {
                 $client = \App\Models\Client::create([
                     'name' => $request->new_client_name,
                     'phone' => $request->new_client_phone,

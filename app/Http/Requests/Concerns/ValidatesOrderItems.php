@@ -68,7 +68,7 @@ trait ValidatesOrderItems
             $variationId = $item['variation_id'] ?? null;
             $productId = $item['product_id'] ?? null;
 
-            if (!$variationId || !$productId) {
+            if (! $variationId || ! $productId) {
                 continue;
             }
 
@@ -76,7 +76,7 @@ trait ValidatesOrderItems
             if ($variation && (int) $variation->product_id !== (int) $productId) {
                 $validator->errors()->add(
                     "items.{$index}.variation_id",
-                    "La variación seleccionada no pertenece al producto indicado."
+                    'La variación seleccionada no pertenece al producto indicado.'
                 );
             }
         }

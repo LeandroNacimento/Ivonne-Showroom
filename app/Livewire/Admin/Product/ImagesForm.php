@@ -8,7 +8,9 @@ use Livewire\Component;
 class ImagesForm extends Component
 {
     public array $colors = [];
+
     public array $existingImages = []; // [color => [{id, url, path}]]
+
     public ?int $productId = null;
 
     public function mount(?Product $product = null): void
@@ -19,10 +21,10 @@ class ImagesForm extends Component
 
             // Group existing images by color name from the relation
             $this->existingImages = $product->images
-                ->groupBy(fn($img) => $img->productColor?->name ?? 'Sin color')
-                ->map(fn($imgs) => $imgs->map(fn($img) => [
+                ->groupBy(fn ($img) => $img->productColor?->name ?? 'Sin color')
+                ->map(fn ($imgs) => $imgs->map(fn ($img) => [
                     'id' => $img->id,
-                    'url' => asset('storage/' . $img->path),
+                    'url' => asset('storage/'.$img->path),
                     'path' => $img->path,
                 ])->values()->toArray())
                 ->toArray();

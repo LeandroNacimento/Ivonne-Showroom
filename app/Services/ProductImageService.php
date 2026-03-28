@@ -17,9 +17,9 @@ class ProductImageService
 
     /**
      * Handles associating newly uploaded images to the correct product and product_color.
-     * 
-     * @param Product $product The base product instance
-     * @param array $imagesData Uploaded files grouped by color name: ['Color Name' => [UploadedFile...]]
+     *
+     * @param  Product  $product  The base product instance
+     * @param  array  $imagesData  Uploaded files grouped by color name: ['Color Name' => [UploadedFile...]]
      */
     public function storeImages(Product $product, array $imagesData): void
     {

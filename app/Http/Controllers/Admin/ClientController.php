@@ -39,15 +39,15 @@ class ClientController extends Controller
             'orders' => function ($query) {
                 $query->latest('date')->with([
                     'items.product.images',
-                    'items.variation.productColor'
+                    'items.variation.productColor',
                 ]);
-            }
+            },
         ]);
 
         // Append cover_url only here so it's available in the @json() blade output
         // without polluting global Product serialization (which would break Livewire hydration)
         foreach ($client->orders as $order) {
-            $order->items->each(fn($item) => $item->product?->append('cover_url'));
+            $order->items->each(fn ($item) => $item->product?->append('cover_url'));
         }
 
         $stats = [
@@ -86,6 +86,7 @@ class ClientController extends Controller
         }
 
         $client->delete();
+
         return redirect()->route('admin.clients.index')->with('success', 'Cliente eliminado con éxito.');
     }
 
@@ -97,7 +98,7 @@ class ClientController extends Controller
 
         $query = trim($request->input('q'));
 
-        if (!$query) {
+        if (! $query) {
             return response()->json([]);
         }
 

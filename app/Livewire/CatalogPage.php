@@ -2,12 +2,11 @@
 
 namespace App\Livewire;
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Services\CartService;
 use Livewire\Component;
 use Livewire\WithPagination;
-
-use App\Models\Category;
 
 class CatalogPage extends Component
 {
@@ -16,8 +15,11 @@ class CatalogPage extends Component
     protected $paginationTheme = 'tailwind';
 
     public ?int $categoryId = null;
+
     public string $sort = 'latest';
+
     public int $perPage = 12;
+
     public $categories;
 
     public function mount()
@@ -49,7 +51,7 @@ class CatalogPage extends Component
             ->withMin([
                 'variations as variations_min_price' => function ($q) {
                     $q->where('stock', '>', 0);
-                }
+                },
             ], 'price')
             ->with([
                 'category',
@@ -66,7 +68,7 @@ class CatalogPage extends Component
                                     ->select('product_variations.id', 'product_variations.product_color_id', 'product_variations.size');
                             },
                         ]);
-                }
+                },
             ]);
 
         return match ($this->sort) {
