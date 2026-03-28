@@ -4,12 +4,9 @@ services:
 
   app:
     restart: unless-stopped
+    ports: []
 
   db:
     restart: unless-stopped
-    app:
-        ports: []
-
-    db:
-        environment:
-            MYSQL_ALLOW_EMPTY_PASSWORD: "no"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
