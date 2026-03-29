@@ -3,11 +3,14 @@ services:
         build:
             context: .
             dockerfile: php/Dockerfile
-        container_name: laravel_app
         restart: unless-stopped
         working_dir: /var/www
         healthcheck:
-            disable: true
+            test: ["CMD-SHELL", "php-fpm -t || exit 1"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 10s
         volumes:
             - ./:/var/www
         ports:
@@ -20,7 +23,6 @@ services:
 
     web:
         image: nginx:alpine
-        container_name: laravel_nginx
         restart: unless-stopped
         healthcheck:
             test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1/up"]
@@ -36,11 +38,11 @@ services:
         networks:
             - laravel
         depends_on:
-            - app
+            app:
+                condition: service_started
 
     db:
         image: mysql:8.0
-        container_name: laravel_db
         restart: unless-stopped
         healthcheck:
             test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
@@ -51,7 +53,6 @@ services:
         environment:
             MYSQL_DATABASE: "${DB_DATABASE}"
             MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
-            MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
         volumes:
             - dbdata:/var/lib/mysql
         networks:
