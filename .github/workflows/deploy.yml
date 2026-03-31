@@ -35,14 +35,37 @@ jobs:
             bash <<'EOF'
             set -euo pipefail
 
-            retry_curl() {
+            print_deploy_diagnostics() {
+              echo "=== docker compose ps ==="
+              docker compose -f docker-compose.yml -f docker-compose.prod.yml ps || true
+              echo "=== app logs ==="
+              docker compose -f docker-compose.yml -f docker-compose.prod.yml logs --tail=100 app || true
+              echo "=== web logs ==="
+              docker compose -f docker-compose.yml -f docker-compose.prod.yml logs --tail=100 web || true
+            }
+
+            wait_for_http_200() {
               local url="$1"
               local attempts="$2"
               local delay="$3"
+              local required_successes="$4"
+              local consecutive_successes=0
+              local status_code=""
+              local curl_timeout=5
 
               for attempt in $(seq 1 "$attempts"); do
-                if curl --fail --silent --show-error "$url" > /dev/null; then
-                  return 0
+                status_code="$(curl --silent --show-error --max-time "$curl_timeout" --output /dev/null --write-out '%{http_code}' "$url" || true)"
+
+                if [ "$status_code" = "200" ]; then
+                  consecutive_successes=$((consecutive_successes + 1))
+                  echo "HTTP readiness OK for $url ($consecutive_successes/$required_successes consecutive successes)."
+
+                  if [ "$consecutive_successes" -ge "$required_successes" ]; then
+                    return 0
+                  fi
+                else
+                  consecutive_successes=0
+                  echo "HTTP readiness not ready for $url (attempt $attempt/$attempts, http_status: ${status_code:-curl_failed}, timeout: ${curl_timeout}s)."
                 fi
 
                 if [ "$attempt" -lt "$attempts" ]; then
@@ -50,6 +73,8 @@ jobs:
                 fi
               done
 
+              echo "HTTP readiness failed for $url after $attempts attempts."
+              print_deploy_diagnostics
               return 1
             }
 
@@ -72,10 +97,9 @@ jobs:
               done
 
               echo "Container $container did not become ready. Last status: $status"
-              docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
-              docker logs --tail=100 laravel_app || true
-              docker logs --tail=100 laravel_nginx || true
-              docker logs --tail=100 laravel_db || true
+              print_deploy_diagnostics
+              echo "=== db logs ==="
+              docker compose -f docker-compose.yml -f docker-compose.prod.yml logs --tail=100 db || true
               return 1
             }
 
@@ -102,6 +126,6 @@ jobs:
 
             docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T app php artisan migrate --force
 
-            retry_curl "http://127.0.0.1/up" 20 3
-            retry_curl "http://127.0.0.1/" 20 3
+            wait_for_http_200 "http://127.0.0.1/up" 30 3 2
+            wait_for_http_200 "http://127.0.0.1/" 30 3 2
             EOF
