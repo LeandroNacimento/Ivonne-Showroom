@@ -79,16 +79,23 @@ jobs:
             }
 
             wait_for_container_health() {
-              local container="$1"
+              local service="$1"
               local attempts="$2"
               local delay="$3"
+              local container_id=""
               local status=""
 
               for attempt in $(seq 1 "$attempts"); do
-                status="$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$container" 2>/dev/null || true)"
+                container_id="$(docker compose -f docker-compose.yml -f docker-compose.prod.yml ps -q "$service" 2>/dev/null || true)"
 
-                if [ "$status" = "healthy" ] || [ "$status" = "running" ]; then
-                  return 0
+                if [ -z "$container_id" ]; then
+                  echo "Service $service did not resolve to a container ID (attempt $attempt/$attempts)."
+                else
+                  status="$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$container_id" 2>/dev/null || true)"
+
+                  if [ "$status" = "healthy" ] || [ "$status" = "running" ]; then
+                    return 0
+                  fi
                 fi
 
                 if [ "$attempt" -lt "$attempts" ]; then
@@ -96,7 +103,11 @@ jobs:
                 fi
               done
 
-              echo "Container $container did not become ready. Last status: $status"
+              if [ -z "$container_id" ]; then
+                echo "Service $service never resolved to a container ID."
+              else
+                echo "Service $service did not become ready. Last status: ${status:-unknown} (container: $container_id)"
+              fi
               print_deploy_diagnostics
               echo "=== db logs ==="
               docker compose -f docker-compose.yml -f docker-compose.prod.yml logs --tail=100 db || true
@@ -120,9 +131,9 @@ jobs:
             docker compose -f docker-compose.yml -f docker-compose.prod.yml down --remove-orphans
             docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
-            wait_for_container_health "laravel_db" 20 3
-            wait_for_container_health "laravel_app" 20 3
-            wait_for_container_health "laravel_nginx" 20 3
+            wait_for_container_health "db" 20 3
+            wait_for_container_health "app" 20 3
+            wait_for_container_health "web" 20 3
 
             docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T app php artisan migrate --force
 
