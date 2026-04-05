@@ -99,18 +99,17 @@
                             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                 @php
                                 $statusClasses = match($order->status) {
-                                    'paid' => 'text-green-600',
-                                    'cancelled' => 'text-red-600',
-                                    'delivered' => 'text-blue-600',
-                                    'reserved' => 'text-yellow-600',
+                                    \App\Models\Order::STATUS_PENDING => 'text-gray-600',
+                                    \App\Models\Order::STATUS_RESERVED => 'text-yellow-600',
+                                    \App\Models\Order::STATUS_DELIVERED => 'text-green-600',
+                                    \App\Models\Order::STATUS_CANCELLED => 'text-red-600',
                                     default => 'text-gray-600',
                                 };
                                 $statusLabel = match($order->status) {
-                                    'paid' => 'Pagado',
-                                    'cancelled' => 'Cancelado',
-                                    'delivered' => 'Entregado',
-                                    'reserved' => 'Reservado',
-                                    'draft' => 'Borrador',
+                                    \App\Models\Order::STATUS_PENDING => 'Pendiente',
+                                    \App\Models\Order::STATUS_RESERVED => 'Reservado',
+                                    \App\Models\Order::STATUS_DELIVERED => 'Entregado',
+                                    \App\Models\Order::STATUS_CANCELLED => 'Cancelado',
                                     default => ucfirst($order->status),
                                 };
                             @endphp

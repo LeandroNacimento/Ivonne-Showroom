@@ -93,10 +93,24 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{{ $order->id }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $order->date->format('d/m/Y') }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    {{ $order->status === 'paid' ? 'bg-green-100 text-green-800' : 
-                                       ($order->status === 'cancelled' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
-                                    {{ ucfirst($order->status) }}
+                                @php
+                                    $statusBadgeClasses = match ($order->status) {
+                                        \App\Models\Order::STATUS_PENDING => 'bg-gray-100 text-gray-800',
+                                        \App\Models\Order::STATUS_RESERVED => 'bg-yellow-100 text-yellow-800',
+                                        \App\Models\Order::STATUS_DELIVERED => 'bg-green-100 text-green-800',
+                                        \App\Models\Order::STATUS_CANCELLED => 'bg-red-100 text-red-800',
+                                        default => 'bg-gray-100 text-gray-800',
+                                    };
+                                    $statusLabel = match ($order->status) {
+                                        \App\Models\Order::STATUS_PENDING => 'Pendiente',
+                                        \App\Models\Order::STATUS_RESERVED => 'Reservado',
+                                        \App\Models\Order::STATUS_DELIVERED => 'Entregado',
+                                        \App\Models\Order::STATUS_CANCELLED => 'Cancelado',
+                                        default => ucfirst($order->status),
+                                    };
+                                @endphp
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusBadgeClasses }}">
+                                    {{ $statusLabel }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${{ number_format($order->total, 0, ',', '.') }}</td>

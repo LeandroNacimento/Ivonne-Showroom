@@ -38,11 +38,10 @@
                     <select wire:model.live="status"
                         class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-brand-pink sm:text-sm sm:leading-6">
                         <option value="">Todos los Estados</option>
-                        <option value="draft">Borrador</option>
-                        <option value="reserved">Reservado</option>
-                        <option value="paid">Pagado</option>
-                        <option value="delivered">Entregado</option>
-                        <option value="cancelled">Cancelado</option>
+                        <option value="{{ \App\Models\Order::STATUS_PENDING }}">Pendiente</option>
+                        <option value="{{ \App\Models\Order::STATUS_RESERVED }}">Reservado</option>
+                        <option value="{{ \App\Models\Order::STATUS_DELIVERED }}">Entregado</option>
+                        <option value="{{ \App\Models\Order::STATUS_CANCELLED }}">Cancelado</option>
                     </select>
                 </div>
 
@@ -91,18 +90,17 @@
                             <td class="whitespace-nowrap px-3 py-4 text-sm">
                                 @php
                                     $statusClasses = match ($order->status) {
-                                        'paid' => 'text-green-600',
-                                        'cancelled' => 'text-red-600',
-                                        'delivered' => 'text-blue-600',
-                                        'reserved' => 'text-yellow-600',
+                                        \App\Models\Order::STATUS_PENDING => 'text-gray-600',
+                                        \App\Models\Order::STATUS_RESERVED => 'text-yellow-600',
+                                        \App\Models\Order::STATUS_DELIVERED => 'text-green-600',
+                                        \App\Models\Order::STATUS_CANCELLED => 'text-red-600',
                                         default => 'text-gray-600',
                                     };
                                     $statusLabel = match ($order->status) {
-                                        'paid' => 'Pagado',
-                                        'cancelled' => 'Cancelado',
-                                        'delivered' => 'Entregado',
-                                        'reserved' => 'Reservado',
-                                        'draft' => 'Borrador',
+                                        \App\Models\Order::STATUS_PENDING => 'Pendiente',
+                                        \App\Models\Order::STATUS_RESERVED => 'Reservado',
+                                        \App\Models\Order::STATUS_DELIVERED => 'Entregado',
+                                        \App\Models\Order::STATUS_CANCELLED => 'Cancelado',
                                         default => ucfirst($order->status),
                                     };
                                 @endphp
