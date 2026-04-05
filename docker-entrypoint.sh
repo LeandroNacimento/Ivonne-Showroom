@@ -8,29 +8,32 @@
 
 set -e
 
-echo "==> [1/6] Installing Composer dependencies (production, optimized)..."
-composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+if [ ! -f vendor/autoload.php ]; then
+    echo "==> vendor/ not found in runtime mount, installing Composer dependencies..."
+    composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+else
+    echo "==> vendor/ already present, skipping Composer install."
+fi
 
-echo "==> [2/6] Setting file permissions..."
+echo "==> [1/4] Setting file permissions..."
 chown -R www-data:www-data storage bootstrap/cache
 chmod -R ug+rwx storage bootstrap/cache
 
-echo "==> [3/6] Caching configuration..."
-php artisan config:cache
+if [ "${APP_ENV}" = "local" ]; then
+    echo "==> [2/4] Local environment detected, clearing caches instead of warming production caches..."
+    php artisan optimize:clear
+else
+    echo "==> [2/4] Caching configuration..."
+    php artisan config:cache
 
-echo "==> [4/6] Caching routes..."
-# Clear first to avoid stale entries, then cache fresh
-php artisan route:clear
-php artisan route:cache
+    echo "==> [3/4] Caching routes..."
+    # Clear first to avoid stale entries, then cache fresh
+    php artisan route:clear
+    php artisan route:cache
 
-echo "==> [5/6] Caching views..."
-php artisan view:cache
-
-echo "==> [6/6] Running database migrations (--force for production)..."
-php artisan migrate --force
-
-echo "==> [DONE] Running php artisan optimize..."
-php artisan optimize
+    echo "==> [4/4] Caching views..."
+    php artisan view:cache
+fi
 
 echo "==> Starting PHP-FPM..."
 exec "$@"

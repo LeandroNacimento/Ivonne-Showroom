@@ -30,7 +30,7 @@ class ProductVariation extends Model
         'L',
         'XL',
         'XXL',
-        'ÚNICO'
+        'ÚNICO',
     ];
 
     /**
@@ -46,8 +46,8 @@ class ProductVariation extends Model
             // Aplica trim regular y convierte a mayúsculas
             $size = mb_strtoupper(trim($normalized), 'UTF-8');
 
-            if (!in_array($size, self::ALLOWED_SIZES)) {
-                throw new \InvalidArgumentException("Invalid size: '{$size}'. Allowed sizes are: " . implode(', ', self::ALLOWED_SIZES));
+            if (! in_array($size, self::ALLOWED_SIZES)) {
+                throw new \InvalidArgumentException("Invalid size: '{$size}'. Allowed sizes are: ".implode(', ', self::ALLOWED_SIZES));
             }
 
             $this->attributes['size'] = $size;
@@ -64,7 +64,7 @@ class ProductVariation extends Model
         $stock = (int) $value;
 
         if ($stock < 0) {
-            throw new \InvalidArgumentException("Stock cannot be negative");
+            throw new \InvalidArgumentException('Stock cannot be negative');
         }
 
         $this->attributes['stock'] = $stock;

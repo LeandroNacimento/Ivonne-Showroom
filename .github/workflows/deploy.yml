@@ -1,23 +1,142 @@
 name: Deploy to Azure VM
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
 
 jobs:
   deploy:
+    name: Deploy Production
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: DEPLOY_SHA
           script: |
+            bash <<'EOF'
+            set -euo pipefail
+
+            print_deploy_diagnostics() {
+              echo "=== docker compose ps ==="
+              docker compose -f docker-compose.yml -f docker-compose.prod.yml ps || true
+              echo "=== app logs ==="
+              docker compose -f docker-compose.yml -f docker-compose.prod.yml logs --tail=100 app || true
+              echo "=== web logs ==="
+              docker compose -f docker-compose.yml -f docker-compose.prod.yml logs --tail=100 web || true
+            }
+
+            wait_for_http_200() {
+              local url="$1"
+              local attempts="$2"
+              local delay="$3"
+              local required_successes="$4"
+              local consecutive_successes=0
+              local status_code=""
+              local curl_timeout=5
+
+              for attempt in $(seq 1 "$attempts"); do
+                status_code="$(curl --silent --show-error --max-time "$curl_timeout" --output /dev/null --write-out '%{http_code}' "$url" || true)"
+
+                if [ "$status_code" = "200" ]; then
+                  consecutive_successes=$((consecutive_successes + 1))
+                  echo "HTTP readiness OK for $url ($consecutive_successes/$required_successes consecutive successes)."
+
+                  if [ "$consecutive_successes" -ge "$required_successes" ]; then
+                    return 0
+                  fi
+                else
+                  consecutive_successes=0
+                  echo "HTTP readiness not ready for $url (attempt $attempt/$attempts, http_status: ${status_code:-curl_failed}, timeout: ${curl_timeout}s)."
+                fi
+
+                if [ "$attempt" -lt "$attempts" ]; then
+                  sleep "$delay"
+                fi
+              done
+
+              echo "HTTP readiness failed for $url after $attempts attempts."
+              print_deploy_diagnostics
+              return 1
+            }
+
+            wait_for_container_health() {
+              local service="$1"
+              local attempts="$2"
+              local delay="$3"
+              local container_id=""
+              local status=""
+
+              for attempt in $(seq 1 "$attempts"); do
+                container_id="$(docker compose -f docker-compose.yml -f docker-compose.prod.yml ps -q "$service" 2>/dev/null || true)"
+
+                if [ -z "$container_id" ]; then
+                  echo "Service $service did not resolve to a container ID (attempt $attempt/$attempts)."
+                else
+                  status="$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$container_id" 2>/dev/null || true)"
+
+                  if [ "$status" = "healthy" ] || [ "$status" = "running" ]; then
+                    return 0
+                  fi
+                fi
+
+                if [ "$attempt" -lt "$attempts" ]; then
+                  sleep "$delay"
+                fi
+              done
+
+              if [ -z "$container_id" ]; then
+                echo "Service $service never resolved to a container ID."
+              else
+                echo "Service $service did not become ready. Last status: ${status:-unknown} (container: $container_id)"
+              fi
+              print_deploy_diagnostics
+              echo "=== db logs ==="
+              docker compose -f docker-compose.yml -f docker-compose.prod.yml logs --tail=100 db || true
+              return 1
+            }
+
             cd ~/Ivonne-Showroom
-            git pull
-            docker-compose down
-            docker-compose up -d --build
+
+            git fetch --prune origin
+            git checkout main
+            git pull --ff-only origin main
+
+            CURRENT_SHA="$(git rev-parse HEAD)"
+            if [ "$CURRENT_SHA" != "$DEPLOY_SHA" ]; then
+              echo "Refusing to deploy unexpected commit."
+              echo "Expected: $DEPLOY_SHA"
+              echo "Current:  $CURRENT_SHA"
+              exit 1
+            fi
+
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml down --remove-orphans
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+            wait_for_container_health "db" 20 3
+            wait_for_container_health "app" 20 3
+            wait_for_container_health "web" 20 3
+
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T app php artisan migrate --force
+
+            wait_for_http_200 "http://127.0.0.1/up" 30 3 2
+            wait_for_http_200 "http://127.0.0.1/" 30 3 2
+            EOF

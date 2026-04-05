@@ -39,7 +39,7 @@ class OrderStatusTransitionHandler
 
         // Validar que la transición sea permitida.
         $allowed = self::ALLOWED_TRANSITIONS[$oldStatus] ?? [];
-        if (!in_array($newStatus, $allowed)) {
+        if (! in_array($newStatus, $allowed)) {
             throw ValidationException::withMessages([
                 'status' => "La transición de '{$oldStatus}' a '{$newStatus}' no está permitida.",
             ]);
@@ -68,13 +68,13 @@ class OrderStatusTransitionHandler
             // Aplicar bloqueo pesimista (row-level lock) para evitar condiciones de carrera (ventas simultáneas)
             $variation = \App\Models\ProductVariation::lockForUpdate()->find($item->variation_id);
 
-            if (!$variation) {
+            if (! $variation) {
                 throw ValidationException::withMessages([
                     'items' => "La variación del producto '{$item->product?->name}' ya no existe.",
                 ]);
             }
 
-            if (!$variation->hasStock($item->quantity)) {
+            if (! $variation->hasStock($item->quantity)) {
                 $colorName = $variation->productColor?->name ?? 'N/A';
                 throw ValidationException::withMessages([
                     'items' => "Stock insuficiente para '{$item->product?->name}' (Talle: {$variation->size}, Color: {$colorName}).",

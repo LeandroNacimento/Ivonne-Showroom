@@ -31,5 +31,4 @@ class ShowroomTest extends TestCase
         $response = $this->get('/contacto');
         $response->assertStatus(200);
     }
-
 }

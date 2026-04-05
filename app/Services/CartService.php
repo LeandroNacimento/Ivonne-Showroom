@@ -24,11 +24,11 @@ class CartService
         $product = Product::find($productId);
         $variation = ProductVariation::with(['product.images', 'productColor.images'])->find($variationId);
 
-        if (!$product || !$variation || $variation->stock <= 0) {
+        if (! $product || ! $variation || $variation->stock <= 0) {
             return false;
         }
 
-        $cartKey = $productId . '-' . $variationId;
+        $cartKey = $productId.'-'.$variationId;
         $currentCartQuantity = isset($cart[$cartKey]) ? $cart[$cartKey]['quantity'] : 0;
 
         if ($currentCartQuantity + $quantity > $variation->stock) {
@@ -52,6 +52,7 @@ class CartService
         }
 
         Session::put('cart', $cart);
+
         return true;
     }
 
@@ -85,6 +86,7 @@ class CartService
         foreach ($cart as $item) {
             $total += $item['price'] * $item['quantity'];
         }
+
         return $total;
     }
 
@@ -97,9 +99,9 @@ class CartService
 
         $message = "Hola IvonneShowroom, me gustaría realizar el siguiente pedido:\n\n";
         foreach ($cart as $item) {
-            $message .= "- {$item['name']} ({$item['color']} - {$item['size']}) x {$item['quantity']} = $" . number_format($item['price'] * $item['quantity'], 0, ',', '.') . "\n";
+            $message .= "- {$item['name']} ({$item['color']} - {$item['size']}) x {$item['quantity']} = $".number_format($item['price'] * $item['quantity'], 0, ',', '.')."\n";
         }
-        $message .= "\nTotal: $" . number_format($this->getTotal(), 0, ',', '.');
+        $message .= "\nTotal: $".number_format($this->getTotal(), 0, ',', '.');
 
         return urlencode($message);
     }

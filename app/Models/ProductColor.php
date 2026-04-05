@@ -47,7 +47,7 @@ class ProductColor extends Model
      */
     public function getImageUrlAttribute(): string
     {
-        if (!$this->image) {
+        if (! $this->image) {
             return 'https://via.placeholder.com/600x750';
         }
 

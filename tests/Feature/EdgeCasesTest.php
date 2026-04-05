@@ -1,95 +1,135 @@
 <?php
 
+namespace Tests\Feature;
+
 use App\Models\Client;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductColor;
 use App\Models\ProductVariation;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Services\OrderService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
-uses(RefreshDatabase::class);
+class EdgeCasesTest extends TestCase
+{
+    use RefreshDatabase;
 
-it('rechaza cantidades negativas', function () {
-    $client = Client::factory()->create();
-    $product = Product::factory()->create();
-    $color = ProductColor::factory()->create(['product_id' => $product->id]);
-    $variation = ProductVariation::factory()->create([
-        'product_id' => $product->id,
-        'product_color_id' => $color->id,
-        'stock' => 5,
-        'price' => 1000,
-        'size' => 'M',
-    ]);
+    public function test_it_rechaza_cantidades_negativas(): void
+    {
+        $client = Client::factory()->create();
+        $product = Product::factory()->create();
+        $color = ProductColor::factory()->create(['product_id' => $product->id]);
+        $variation = ProductVariation::factory()->create([
+            'product_id' => $product->id,
+            'product_color_id' => $color->id,
+            'stock' => 5,
+            'price' => 1000,
+            'size' => 'M',
+        ]);
 
-    $orderData = [
-        'client_id' => $client->id,
-        'date' => now()->format('Y-m-d'),
-        'status' => Order::STATUS_RESERVED,
-        'payment_method' => 'cash',
-        'delivery_type' => 'showroom',
-        'items' => [
-            [
-                'product_id' => $product->id,
-                'variation_id' => $variation->id,
-                'quantity' => -5,
-            ]
-        ]
-    ];
+        $orderData = [
+            'client_id' => $client->id,
+            'date' => now()->format('Y-m-d'),
+            'status' => Order::STATUS_RESERVED,
+            'payment_method' => 'cash',
+            'delivery_type' => 'showroom',
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'variation_id' => $variation->id,
+                    'quantity' => -5,
+                ],
+            ],
+        ];
 
-    // Negative quantity should cause stock to go below allowed, or be rejected
-    expect(fn () => app(OrderService::class)->create($orderData))
-        ->toThrow(\Exception::class);
+        $this->expectException(\Exception::class);
+        app(OrderService::class)->create($orderData);
+    }
 
-    expect(Order::count())->toBe(0);
-    expect($variation->fresh()->stock)->toBe(5);
-});
+    public function test_it_preserves_stock_when_negative_quantities_are_rejected(): void
+    {
+        $client = Client::factory()->create();
+        $product = Product::factory()->create();
+        $color = ProductColor::factory()->create(['product_id' => $product->id]);
+        $variation = ProductVariation::factory()->create([
+            'product_id' => $product->id,
+            'product_color_id' => $color->id,
+            'stock' => 5,
+            'price' => 1000,
+            'size' => 'M',
+        ]);
 
-it('rechaza cantidad cero', function () {
-    $client = Client::factory()->create();
-    $product = Product::factory()->create();
-    $color = ProductColor::factory()->create(['product_id' => $product->id]);
-    $variation = ProductVariation::factory()->create([
-        'product_id' => $product->id,
-        'product_color_id' => $color->id,
-        'stock' => 5,
-        'price' => 1000,
-        'size' => 'M',
-    ]);
+        $orderData = [
+            'client_id' => $client->id,
+            'date' => now()->format('Y-m-d'),
+            'status' => Order::STATUS_RESERVED,
+            'payment_method' => 'cash',
+            'delivery_type' => 'showroom',
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'variation_id' => $variation->id,
+                    'quantity' => -5,
+                ],
+            ],
+        ];
 
-    $orderData = [
-        'client_id' => $client->id,
-        'date' => now()->format('Y-m-d'),
-        'status' => Order::STATUS_PENDING,
-        'payment_method' => 'cash',
-        'delivery_type' => 'showroom',
-        'items' => [
-            [
-                'product_id' => $product->id,
-                'variation_id' => $variation->id,
-                'quantity' => 0,
-            ]
-        ]
-    ];
+        try {
+            app(OrderService::class)->create($orderData);
+            $this->fail('Expected exception was not thrown.');
+        } catch (\Exception) {
+            $this->assertSame(0, Order::count());
+            $this->assertSame(5, $variation->fresh()->stock);
+        }
+    }
 
-    // Zero quantity should be rejected
-    expect(fn () => app(OrderService::class)->create($orderData))
-        ->toThrow(\Exception::class);
-});
+    public function test_it_rechaza_cantidad_cero(): void
+    {
+        $client = Client::factory()->create();
+        $product = Product::factory()->create();
+        $color = ProductColor::factory()->create(['product_id' => $product->id]);
+        $variation = ProductVariation::factory()->create([
+            'product_id' => $product->id,
+            'product_color_id' => $color->id,
+            'stock' => 5,
+            'price' => 1000,
+            'size' => 'M',
+        ]);
 
-it('rechaza arrays de items vacios', function () {
-    $client = Client::factory()->create();
+        $orderData = [
+            'client_id' => $client->id,
+            'date' => now()->format('Y-m-d'),
+            'status' => Order::STATUS_PENDING,
+            'payment_method' => 'cash',
+            'delivery_type' => 'showroom',
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'variation_id' => $variation->id,
+                    'quantity' => 0,
+                ],
+            ],
+        ];
 
-    $orderData = [
-        'client_id' => $client->id,
-        'date' => now()->format('Y-m-d'),
-        'status' => Order::STATUS_PENDING,
-        'payment_method' => 'cash',
-        'delivery_type' => 'showroom',
-        'items' => [],
-    ];
+        $this->expectException(\Exception::class);
+        app(OrderService::class)->create($orderData);
+    }
 
-    // Empty items should be rejected natively by service
-    expect(fn () => app(OrderService::class)->create($orderData))
-        ->toThrow(\Exception::class);
-});
+    public function test_it_rechaza_arrays_de_items_vacios(): void
+    {
+        $client = Client::factory()->create();
+
+        $orderData = [
+            'client_id' => $client->id,
+            'date' => now()->format('Y-m-d'),
+            'status' => Order::STATUS_PENDING,
+            'payment_method' => 'cash',
+            'delivery_type' => 'showroom',
+            'items' => [],
+        ];
+
+        $this->expectException(\Exception::class);
+        app(OrderService::class)->create($orderData);
+    }
+}

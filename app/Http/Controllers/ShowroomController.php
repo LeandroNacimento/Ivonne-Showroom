@@ -13,6 +13,7 @@ class ShowroomController extends Controller
     {
         $featuredProducts = Product::where('is_featured', true)->with('category', 'images')->take(4)->get();
         $categories = Category::all();
+
         return view('home', compact('featuredProducts', 'categories'));
     }
 
@@ -20,8 +21,6 @@ class ShowroomController extends Controller
     {
         return view('catalog');
     }
-
-
 
     public function cart()
     {

@@ -2,11 +2,10 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Http\Requests\Concerns\ValidatesOrderItems;
+use App\Models\Order;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Models\ProductVariation;
-use App\Models\Order;
-use App\Http\Requests\Concerns\ValidatesOrderItems;
 
 class UpdateOrderRequest extends FormRequest
 {
@@ -36,7 +35,7 @@ class UpdateOrderRequest extends FormRequest
             'shipping_cost' => ['required_if:delivery_type,shipping', 'nullable', 'numeric', 'min:0'],
         ];
 
-        if (!$order || $order->status === Order::STATUS_PENDING) {
+        if (! $order || $order->status === Order::STATUS_PENDING) {
             $rules['items'] = ['required', 'array', 'min:1'];
             $rules['items.*.product_id'] = ['required', 'exists:products,id'];
             $rules['items.*.variation_id'] = ['required', 'exists:product_variations,id'];

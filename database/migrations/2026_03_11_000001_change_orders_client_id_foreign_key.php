@@ -11,9 +11,9 @@ return new class extends Migration
         Schema::table('orders', function (Blueprint $table) {
             $table->dropForeign(['client_id']);
             $table->foreign('client_id')
-                  ->references('id')
-                  ->on('clients')
-                  ->restrictOnDelete();
+                ->references('id')
+                ->on('clients')
+                ->restrictOnDelete();
         });
     }
 
@@ -22,9 +22,9 @@ return new class extends Migration
         Schema::table('orders', function (Blueprint $table) {
             $table->dropForeign(['client_id']);
             $table->foreign('client_id')
-                  ->references('id')
-                  ->on('clients')
-                  ->cascadeOnDelete();
+                ->references('id')
+                ->on('clients')
+                ->cascadeOnDelete();
         });
     }
 };

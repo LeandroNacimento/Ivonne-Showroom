@@ -3,22 +3,21 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\ProductImage;
-use App\Models\ProductVariation;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use App\Services\ProductService;
-use App\Services\ProductImageService;
 use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
+use App\Models\Category;
+use App\Models\Product;
+use App\Services\ProductImageService;
+use App\Services\ProductService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
     protected ProductService $productService;
+
     protected ProductImageService $imageService;
 
     public function __construct(ProductService $productService, ProductImageService $imageService)
@@ -26,6 +25,7 @@ class ProductController extends Controller
         $this->productService = $productService;
         $this->imageService = $imageService;
     }
+
     public function index()
     {
         return view('admin.products.index');
@@ -34,6 +34,7 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Category::all();
+
         return view('admin.products.create', compact('categories'));
     }
 
@@ -45,7 +46,7 @@ class ProductController extends Controller
         $slug = $baseSlug;
         $i = 1;
         while (Product::withTrashed()->where('slug', $slug)->exists()) {
-            $slug = $baseSlug . '-' . $i++;
+            $slug = $baseSlug.'-'.$i++;
         }
 
         DB::transaction(function () use ($request, $validated, $slug) {
@@ -60,7 +61,7 @@ class ProductController extends Controller
             $this->productService->syncVariations($product, $request->variations);
 
             $imagesData = $request->file('images');
-            if (!empty($imagesData) && is_array($imagesData)) {
+            if (! empty($imagesData) && is_array($imagesData)) {
                 $this->imageService->storeImages($product, $imagesData);
             }
         });
@@ -72,6 +73,7 @@ class ProductController extends Controller
     {
         $categories = Category::all();
         $product->load('variations', 'images');
+
         return view('admin.products.edit', compact('product', 'categories'));
     }
 
@@ -83,7 +85,7 @@ class ProductController extends Controller
         $slug = $baseSlug;
         $i = 1;
         while (Product::withTrashed()->where('slug', $slug)->where('id', '!=', $product->id)->exists()) {
-            $slug = $baseSlug . '-' . $i++;
+            $slug = $baseSlug.'-'.$i++;
         }
 
         DB::transaction(function () use ($request, $product, $validated, $slug) {
@@ -102,7 +104,7 @@ class ProductController extends Controller
             }
 
             $imagesData = $request->file('images');
-            if (!empty($imagesData) && is_array($imagesData)) {
+            if (! empty($imagesData) && is_array($imagesData)) {
                 $this->imageService->storeImages($product, $imagesData);
             }
         });
@@ -116,13 +118,14 @@ class ProductController extends Controller
             Storage::disk('public')->delete($image->path);
         }
         $product->delete();
+
         return redirect()->route('admin.products.index')->with('success', 'Producto eliminado con éxito.');
     }
 
     public function search(Request $request)
     {
         $validated = $request->validate([
-            'q' => ['required', 'string', 'min:2', 'max:50'],
+            'q' => ['required', 'string', 'min:1', 'max:50'],
         ]);
 
         $query = $validated['q'];
@@ -133,7 +136,7 @@ class ProductController extends Controller
                 'variations' => function ($q) {
                     $q->where('stock', '>', 0);
                 },
-                'variations.productColor'
+                'variations.productColor',
             ])
             ->limit(20)
             ->get();
@@ -151,7 +154,7 @@ class ProductController extends Controller
                         'stock' => $v->stock,
                         'price' => $v->price ?? $product->price,
                     ];
-                })->values()->toArray()
+                })->values()->toArray(),
             ];
         });
 

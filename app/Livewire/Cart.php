@@ -9,7 +9,9 @@ use Livewire\Component;
 class Cart extends Component
 {
     public $cart = [];
+
     public $total = 0;
+
     public $whatsappMessage = '';
 
     public function mount(CartService $cartService)

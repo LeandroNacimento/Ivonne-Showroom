@@ -17,7 +17,7 @@
 
             window.INITIAL_ORDER_DATA = {
                 oldItems: {!! json_encode(old('items')) !!},
-                existingItems: {!! json_encode($order->items) !!},
+                existingItems: {!! json_encode($existingItems) !!},
                 errors: {!! json_encode($errors->toArray()) !!},
                 deliveryType: @json(old('delivery_type', $order->delivery_type ?? 'showroom')),
                 shippingCost: {!! json_encode(old('shipping_cost', $order->shipping_cost) ?: 0) !!},
@@ -54,37 +54,54 @@
                                         class="grid grid-cols-1 md:grid-cols-12 gap-4 md:items-end border-b border-gray-100 pb-6 md:pb-4">
                                         <div class="md:col-span-4 md:pr-4 relative">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Producto</label>
-                                            <input type="text"
-                                                class="w-full rounded-md border-gray-300 shadow-sm text-sm {{ $order->status === 'reservado' ? 'bg-gray-100 cursor-not-allowed pointer-events-none opacity-80' : '' }}"
-                                                :class="getError(`items.${index}.product_id`) ? 'border-red-500' : ''"
-                                                placeholder="Buscar producto..." x-model="item.productName"
-                                                @if ($order->status !== 'reservado') @input.debounce.300ms="searchProduct(index); clearError(`items.${index}.product_id`)"
-                                                @focus="item.showResults = true" @click.away="item.showResults = false" @endif
-                                                autocomplete="off" {{ $order->status === 'reservado' ? 'readonly' : '' }}>
                                             <input type="hidden" :name="`items[${index}][product_id]`"
                                                 x-model="item.productId">
 
-                                            <!-- Results Dropdown -->
-                                            <div x-show="item.showResults"
-                                                class="absolute z-50 left-0 min-w-full md:min-w-[450px] bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
-
-                                                <!-- Loading state -->
-                                                <div x-show="item.isSearching"
-                                                    class="p-3 text-sm text-gray-500 text-center">
-                                                    Buscando...
+                                            <div x-show="item.productId"
+                                                class="flex items-center justify-between bg-gray-50 p-2 rounded-md border border-gray-200 {{ $order->status === 'reservado' ? 'opacity-80' : '' }}">
+                                                <div class="flex flex-col">
+                                                    <span class="text-sm font-semibold text-gray-800"
+                                                        x-text="item.productName"></span>
                                                 </div>
+                                            </div>
 
-                                                <!-- No results -->
-                                                <div x-cloak
-                                                    x-show="item.searchResults.length === 0 && item.hasSearched && !item.isSearching"
-                                                    class="p-3 text-sm text-gray-500 text-center">
-                                                    Producto no encontrado
-                                                </div>
+                                            <div x-show="!item.productId" class="relative">
+                                                <input type="text"
+                                                    class="w-full rounded-md shadow-sm text-sm"
+                                                    :class="getError(`items.${index}.product_id`) ? 'border-red-500' :
+                                                        'border-gray-300'"
+                                                    placeholder="Buscar producto..." x-model="item.productSearch"
+                                                    @input.debounce.300ms="searchProduct(index); clearError(`items.${index}.product_id`)"
+                                                    @focus="item.showResults = true" @click.away="item.showResults = false"
+                                                    autocomplete="off">
 
-                                                <template x-for="result in item.searchResults" :key="result.id">
-                                                    <div class="p-2 hover:bg-gray-100 cursor-pointer text-sm"
-                                                        @click="selectProduct(index, result)" x-text="result.name"></div>
+                                                <template x-if="getError(`items.${index}.product_id`)">
+                                                    <div class="text-[10px] text-red-500 mt-1"
+                                                        x-text="getError(`items.${index}.product_id`)"></div>
                                                 </template>
+
+                                                <!-- Results Dropdown -->
+                                                <div x-show="item.showResults"
+                                                    class="absolute z-50 left-0 min-w-full md:min-w-112.5 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
+
+                                                    <!-- Loading state -->
+                                                    <div x-show="item.isSearching"
+                                                        class="p-3 text-sm text-gray-500 text-center">
+                                                        Buscando...
+                                                    </div>
+
+                                                    <!-- No results -->
+                                                    <div x-cloak
+                                                        x-show="item.searchResults.length === 0 && item.hasSearched && !item.isSearching"
+                                                        class="p-3 text-sm text-gray-500 text-center">
+                                                        Producto no encontrado
+                                                    </div>
+
+                                                    <template x-for="result in item.searchResults" :key="result.id">
+                                                        <div class="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                                            @click="selectProduct(index, result)" x-text="result.name"></div>
+                                                    </template>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="md:col-span-3">
@@ -94,11 +111,12 @@
                                                 :class="getError(`items.${index}.variation_id`) ? 'border-red-500' :
                                                     'border-gray-300'"
                                                 x-model="item.variationId"
+                                                x-effect="syncVariationSelect($el, item)"
                                                 @change="updatePrice(index); clearError(`items.${index}.variation_id`)"
                                                 :disabled="!item.productId">
                                                 <option value="">Seleccionar...</option>
                                                 <template x-for="variation in item.variations" :key="variation.id">
-                                                    <option :value="variation.id"
+                                                    <option :value="String(variation.id)"
                                                         x-text="`${variation.color !== 'N/A' ? variation.color : ''}${variation.color !== 'N/A' && variation.size !== 'ÚNICO' ? ' - ' : ''}${variation.size !== 'ÚNICO' ? variation.size : ''} (Stock: ${variation.stock})`">
                                                     </option>
                                                 </template>
@@ -106,6 +124,11 @@
                                             <template x-if="getError(`items.${index}.variation_id`)">
                                                 <div class="text-[10px] text-red-500 mt-1"
                                                     x-text="getError(`items.${index}.variation_id`)"></div>
+                                            </template>
+                                            <template x-if="item.initialVariationOption?.missing">
+                                                <div class="text-[10px] text-amber-600 mt-1">
+                                                    La variación original del pedido ya no existe. Revisa antes de guardar.
+                                                </div>
                                             </template>
                                         </div>
                                         <div class="md:col-span-1">

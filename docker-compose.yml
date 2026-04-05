@@ -3,20 +3,47 @@ services:
         build:
             context: .
             dockerfile: php/Dockerfile
-        container_name: laravel_app
         restart: unless-stopped
         working_dir: /var/www
+        healthcheck:
+            test: ["CMD-SHELL", "php-fpm -t || exit 1"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 10s
+        volumes:
+            - ./:/var/www
+            - ./php/opcache.ini:/usr/local/etc/php/conf.d/opcache.ini
+        networks:
+            - laravel
+        depends_on:
+            db:
+                condition: service_healthy
+
+    vite:
+        image: node:20-alpine
+        restart: unless-stopped
+        working_dir: /var/www
+        command: sh -lc "npm run dev -- --host 0.0.0.0 --port 5173"
         volumes:
             - ./:/var/www
         ports:
             - "5173:5173"
         networks:
             - laravel
+        depends_on:
+            app:
+                condition: service_started
 
     web:
         image: nginx:alpine
-        container_name: laravel_nginx
         restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1/up"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 10s
         ports:
             - "80:80"
         volumes:
@@ -25,16 +52,21 @@ services:
         networks:
             - laravel
         depends_on:
-            - app
+            app:
+                condition: service_started
 
     db:
         image: mysql:8.0
-        container_name: laravel_db
         restart: unless-stopped
+        healthcheck:
+            test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+            interval: 10s
+            timeout: 5s
+            retries: 6
+            start_period: 30s
         environment:
             MYSQL_DATABASE: "${DB_DATABASE}"
             MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
-            MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
         volumes:
             - dbdata:/var/lib/mysql
         networks:

@@ -87,10 +87,10 @@ class Product extends Model
         }
 
         if ($min == $max) {
-            return '$' . number_format((float) $min, 0, ',', '.');
+            return '$'.number_format((float) $min, 0, ',', '.');
         }
 
-        return '$' . number_format((float) $min, 0, ',', '.') . ' - $' . number_format((float) $max, 0, ',', '.');
+        return '$'.number_format((float) $min, 0, ',', '.').' - $'.number_format((float) $max, 0, ',', '.');
     }
 
     /**
@@ -105,6 +105,7 @@ class Product extends Model
         if ($this->relationLoaded('variations')) {
             return $this->variations->sum('stock');
         }
+
         return $this->variations()->sum('stock');
     }
 
@@ -117,7 +118,7 @@ class Product extends Model
         }
 
         if ($cover) {
-            return asset('storage/' . $cover->path);
+            return asset('storage/'.$cover->path);
         }
 
         return asset('img/placeholder-product.jpg');
@@ -125,7 +126,7 @@ class Product extends Model
 
     public function getAvailableSizesAttribute(): array
     {
-        if (!$this->relationLoaded('variations')) {
+        if (! $this->relationLoaded('variations')) {
             $this->load('variations');
         }
 
@@ -134,7 +135,7 @@ class Product extends Model
             ->pluck('size')
             ->filter()
             ->unique()
-            ->sortBy(fn($size) => self::SIZE_ORDER[$size] ?? 999)
+            ->sortBy(fn ($size) => self::SIZE_ORDER[$size] ?? 999)
             ->values()
             ->toArray();
     }
@@ -146,7 +147,7 @@ class Product extends Model
 
     public function getAvailabilityLabelAttribute(): string
     {
-        if (!$this->has_sizes) {
+        if (! $this->has_sizes) {
             return $this->total_stock > 0 ? 'Disponible' : 'Sin stock';
         }
 
@@ -160,7 +161,7 @@ class Product extends Model
             return 'Talle único';
         }
 
-        return 'Disponible en ' . implode(' - ', $sizes);
+        return 'Disponible en '.implode(' - ', $sizes);
     }
 
     /**
@@ -177,6 +178,7 @@ class Product extends Model
     public function getIsLowStockAttribute(): bool
     {
         $total = $this->total_stock;
+
         return $total > 0 && $total <= 3;
     }
 }

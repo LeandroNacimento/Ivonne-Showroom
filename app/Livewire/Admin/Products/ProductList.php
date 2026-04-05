@@ -21,14 +21,14 @@ class ProductList extends Component
     {
         $products = Product::query()
             ->with(['category', 'images', 'variations'])
-            ->when($this->search, function($query) {
-                $query->where('name', 'like', '%' . $this->search . '%');
+            ->when($this->search, function ($query) {
+                $query->where('name', 'like', '%'.$this->search.'%');
             })
             ->orderBy('id', 'desc')
             ->paginate(10);
 
         return view('livewire.admin.products.product-list', [
-            'products' => $products
+            'products' => $products,
         ]);
     }
 }

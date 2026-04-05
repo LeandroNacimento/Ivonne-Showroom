@@ -19,7 +19,7 @@ class OrderProductSelector extends Component
             'variations' => function ($q) {
                 $q->where('stock', '>', 0);
             },
-            'variations.productColor'
+            'variations.productColor',
         ])->find($productId);
 
         if ($product) {
@@ -38,7 +38,7 @@ class OrderProductSelector extends Component
                 product: [
                     'id' => $product->id,
                     'name' => $product->name,
-                    'price' => $product->price
+                    'price' => $product->price,
                 ],
                 variations: $variationsPayload
             );
@@ -52,14 +52,14 @@ class OrderProductSelector extends Component
         $products = [];
 
         if (strlen($this->search) >= 2) {
-            $products = Product::where('name', 'like', '%' . $this->search . '%')
+            $products = Product::where('name', 'like', '%'.$this->search.'%')
                 ->whereHas('variations', function ($query) {
                     $query->where('stock', '>', 0);
                 })
                 ->with([
                     'variations' => function ($query) {
                         $query->where('stock', '>', 0);
-                    }
+                    },
                 ])
                 ->orderBy('name', 'asc')
                 ->take(10)
@@ -67,7 +67,7 @@ class OrderProductSelector extends Component
         }
 
         return view('livewire.admin.orders.order-product-selector', [
-            'products' => $products
+            'products' => $products,
         ]);
     }
 }

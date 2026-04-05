@@ -42,10 +42,13 @@ WORKDIR /var/www
 # startup. The public/build/ directory (with manifest.json) is baked into
 # the image and served by Nginx from the volume mount.
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm ci
 
 COPY . .
-RUN npm run build
+RUN cp .env.example .env \
+    && composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist \
+    && npm run build \
+    && rm .env
 
 # ── Entrypoint ────────────────────────────────────────────────────────────────
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
