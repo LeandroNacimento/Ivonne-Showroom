@@ -58,7 +58,7 @@
                             <div class="space-y-4">
                                 <template x-for="(item, index) in items" :key="index">
                                     <div
-                                        class="grid grid-cols-1 gap-4 border-b border-gray-100 pb-6 md:grid-cols-[repeat(13,minmax(0,1fr))] md:items-start md:gap-x-4 md:gap-y-3 md:pb-4">
+                                        class="grid grid-cols-1 gap-4 border-b border-gray-100 pb-6 md:grid-cols-13 md:items-start md:gap-x-4 md:gap-y-3 md:pb-4">
                                         <div class="md:col-span-4 md:pr-4 relative">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Producto</label>
                                             <input type="hidden" :name="`items[${index}][product_id]`"
