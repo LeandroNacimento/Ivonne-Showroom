@@ -1,6 +1,13 @@
 @extends('layouts.admin')
 
 @section('content')
+    @php
+        $pendingStatus = \App\Models\Order::STATUS_PENDING;
+        $reservedStatus = \App\Models\Order::STATUS_RESERVED;
+        $deliveredStatus = \App\Models\Order::STATUS_DELIVERED;
+        $cancelledStatus = \App\Models\Order::STATUS_CANCELLED;
+    @endphp
+
     <div class="max-w-7xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-bold text-gray-800">Editar Pedido #{{ $order->id }}</h1>
@@ -39,7 +46,7 @@
                         <div class="bg-white rounded-lg shadow-sm p-6">
                             <div class="flex justify-between items-center mb-4">
                                 <h2 class="text-lg font-semibold text-gray-800">Ítems del Pedido</h2>
-                                @if ($order->status === 'reservado')
+                                @if ($order->status === $reservedStatus)
                                     <span
                                         class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1">
                                         🔒 Ítems bloqueados (pedido reservado)
@@ -58,7 +65,7 @@
                                                 x-model="item.productId">
 
                                             <div x-show="item.productId"
-                                                class="flex items-center justify-between bg-gray-50 p-2 rounded-md border border-gray-200 {{ $order->status === 'reservado' ? 'opacity-80' : '' }}">
+                                                class="flex items-center justify-between bg-gray-50 p-2 rounded-md border border-gray-200 {{ $order->status === $reservedStatus ? 'opacity-80' : '' }}">
                                                 <div class="flex flex-col">
                                                     <span class="text-sm font-semibold text-gray-800"
                                                         x-text="item.productName"></span>
@@ -107,7 +114,7 @@
                                         <div class="md:col-span-3">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Variación</label>
                                             <select :name="`items[${index}][variation_id]`"
-                                                class="w-full rounded-md shadow-sm text-sm {{ $order->status === 'reservado' ? 'bg-gray-100 cursor-not-allowed pointer-events-none opacity-80' : '' }}"
+                                                class="w-full rounded-md shadow-sm text-sm {{ $order->status === $reservedStatus ? 'bg-gray-100 cursor-not-allowed pointer-events-none opacity-80' : '' }}"
                                                 :class="getError(`items.${index}.variation_id`) ? 'border-red-500' :
                                                     'border-gray-300'"
                                                 x-model="item.variationId"
@@ -136,10 +143,10 @@
                                             <input type="number" :name="`items[${index}][quantity]`"
                                                 x-model="item.quantity" min="1" :max="item.maxStock"
                                                 @input="validateQuantity(index); clearError(`items.${index}.quantity`)"
-                                                class="w-full rounded-md shadow-sm text-sm {{ $order->status === 'reservado' ? 'bg-gray-100 cursor-not-allowed pointer-events-none opacity-80' : '' }}"
+                                                class="w-full rounded-md shadow-sm text-sm {{ $order->status === $reservedStatus ? 'bg-gray-100 cursor-not-allowed pointer-events-none opacity-80' : '' }}"
                                                 :class="getError(`items.${index}.quantity`) ? 'border-red-500' :
                                                     'border-gray-300'"
-                                                {{ $order->status === 'reservado' ? 'readonly' : '' }}>
+                                                {{ $order->status === $reservedStatus ? 'readonly' : '' }}>
                                             <template x-if="getError(`items.${index}.quantity`)">
                                                 <div class="text-[10px] text-red-500 mt-1"
                                                     x-text="getError(`items.${index}.quantity`)"></div>
@@ -150,10 +157,10 @@
                                             <input type="number" :name="`items[${index}][unit_price]`"
                                                 x-model="item.unitPrice" step="0.01"
                                                 @input="clearError(`items.${index}.unit_price`)"
-                                                class="w-full rounded-md shadow-sm text-sm {{ $order->status === 'reservado' ? 'bg-gray-100 cursor-not-allowed pointer-events-none opacity-80' : '' }}"
+                                                class="w-full rounded-md shadow-sm text-sm {{ $order->status === $reservedStatus ? 'bg-gray-100 cursor-not-allowed pointer-events-none opacity-80' : '' }}"
                                                 :class="getError(`items.${index}.unit_price`) ? 'border-red-500' :
                                                     'border-gray-300'"
-                                                {{ $order->status === 'reservado' ? 'readonly' : '' }}>
+                                                {{ $order->status === $reservedStatus ? 'readonly' : '' }}>
                                             <template x-if="getError(`items.${index}.unit_price`)">
                                                 <div class="text-[10px] text-red-500 mt-1"
                                                     x-text="getError(`items.${index}.unit_price`)"></div>
@@ -166,7 +173,7 @@
                                             </div>
                                         </div>
                                         <div class="md:col-span-1 mt-2 md:mt-0 flex md:justify-end">
-                                            @if ($order->status !== 'reservado')
+                                            @if ($order->status !== $reservedStatus)
                                                 <button type="button" @click="removeItem(index)"
                                                     class="text-red-500 hover:text-red-700">
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor"
@@ -183,7 +190,7 @@
                                 </template>
                             </div>
 
-                            @if ($order->status !== 'reservado')
+                            @if ($order->status !== $reservedStatus)
                                 <button type="button" @click="addItem()"
                                     class="mt-4 text-sm text-brand-pink hover:text-brand-heart font-medium">
                                     + Agregar Producto
@@ -324,21 +331,21 @@
                                 <select name="status" id="status"
                                     class="w-full rounded-md border-[{{ $errors->has('status') ? 'red-500' : 'gray-300' }}] shadow-sm focus:border-brand-pink focus:ring-brand-pink focus:ring-opacity-50"
                                     required>
-                                    @if ($order->status === 'pendiente')
-                                        <option value="pendiente"
-                                            {{ old('status') === 'pendiente' ? 'selected' : (old('status') ? '' : 'selected') }}>
+                                    @if ($order->status === $pendingStatus)
+                                        <option value="{{ $pendingStatus }}"
+                                            {{ old('status') === $pendingStatus ? 'selected' : (old('status') ? '' : 'selected') }}>
                                             Pendiente</option>
-                                        <option value="reservado" {{ old('status') === 'reservado' ? 'selected' : '' }}>
+                                        <option value="{{ $reservedStatus }}" {{ old('status') === $reservedStatus ? 'selected' : '' }}>
                                             Reservado</option>
-                                        <option value="cancelado" {{ old('status') === 'cancelado' ? 'selected' : '' }}>
+                                        <option value="{{ $cancelledStatus }}" {{ old('status') === $cancelledStatus ? 'selected' : '' }}>
                                             Cancelado</option>
-                                    @elseif($order->status === 'reservado')
-                                        <option value="reservado"
-                                            {{ old('status') === 'reservado' ? 'selected' : (old('status') ? '' : 'selected') }}>
+                                    @elseif($order->status === $reservedStatus)
+                                        <option value="{{ $reservedStatus }}"
+                                            {{ old('status') === $reservedStatus ? 'selected' : (old('status') ? '' : 'selected') }}>
                                             Reservado</option>
-                                        <option value="entregado" {{ old('status') === 'entregado' ? 'selected' : '' }}>
+                                        <option value="{{ $deliveredStatus }}" {{ old('status') === $deliveredStatus ? 'selected' : '' }}>
                                             Entregado</option>
-                                        <option value="cancelado" {{ old('status') === 'cancelado' ? 'selected' : '' }}>
+                                        <option value="{{ $cancelledStatus }}" {{ old('status') === $cancelledStatus ? 'selected' : '' }}>
                                             Cancelado</option>
                                     @else
                                         <option value="{{ $order->status }}" selected>{{ ucfirst($order->status) }}

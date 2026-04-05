@@ -1,6 +1,11 @@
 @extends('layouts.admin')
 
 @section('content')
+    @php
+        $pendingStatus = \App\Models\Order::STATUS_PENDING;
+        $reservedStatus = \App\Models\Order::STATUS_RESERVED;
+    @endphp
+
     <div class="max-w-7xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-bold text-gray-800">Nuevo Pedido</h1>
@@ -309,10 +314,10 @@
                                 <select name="status" id="status"
                                     class="w-full rounded-md border-[{{ $errors->has('status') ? 'red-500' : 'gray-300' }}] shadow-sm focus:border-brand-pink focus:ring-brand-pink focus:ring-opacity-50"
                                     required>
-                                    <option value="pendiente"
-                                        {{ old('status', 'pendiente') === 'pendiente' ? 'selected' : '' }}>Pendiente
+                                    <option value="{{ $pendingStatus }}"
+                                        {{ old('status', $pendingStatus) === $pendingStatus ? 'selected' : '' }}>Pendiente
                                     </option>
-                                    <option value="reservado" {{ old('status') === 'reservado' ? 'selected' : '' }}>
+                                    <option value="{{ $reservedStatus }}" {{ old('status') === $reservedStatus ? 'selected' : '' }}>
                                         Reservado</option>
                                 </select>
                                 @error('status')
