@@ -125,7 +125,7 @@ class ProductController extends Controller
     public function search(Request $request)
     {
         $validated = $request->validate([
-            'q' => ['required', 'string', 'min:2', 'max:50'],
+            'q' => ['required', 'string', 'min:1', 'max:50'],
         ]);
 
         $query = $validated['q'];

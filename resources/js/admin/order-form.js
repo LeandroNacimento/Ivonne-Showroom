@@ -13,6 +13,139 @@ export default function orderForm(initialData = {}) {
         errors: initialData.errors || {},
         API: null,
 
+        normalizeVariation(variation) {
+            if (!variation) {
+                return null;
+            }
+
+            return {
+                id: String(variation.id),
+                color: variation.product_color?.name || variation.color || 'N/A',
+                size: variation.size || 'ÚNICO',
+                stock: variation.stock ?? 0,
+                price: variation.price ?? 0,
+            };
+        },
+
+        normalizeInitialVariationOption(option) {
+            if (!option) {
+                return null;
+            }
+
+            return {
+                id: option.id !== null && option.id !== undefined ? String(option.id) : null,
+                color: option.color || 'N/A',
+                size: option.size || 'ÚNICO',
+                stock: option.stock ?? null,
+                price: option.price ?? 0,
+                label: option.label || null,
+                missing: Boolean(option.missing),
+            };
+        },
+
+        mergeVariationOptions(initialOption, fetchedVariations) {
+            const merged = [];
+            const seen = new Set();
+            const normalizedInitialOption = this.normalizeInitialVariationOption(initialOption);
+            const normalizedFetchedVariations = (fetchedVariations || []).map((variation) => ({
+                ...variation,
+                id: String(variation.id),
+            }));
+
+            if (normalizedInitialOption && !normalizedInitialOption.missing && normalizedInitialOption.id !== null) {
+                merged.push(normalizedInitialOption);
+                seen.add(normalizedInitialOption.id);
+            }
+
+            normalizedFetchedVariations.forEach((variation) => {
+                if (seen.has(variation.id)) {
+                    return;
+                }
+
+                merged.push(variation);
+                seen.add(variation.id);
+            });
+
+            return merged;
+        },
+
+        findMatchingInitialVariationOption(item) {
+            const existingItems = initialData.existingItems || [];
+
+            return existingItems.find((existingItem) => {
+                if (String(existingItem.product_id ?? '') !== String(item.product_id ?? '')) {
+                    return false;
+                }
+
+                if (item.variation_id && existingItem.variation_id) {
+                    return String(existingItem.variation_id) === String(item.variation_id);
+                }
+
+                return Boolean(existingItem.initial_variation_option);
+            })?.initial_variation_option ?? null;
+        },
+
+        getMatchingVariation(item, variationId = item?.variationId) {
+            if (!item?.variations?.length || !variationId) {
+                return null;
+            }
+
+            return item.variations.find((variation) => String(variation.id) === String(variationId)) ?? null;
+        },
+
+        syncVariationState(item, variationId = item?.variationId) {
+            const normalizedVariationId = variationId ? String(variationId) : '';
+
+            if (!normalizedVariationId) {
+                item.variationId = '';
+                item.selectedVariation = null;
+                item.maxStock = null;
+                return null;
+            }
+
+            const selectedOption = this.getMatchingVariation(item, normalizedVariationId);
+
+            if (!selectedOption) {
+                item.selectedVariation = null;
+                item.maxStock = null;
+                return null;
+            }
+
+            item.variationId = String(selectedOption.id);
+            item.selectedVariation = selectedOption;
+            item.maxStock = selectedOption.stock ?? null;
+
+            return selectedOption;
+        },
+
+        syncVariationSelect(select, item) {
+            const desiredValue = item?.variationId ? String(item.variationId) : '';
+            const optionSignature = (item?.variations || []).map((variation) => String(variation.id)).join('|');
+            const selectedOption = this.syncVariationState(item, desiredValue);
+
+            void optionSignature;
+
+            this.$nextTick(() => {
+                if (!desiredValue || !selectedOption) {
+                    if (select.value !== '') {
+                        select.value = '';
+                    }
+
+                    return;
+                }
+
+                const hasMatchingOption = Array.from(select.options).some((option) => option.value === desiredValue);
+                if (!hasMatchingOption) {
+                    return;
+                }
+
+                if (select.value !== desiredValue) {
+                    select.value = '';
+                    select.value = desiredValue;
+                }
+            });
+        },
+
         init() {
             this.API = window.ORDER_ENDPOINTS;
             if (!this.API) {
@@ -26,11 +159,19 @@ export default function orderForm(initialData = {}) {
             if (oldItems && Object.keys(oldItems).length > 0) {
                 this.items = [];
                 Object.values(oldItems).forEach(item => {
+                    const initialVariationOption = this.normalizeInitialVariationOption(
+                        this.findMatchingInitialVariationOption(item)
+                    );
+
                     this.items.push({
                         productId: item.product_id || '',
-                        productName: 'Producto Previo (Seleccione para refrescar)',
+                        productName: 'Producto Previo (seleccione para refrescar)',
                         productSearch: '',
-                        variationId: item.variation_id || '',
+                        variationId: item.variation_id ? String(item.variation_id) : '',
+                        selectedVariation: initialVariationOption && !initialVariationOption.missing
+                            ? initialVariationOption
+                            : null,
+                        initialVariationOption: initialVariationOption,
                         quantity: item.quantity || 1,
                         unitPrice: item.unit_price || 0,
                         maxStock: null,
@@ -38,8 +179,11 @@ export default function orderForm(initialData = {}) {
                         isSearching: false,
                         hasSearched: false,
                         searchResults: [],
-                        variations: []
+                        variations: initialVariationOption && !initialVariationOption.missing
+                            ? [initialVariationOption]
+                            : []
                     });
+                    this.syncVariationState(this.items[this.items.length - 1]);
                     if (item.product_id) {
                         this.loadVariationsForItem(this.items.length - 1, item.product_id);
                     }
@@ -47,11 +191,17 @@ export default function orderForm(initialData = {}) {
             } else if (initialData.existingItems && initialData.existingItems.length > 0) {
                 // Fallback to DB items (for Edit mode)
                 initialData.existingItems.forEach(item => {
+                    const initialVariationOption = this.normalizeInitialVariationOption(item.initial_variation_option);
+
                     this.items.push({
                         productId: item.product_id,
                         productName: item.product ? item.product.name : 'Producto Eliminado',
                         productSearch: '',
-                        variationId: item.variation_id,
+                        variationId: item.variation_id ? String(item.variation_id) : '',
+                        selectedVariation: initialVariationOption && !initialVariationOption.missing
+                            ? initialVariationOption
+                            : this.normalizeVariation(item.variation),
+                        initialVariationOption: initialVariationOption,
                         quantity: item.quantity,
                         unitPrice: item.unit_price,
                         maxStock: null,
@@ -59,8 +209,11 @@ export default function orderForm(initialData = {}) {
                         isSearching: false,
                         hasSearched: false,
                         searchResults: [],
-                        variations: []
+                        variations: initialVariationOption && !initialVariationOption.missing
+                            ? [initialVariationOption]
+                            : []
                     });
+                    this.syncVariationState(this.items[this.items.length - 1]);
                     this.loadVariationsForItem(this.items.length - 1, item.product_id);
                 });
             } else {
@@ -74,6 +227,8 @@ export default function orderForm(initialData = {}) {
                 productName: '',
                 productSearch: '',
                 variationId: '',
+                selectedVariation: null,
+                initialVariationOption: null,
                 quantity: 1,
                 unitPrice: 0,
                 maxStock: null,
@@ -130,14 +285,28 @@ export default function orderForm(initialData = {}) {
             item.productName = product.name;
             item.showResults = false;
             item.productSearch = '';
-            item.variations = product.variations || [];
+            item.variationId = '';
+            item.selectedVariation = null;
+            item.initialVariationOption = null;
+            item.unitPrice = 0;
+            item.maxStock = null;
+            item.variations = (product.variations || []).map((variation) => ({
+                ...variation,
+                id: String(variation.id),
+            }));
             
             this.clearError(`items.${index}.product_id`);
+            this.clearError(`items.${index}.variation_id`);
+            this.clearError(`items.${index}.unit_price`);
             this.loadVariationsForItem(index, product.id);
         },
 
         loadVariationsForItem(index, productId) {
-            fetch(`${this.API.searchProducts}?q=${productId}`)
+            if (!productId) {
+                return;
+            }
+
+            fetch(`${this.API.searchProducts}?q=${encodeURIComponent(String(productId))}`)
                 .then(async res => {
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     return res.json();
@@ -146,14 +315,16 @@ export default function orderForm(initialData = {}) {
                     const product = products.find(p => String(p.id) === String(productId));
                     if (product) {
                         let item = this.items[index];
-                        item.productName = product.name;
-                        item.variations = product.variations || [];
-                        
-                        // If we have a variation selected (from old/existing), update maxStock
-                        if (item.variationId) {
-                            const v = item.variations.find(v => v.id == item.variationId);
-                            if (v) item.maxStock = v.stock;
+                        if (!item || String(item.productId) !== String(productId)) {
+                            return;
                         }
+
+                        item.productName = product.name;
+                        item.variations = this.mergeVariationOptions(
+                            item.initialVariationOption,
+                            product.variations || []
+                        );
+                        this.syncVariationState(item);
                     }
                 })
                 .catch(err => console.error("Error loading variations:", err));
@@ -163,7 +334,10 @@ export default function orderForm(initialData = {}) {
             let item = this.items[index];
             item.productId = '';
             item.productName = '';
+            item.productSearch = '';
             item.variationId = '';
+            item.selectedVariation = null;
+            item.initialVariationOption = null;
             item.unitPrice = 0;
             item.variations = [];
             item.maxStock = null;
@@ -215,6 +389,7 @@ export default function orderForm(initialData = {}) {
             let item = this.items[index];
             const variation = item.variations.find(v => v.id == item.variationId);
             if (variation) {
+                item.selectedVariation = variation;
                 item.unitPrice = variation.price;
                 item.maxStock = variation.stock;
                 if (item.quantity > variation.stock) item.quantity = variation.stock;
