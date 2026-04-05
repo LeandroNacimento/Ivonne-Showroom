@@ -50,9 +50,66 @@ class OrderController extends Controller
         }
 
         $clients = Client::orderBy('name')->get();
-        $order->load(['items.product', 'items.variation']);
+        $order->load(['items.product', 'items.variation.productColor']);
+        $existingItems = $order->items->map(function (OrderItem $item) {
+            $initialVariationOption = null;
 
-        return view('admin.orders.edit', compact('order', 'clients'));
+            if ($item->variation) {
+                $color = $item->variation->productColor?->name ?? 'N/A';
+                $size = $item->variation->size ?? 'ÚNICO';
+                $stock = $item->variation->stock ?? 0;
+                $separator = $color !== 'N/A' && $size !== 'ÚNICO' ? ' - ' : '';
+                $sizeLabel = $size !== 'ÚNICO' ? $size : '';
+
+                $initialVariationOption = [
+                    'id' => $item->variation->id,
+                    'color' => $color,
+                    'size' => $size,
+                    'stock' => $stock,
+                    'price' => $item->variation->price,
+                    'label' => "{$color}{$separator}{$sizeLabel} (Stock: {$stock})",
+                    'missing' => false,
+                ];
+            } elseif ($item->variation_id) {
+                $color = $item->color ?? 'N/A';
+                $size = $item->size ?? 'ÚNICO';
+                $separator = $color !== 'N/A' && $size !== 'ÚNICO' ? ' - ' : '';
+                $sizeLabel = $size !== 'ÚNICO' ? $size : '';
+
+                $initialVariationOption = [
+                    'id' => null,
+                    'color' => $color,
+                    'size' => $size,
+                    'stock' => null,
+                    'price' => $item->unit_price,
+                    'label' => "{$color}{$separator}{$sizeLabel}",
+                    'missing' => true,
+                ];
+            }
+
+            return [
+                'product_id' => $item->product_id,
+                'product' => $item->product ? [
+                    'id' => $item->product->id,
+                    'name' => $item->product->name,
+                ] : null,
+                'variation_id' => $item->variation_id,
+                'variation' => $item->variation ? [
+                    'id' => $item->variation->id,
+                    'size' => $item->variation->size,
+                    'stock' => $item->variation->stock,
+                    'price' => $item->variation->price,
+                    'product_color' => $item->variation->productColor ? [
+                        'name' => $item->variation->productColor->name,
+                    ] : null,
+                ] : null,
+                'quantity' => $item->quantity,
+                'unit_price' => $item->unit_price,
+                'initial_variation_option' => $initialVariationOption,
+            ];
+        })->values();
+
+        return view('admin.orders.edit', compact('order', 'clients', 'existingItems'));
     }
 
     public function update(UpdateOrderRequest $request, Order $order, OrderStatusTransitionHandler $handler)

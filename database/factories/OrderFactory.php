@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Client;
+use App\Models\Order;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class OrderFactory extends Factory
@@ -12,7 +13,7 @@ class OrderFactory extends Factory
         return [
             'client_id' => Client::factory(),
             'date' => fake()->date(),
-            'status' => 'pending',
+            'status' => Order::STATUS_PENDING,
             'payment_method' => 'cash',
             'delivery_type' => 'showroom',
             'shipping_cost' => 0,
