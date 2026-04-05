@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('client_id')->constrained()->onDelete('cascade');
-            $table->string('status')->default('draft'); // draft, reserved, paid, delivered, cancelled
+            $table->string('status')->default('pendiente'); // pendiente, reservado, entregado, cancelado
             $table->string('payment_method')->nullable(); // cash, transfer, mercadopago, other
             $table->string('delivery_type')->nullable(); // showroom, shipping
             $table->decimal('shipping_cost', 10, 2)->default(0);
