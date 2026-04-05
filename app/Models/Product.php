@@ -124,6 +124,21 @@ class Product extends Model
         return asset('img/placeholder-product.jpg');
     }
 
+    public function getPublicPrimaryImageUrlAttribute(): string
+    {
+        $colors = $this->relationLoaded('colors')
+            ? $this->colors
+            : $this->colors()->with('images')->get();
+
+        $primaryColor = $colors->first();
+
+        if ($primaryColor) {
+            return $primaryColor->public_primary_image_url;
+        }
+
+        return $this->cover_url;
+    }
+
     public function getAvailableSizesAttribute(): array
     {
         if (! $this->relationLoaded('variations')) {

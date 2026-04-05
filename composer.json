@@ -52,6 +52,9 @@
             "@php artisan config:clear --ansi",
             "@php artisan test"
         ],
+        "test:catalog-images": [
+            "@php vendor/bin/phpunit tests/Feature/ProductImageSourceTruthTest.php tests/Feature/Admin/ProductColorDualWriteTest.php"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"

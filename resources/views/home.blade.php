@@ -121,7 +121,7 @@
                     <div class="group relative bg-white rounded-lg shadow-sm overflow-hidden reveal-child">
                         <div
                             class="w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-t-lg overflow-hidden group-hover:opacity-75 lg:h-80 lg:aspect-none flex items-center justify-center">
-                            <img src="{{ $product->cover_url }}" alt="{{ $product->name }}"
+                            <img src="{{ $product->public_primary_image_url }}" alt="{{ $product->name }}"
                                 class="w-full h-full object-center object-cover" loading="lazy">
                         </div>
                         <div class="mt-4 flex justify-between px-4 pb-4">
