@@ -1,14 +1,18 @@
 @props(['product'])
 
 @php
-    // Build image list using the accessor
-    $images = $product->colors->map(fn($color) => $color->image_url)->toArray();
+    $images = $product->colors->map(fn($color) => $color->public_primary_image_url)->values()->toArray();
+
+    if ($images === []) {
+        $images = [asset('img/placeholder-product.jpg')];
+    }
+
     $colorsData = $product->colors
         ->map(
             fn($color) => [
                 'id' => $color->id,
                 'name' => $color->name,
-                'image' => $color->image_url,
+                'image' => $color->public_primary_image_url,
             ],
         )
         ->toArray();
@@ -88,12 +92,8 @@
                         title="{{ $color->name }}"
                         @mouseenter="setPreview({{ collect($colorsData)->search(fn($c) => $c['id'] == $color->id) }})"
                         @mouseleave="clearPreview()">
-                        @if ($color->image)
-                            <img src="{{ $color->image_url }}" class="w-full h-full object-cover"
-                                alt="{{ $color->name }}" loading="lazy">
-                        @else
-                            <div class="w-full h-full bg-gray-200"></div>
-                        @endif
+                        <img src="{{ $color->public_primary_image_url }}" class="w-full h-full object-cover"
+                            alt="{{ $color->name }}" loading="lazy">
                     </div>
                 @endforeach
                 @if ($extraColorsCount > 0)

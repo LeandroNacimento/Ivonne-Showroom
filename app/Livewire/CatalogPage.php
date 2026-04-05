@@ -56,13 +56,13 @@ class CatalogPage extends Component
             ->with([
                 'category',
                 'variations:product_variations.id,product_variations.product_id,product_variations.product_color_id,product_variations.size,product_variations.stock,product_variations.price',
-                'mainColor:id,product_id,image,is_main',
                 'colors' => function ($q) {
                     $q->whereHas('variations', function ($v) {
                         $v->where('stock', '>', 0);
                     })
-                        ->select('product_colors.id', 'product_colors.product_id', 'product_colors.name', 'product_colors.image', 'product_colors.is_main')
+                        ->select('product_colors.id', 'product_colors.product_id', 'product_colors.name', 'product_colors.image', 'product_colors.position')
                         ->with([
+                            'images:id,product_color_id,path,position',
                             'variations' => function ($v) {
                                 $v->where('stock', '>', 0)
                                     ->select('product_variations.id', 'product_variations.product_color_id', 'product_variations.size');

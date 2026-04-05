@@ -29,7 +29,9 @@ class ProductColor extends Model
 
     public function images()
     {
-        return $this->hasMany(ProductImage::class)->orderBy('position');
+        return $this->hasMany(ProductImage::class)
+            ->orderBy('position')
+            ->orderBy('id');
     }
 
     public function mainImage()
@@ -40,6 +42,26 @@ class ProductColor extends Model
     public function getCoverImageAttribute()
     {
         return $this->images()->first();
+    }
+
+    public function getPublicPrimaryImageUrlAttribute(): string
+    {
+        return $this->public_gallery_urls[0] ?? $this->placeholderImageUrl();
+    }
+
+    public function getPublicGalleryUrlsAttribute(): array
+    {
+        $canonicalUrls = $this->resolveCanonicalImageUrls();
+
+        if ($canonicalUrls !== []) {
+            return $canonicalUrls;
+        }
+
+        if ($legacyUrl = $this->resolveLegacyImageUrl()) {
+            return [$legacyUrl];
+        }
+
+        return [$this->placeholderImageUrl()];
     }
 
     /**
@@ -54,5 +76,40 @@ class ProductColor extends Model
         return str_starts_with($this->image, 'http')
             ? $this->image
             : \Illuminate\Support\Facades\Storage::url($this->image);
+    }
+
+    protected function resolveCanonicalImageUrls(): array
+    {
+        $images = $this->relationLoaded('images')
+            ? $this->images
+            : $this->images()->get();
+
+        return $images
+            ->pluck('path')
+            ->filter()
+            ->map(fn (string $path) => $this->resolveStorageImageUrl($path))
+            ->values()
+            ->all();
+    }
+
+    protected function resolveLegacyImageUrl(): ?string
+    {
+        if (! $this->image) {
+            return null;
+        }
+
+        return $this->getImageUrlAttribute();
+    }
+
+    protected function resolveStorageImageUrl(string $path): string
+    {
+        return str_starts_with($path, 'http')
+            ? $path
+            : \Illuminate\Support\Facades\Storage::url($path);
+    }
+
+    protected function placeholderImageUrl(): string
+    {
+        return asset('img/placeholder-product.jpg');
     }
 }

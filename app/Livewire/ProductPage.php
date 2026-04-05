@@ -21,12 +21,12 @@ class ProductPage extends Component
     public function mount($slug)
     {
         $this->product = Product::where('slug', $slug)
-            ->with(['category', 'colors', 'variations.productColor'])
+            ->with(['category', 'colors.images', 'variations.productColor'])
             ->firstOrFail();
 
         $this->relatedProducts = Product::where('category_id', $this->product->category_id)
             ->where('id', '!=', $this->product->id)
-            ->with(['colors'])
+            ->with(['colors.images'])
             ->take(4)
             ->get();
 
@@ -46,9 +46,7 @@ class ProductPage extends Component
         // Group images by color for Alpine.js dynamic gallery
         $this->imagesByColor = [];
         foreach ($this->product->colors as $color) {
-            if ($color->image) {
-                $this->imagesByColor[$color->name] = [$color->image_url];
-            }
+            $this->imagesByColor[$color->name] = $color->public_gallery_urls;
         }
 
         // Initial active color determination
