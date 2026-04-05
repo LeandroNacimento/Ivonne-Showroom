@@ -15,7 +15,7 @@ trait ValidatesOrderItems
         $validator->after(function ($validator) {
             $order = $this->route('order');
 
-            // Solo validar items si el pedido está en estado pending
+            // Solo validar items si el pedido esta en estado pending
             if ($order && $order->status !== Order::STATUS_PENDING) {
                 return;
             }
@@ -32,8 +32,8 @@ trait ValidatesOrderItems
     {
         $order = $this->route('order');
 
-        // Si el pedido ya está en estado reservado, el stock ya fue descontado.
-        // Los ítems vienen readonly en el form, por lo que no validaremos contra el stock *restante*.
+        // Si el pedido ya esta en estado reservado, el stock ya fue descontado.
+        // Los items vienen readonly en el form, por lo que no validaremos contra el stock *restante*.
         if ($order && in_array($order->status, [Order::STATUS_RESERVED, Order::STATUS_DELIVERED])) {
             return;
         }
@@ -58,7 +58,7 @@ trait ValidatesOrderItems
     {
         $variationIds = array_column($items, 'variation_id');
         if (count($variationIds) !== count(array_unique($variationIds))) {
-            $validator->errors()->add('items', 'No se puede repetir la misma variación en dos ítems del pedido.');
+            $validator->errors()->add('items', 'No se puede repetir la misma variacion en dos items del pedido.');
         }
     }
 
@@ -76,7 +76,7 @@ trait ValidatesOrderItems
             if ($variation && (int) $variation->product_id !== (int) $productId) {
                 $validator->errors()->add(
                     "items.{$index}.variation_id",
-                    'La variación seleccionada no pertenece al producto indicado.'
+                    'La variacion seleccionada no pertenece al producto indicado.'
                 );
             }
         }
@@ -88,20 +88,18 @@ trait ValidatesOrderItems
             'client_id.required_without' => 'Debe seleccionar un cliente o crear uno nuevo.',
             'new_client_name.required_without' => 'El nombre del cliente nuevo es obligatorio si no selecciona uno.',
             'client_id.exists' => 'El cliente seleccionado no existe.',
-            'status.in' => 'El estado indicado no es válido.',
-            'items.required' => 'El pedido debe tener al menos un ítem.',
-            'items.min' => 'El pedido debe tener al menos un ítem.',
-            'items.*.variation_id.required' => 'Debe seleccionar una variación para cada ítem.',
-            'items.*.product_id.required' => 'Debe seleccionar un producto válido usando el buscador.',
+            'status.in' => 'El estado indicado no es valido.',
+            'items.required' => 'El pedido debe tener al menos un item.',
+            'items.min' => 'El pedido debe tener al menos un item.',
+            'items.*.variation_id.required' => 'Debe seleccionar una variacion para cada item.',
+            'items.*.product_id.required' => 'Debe seleccionar un producto valido usando el buscador.',
             'items.*.product_id.exists' => 'El producto seleccionado ya no existe en la base de datos.',
             'items.*.quantity.required' => 'Debe indicar la cantidad solicitada.',
-            'items.*.quantity.min' => 'La cantidad mínima es 1.',
+            'items.*.quantity.min' => 'La cantidad minima es 1.',
             'date.before_or_equal' => 'La fecha del pedido no puede ser futura.',
-            'payment_method.required' => 'Debe seleccionar un método de pago.',
+            'payment_method.required' => 'Debe seleccionar un metodo de pago.',
             'delivery_type.required' => 'Debe seleccionar un tipo de entrega.',
-            'shipping_cost.required_if' => 'Debe indicar el costo de envío si el método de entrega es Envío (puede ser 0).',
-            'items.*.unit_price.required' => 'El precio del producto no puede quedar vacío.',
-            'items.*.unit_price.gt' => 'El precio del producto debe ser mayor a 0.',
+            'shipping_cost.required_if' => 'Debe indicar el costo de envio si el metodo de entrega es Envio (puede ser 0).',
         ];
     }
 }

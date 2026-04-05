@@ -35,7 +35,6 @@ class StoreOrderRequest extends FormRequest
             'items.*.product_id' => ['required', 'exists:products,id'],
             'items.*.variation_id' => ['required', 'exists:product_variations,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
-            'items.*.unit_price' => ['required', 'numeric', 'gt:0'],
         ];
     }
 }

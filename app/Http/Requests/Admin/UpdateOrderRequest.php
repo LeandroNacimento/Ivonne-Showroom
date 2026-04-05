@@ -40,7 +40,6 @@ class UpdateOrderRequest extends FormRequest
             $rules['items.*.product_id'] = ['required', 'exists:products,id'];
             $rules['items.*.variation_id'] = ['required', 'exists:product_variations,id'];
             $rules['items.*.quantity'] = ['required', 'integer', 'min:1'];
-            $rules['items.*.unit_price'] = ['required', 'numeric', 'gt:0'];
         }
 
         return $rules;

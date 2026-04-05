@@ -46,7 +46,7 @@
                             <div class="space-y-4">
                                 <template x-for="(item, index) in items" :key="index">
                                     <div
-                                        class="grid grid-cols-1 md:grid-cols-12 gap-4 md:items-end border-b border-gray-100 pb-6 md:pb-4">
+                                        class="grid grid-cols-1 gap-4 border-b border-gray-100 pb-6 md:grid-cols-[repeat(13,minmax(0,1fr))] md:items-start md:gap-x-4 md:gap-y-3 md:pb-4">
                                         <div class="md:col-span-4 md:pr-4 relative">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Producto</label>
 
@@ -54,27 +54,17 @@
                                             <input type="hidden" :name="`items[${index}][product_id]`"
                                                 x-model="item.productId">
 
-                                            <!-- En modo edición o tras seleccionar, mostramos la información elegida -->
-                                            <div x-show="item.productId"
-                                                class="flex items-center justify-between bg-gray-50 p-2 rounded-md border border-gray-200">
-                                                <div class="flex flex-col">
-                                                    <span class="text-sm font-semibold text-gray-800"
-                                                        x-text="item.productName"></span>
-                                                </div>
-                                                <button type="button" @click="clearProduct(index)"
-                                                    class="text-xs text-brand-pink hover:underline">
-                                                    Cambiar
-                                                </button>
-                                            </div>
-
-                                            <!-- Si no hay producto seleccionado, mostramos el componente buscador Alpine -->
-                                            <div x-show="!item.productId" class="relative">
-                                                <input type="text" class="w-full rounded-md shadow-sm text-sm"
+                                            <div class="relative">
+                                                <input type="text"
+                                                    class="h-10 w-full truncate rounded-md shadow-sm text-sm"
                                                     :class="getError(`items.${index}.product_id`) ? 'border-red-500' :
                                                         'border-gray-300'"
-                                                    placeholder="Buscar producto..." x-model="item.productSearch"
-                                                    @input.debounce.300ms="searchProduct(index); clearError(`items.${index}.product_id`)"
-                                                    @focus="item.showResults = true" @click.away="item.showResults = false"
+                                                    placeholder="Buscar producto..."
+                                                    :title="item.productSearch || item.productName || ''"
+                                                    x-model="item.productSearch"
+                                                    @input="handleProductInput(index); clearError(`items.${index}.product_id`)"
+                                                    @focus="item.showResults = !item.productId || item.productSearch !== item.productName"
+                                                    @click.away="item.showResults = false"
                                                     autocomplete="off">
 
                                                 <template x-if="getError(`items.${index}.product_id`)">
@@ -110,7 +100,7 @@
                                         <div class="md:col-span-3">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Variación</label>
                                             <select :name="`items[${index}][variation_id]`"
-                                                class="w-full rounded-md shadow-sm text-sm"
+                                                class="h-10 w-full rounded-md shadow-sm text-sm"
                                                 :class="getError(`items.${index}.variation_id`) ? 'border-red-500' :
                                                     'border-gray-300'"
                                                 x-model="item.variationId" :disabled="!item.productId"
@@ -132,7 +122,7 @@
                                             <input type="number" :name="`items[${index}][quantity]`"
                                                 x-model="item.quantity" min="1" :max="item.maxStock"
                                                 @input="validateQuantity(index); clearError(`items.${index}.quantity`)"
-                                                class="w-full rounded-md shadow-sm text-sm"
+                                                class="h-10 w-full rounded-md shadow-sm text-sm"
                                                 :class="getError(`items.${index}.quantity`) ? 'border-red-500' :
                                                     'border-gray-300'">
                                             <template x-if="getError(`items.${index}.quantity`)">
@@ -143,26 +133,22 @@
                                         <div class="md:col-span-2">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Precio
                                                 Unit.</label>
-                                            <input type="number" :name="`items[${index}][unit_price]`"
-                                                x-model="item.unitPrice" step="0.01"
-                                                @input="clearError(`items.${index}.unit_price`)"
-                                                class="w-full rounded-md shadow-sm text-sm"
-                                                :class="getError(`items.${index}.unit_price`) ? 'border-red-500' :
-                                                    'border-gray-300'">
-                                            <template x-if="getError(`items.${index}.unit_price`)">
-                                                <div class="text-[10px] text-red-500 mt-1"
-                                                    x-text="getError(`items.${index}.unit_price`)"></div>
-                                            </template>
+                                            <div
+                                                class="flex h-10 w-full items-center rounded-md border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700">
+                                                <span
+                                                    x-text="item.unitPrice ? formatCurrency(item.unitPrice) : 'Seleccionar variacion'"></span>
+                                            </div>
                                         </div>
-                                        <div class="md:col-span-1">
+                                        <div class="md:col-span-2">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Subtotal</label>
-                                            <div class="w-full text-sm font-semibold text-gray-800 mt-2 text-right md:text-left"
+                                            <div
+                                                class="flex h-10 w-full items-center justify-end rounded-md border border-gray-100 bg-gray-50 px-3 text-sm font-semibold text-gray-800 md:justify-start"
                                                 x-text="formatCurrency((parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0))">
                                             </div>
                                         </div>
-                                        <div class="md:col-span-1 mt-2 md:mt-0 flex md:justify-end">
+                                        <div class="mt-2 flex md:col-span-1 md:mt-0 md:justify-center md:pt-6">
                                             <button type="button" @click="removeItem(index)"
-                                                class="text-red-500 hover:text-red-700">
+                                                class="inline-flex h-10 w-10 items-center justify-center rounded-md text-red-500 transition-colors hover:bg-red-50 hover:text-red-700">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
