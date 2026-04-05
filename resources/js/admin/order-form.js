@@ -165,8 +165,8 @@ export default function orderForm(initialData = {}) {
 
                     this.items.push({
                         productId: item.product_id || '',
-                        productName: 'Producto Previo (seleccione para refrescar)',
-                        productSearch: '',
+                        productName: item.product_id ? 'Cargando producto...' : '',
+                        productSearch: item.product_id ? 'Cargando producto...' : '',
                         variationId: item.variation_id ? String(item.variation_id) : '',
                         selectedVariation: initialVariationOption && !initialVariationOption.missing
                             ? initialVariationOption
@@ -196,7 +196,7 @@ export default function orderForm(initialData = {}) {
                     this.items.push({
                         productId: item.product_id,
                         productName: item.product ? item.product.name : 'Producto Eliminado',
-                        productSearch: '',
+                        productSearch: item.product ? item.product.name : 'Producto Eliminado',
                         variationId: item.variation_id ? String(item.variation_id) : '',
                         selectedVariation: initialVariationOption && !initialVariationOption.missing
                             ? initialVariationOption
@@ -279,12 +279,24 @@ export default function orderForm(initialData = {}) {
             }, 300);
         },
 
+        handleProductInput(index) {
+            let item = this.items[index];
+            const currentSearch = item.productSearch;
+
+            if (item.productId && currentSearch !== item.productName) {
+                this.clearProduct(index, { preserveSearch: true });
+                item.productSearch = currentSearch;
+            }
+
+            this.searchProduct(index);
+        },
+
         selectProduct(index, product) {
             let item = this.items[index];
             item.productId = product.id;
             item.productName = product.name;
             item.showResults = false;
-            item.productSearch = '';
+            item.productSearch = product.name;
             item.variationId = '';
             item.selectedVariation = null;
             item.initialVariationOption = null;
@@ -319,6 +331,7 @@ export default function orderForm(initialData = {}) {
                         }
 
                         item.productName = product.name;
+                        item.productSearch = product.name;
                         item.variations = this.mergeVariationOptions(
                             item.initialVariationOption,
                             product.variations || []
@@ -329,11 +342,13 @@ export default function orderForm(initialData = {}) {
                 .catch(err => console.error("Error loading variations:", err));
         },
 
-        clearProduct(index) {
+        clearProduct(index, options = {}) {
             let item = this.items[index];
+            const preserveSearch = options.preserveSearch === true;
+            const currentSearch = item.productSearch;
             item.productId = '';
             item.productName = '';
-            item.productSearch = '';
+            item.productSearch = preserveSearch ? currentSearch : '';
             item.variationId = '';
             item.selectedVariation = null;
             item.initialVariationOption = null;
