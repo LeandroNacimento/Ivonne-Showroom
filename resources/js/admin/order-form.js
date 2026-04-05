@@ -297,7 +297,6 @@ export default function orderForm(initialData = {}) {
             
             this.clearError(`items.${index}.product_id`);
             this.clearError(`items.${index}.variation_id`);
-            this.clearError(`items.${index}.unit_price`);
             this.loadVariationsForItem(index, product.id);
         },
 
@@ -344,7 +343,6 @@ export default function orderForm(initialData = {}) {
 
             this.clearError(`items.${index}.product_id`);
             this.clearError(`items.${index}.variation_id`);
-            this.clearError(`items.${index}.unit_price`);
             this.clearError(`items.${index}.quantity`);
         },
 
@@ -394,7 +392,6 @@ export default function orderForm(initialData = {}) {
                 item.maxStock = variation.stock;
                 if (item.quantity > variation.stock) item.quantity = variation.stock;
                 
-                this.clearError(`items.${index}.unit_price`);
                 this.clearError(`items.${index}.variation_id`);
             }
         },

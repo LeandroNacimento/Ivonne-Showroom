@@ -143,16 +143,11 @@
                                         <div class="md:col-span-2">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Precio
                                                 Unit.</label>
-                                            <input type="number" :name="`items[${index}][unit_price]`"
-                                                x-model="item.unitPrice" step="0.01"
-                                                @input="clearError(`items.${index}.unit_price`)"
-                                                class="w-full rounded-md shadow-sm text-sm"
-                                                :class="getError(`items.${index}.unit_price`) ? 'border-red-500' :
-                                                    'border-gray-300'">
-                                            <template x-if="getError(`items.${index}.unit_price`)">
-                                                <div class="text-[10px] text-red-500 mt-1"
-                                                    x-text="getError(`items.${index}.unit_price`)"></div>
-                                            </template>
+                                            <div
+                                                class="flex min-h-9 w-full items-center rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                                                <span
+                                                    x-text="item.unitPrice ? formatCurrency(item.unitPrice) : 'Seleccionar variacion'"></span>
+                                            </div>
                                         </div>
                                         <div class="md:col-span-1">
                                             <label class="block text-xs font-medium text-gray-500 mb-1">Subtotal</label>
