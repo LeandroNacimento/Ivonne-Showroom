@@ -163,4 +163,41 @@ class ProductImageSourceTruthTest extends TestCase
         $response->assertSee('https:\/\/legacy.example.com\/blue-legacy.jpg', false);
         $response->assertDontSee('https:\/\/legacy.example.com\/red-legacy.jpg', false);
     }
+
+    public function test_home_featured_product_uses_canonical_public_image_with_legacy_fallback(): void
+    {
+        $category = Category::factory()->create();
+
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'is_featured' => true,
+        ]);
+
+        $color = ProductColor::factory()->create([
+            'product_id' => $product->id,
+            'name' => 'Negro',
+            'position' => 0,
+            'image' => 'https://legacy.example.com/home-legacy.jpg',
+        ]);
+
+        ProductVariation::factory()->create([
+            'product_id' => $product->id,
+            'product_color_id' => $color->id,
+            'stock' => 2,
+            'price' => 1500,
+            'size' => 'M',
+        ]);
+
+        ProductImage::create([
+            'product_color_id' => $color->id,
+            'path' => 'products/home-canonical.jpg',
+            'position' => 0,
+        ]);
+
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('/storage/products/home-canonical.jpg', false);
+        $response->assertDontSee('https://legacy.example.com/home-legacy.jpg');
+    }
 }

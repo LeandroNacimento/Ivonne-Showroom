@@ -11,7 +11,16 @@ class ShowroomController extends Controller
 {
     public function index()
     {
-        $featuredProducts = Product::where('is_featured', true)->with('category', 'images')->take(4)->get();
+        $featuredProducts = Product::where('is_featured', true)
+            ->with([
+                'category',
+                'colors' => function ($query) {
+                    $query->select('product_colors.id', 'product_colors.product_id', 'product_colors.name', 'product_colors.image', 'product_colors.position')
+                        ->with('images:id,product_color_id,path,position');
+                },
+            ])
+            ->take(4)
+            ->get();
         $categories = Category::all();
 
         return view('home', compact('featuredProducts', 'categories'));
