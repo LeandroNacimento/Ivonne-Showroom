@@ -80,6 +80,7 @@ class OrderPendingUpdateTest extends TestCase
 
         $order->refresh()->load(['client', 'items']);
 
+        $this->assertSame(2, Client::count());
         $this->assertSame(Order::STATUS_PENDING, $order->status);
         $this->assertNotSame($originalClient->id, $order->client_id);
         $this->assertSame('Cliente Nuevo', $order->client->name);

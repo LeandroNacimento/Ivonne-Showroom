@@ -19,7 +19,7 @@ class OrderService
     public function create(array $data): Order
     {
         return DB::transaction(function () use ($data) {
-            $rebuiltOrder = $this->buildEditableOrderData($data);
+            $rebuiltOrder = $this->buildPendingOrderPayload($data);
 
             // Crear el pedido siempre como pendiente
             $order = Order::create([
@@ -47,7 +47,7 @@ class OrderService
      */
     public function rebuildPendingOrder(Order $order, array $data): Order
     {
-        $rebuiltOrder = $this->buildEditableOrderData($data);
+        $rebuiltOrder = $this->buildPendingOrderPayload($data);
 
         $order->items()->delete();
         $order->unsetRelation('items');
@@ -57,7 +57,7 @@ class OrderService
         return $order;
     }
 
-    private function buildEditableOrderData(array $data): array
+    private function buildPendingOrderPayload(array $data): array
     {
         if (empty($data['items'])) {
             throw new \Exception('El pedido debe contener al menos un producto.');
