@@ -71,6 +71,7 @@ class UpdateProductRequest extends FormRequest
 
                 if ($size === null || $size === '') {
                     $validator->errors()->add("variations.{$index}.size", 'Debe seleccionar un talle válido.');
+
                     continue;
                 }
 
@@ -86,6 +87,7 @@ class UpdateProductRequest extends FormRequest
 
                 if (isset($seen[$key])) {
                     $validator->errors()->add("variations.{$index}.size", 'Combinación color + talle duplicada.');
+
                     continue;
                 }
 

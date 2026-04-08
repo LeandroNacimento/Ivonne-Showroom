@@ -317,8 +317,7 @@ class ProductSizeTypeTest extends TestCase
         string $name = 'Vestidos',
         string $slug = 'vestidos',
         bool $supportsSize = true,
-    ): Category
-    {
+    ): Category {
         return Category::create([
             'name' => $name,
             'slug' => $slug,
