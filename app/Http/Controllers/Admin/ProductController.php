@@ -34,8 +34,9 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Category::all();
+        $sizeTypeOptions = Product::sizeTypeOptions();
 
-        return view('admin.products.create', compact('categories'));
+        return view('admin.products.create', compact('categories', 'sizeTypeOptions'));
     }
 
     public function store(StoreProductRequest $request)
@@ -55,6 +56,7 @@ class ProductController extends Controller
                 'slug' => $slug,
                 'category_id' => $validated['category_id'],
                 'description' => $validated['description'] ?? null,
+                'size_type' => $validated['size_type'],
                 'is_featured' => $request->has('is_featured'),
             ]);
 
@@ -73,8 +75,9 @@ class ProductController extends Controller
     {
         $categories = Category::all();
         $product->load('variations', 'images');
+        $sizeTypeOptions = Product::sizeTypeOptions();
 
-        return view('admin.products.edit', compact('product', 'categories'));
+        return view('admin.products.edit', compact('product', 'categories', 'sizeTypeOptions'));
     }
 
     public function update(UpdateProductRequest $request, Product $product)
@@ -94,6 +97,7 @@ class ProductController extends Controller
                 'slug' => $slug,
                 'category_id' => $validated['category_id'],
                 'description' => $validated['description'] ?? null,
+                'size_type' => $validated['size_type'],
                 'is_featured' => $request->has('is_featured'),
             ]);
 

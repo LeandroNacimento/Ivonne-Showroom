@@ -85,7 +85,7 @@ class ProductService
 
             $data = [
                 'product_color_id' => $colorId,
-                'size' => $v['size'],
+                'size' => Product::normalizeSize($v['size'] ?? null),
                 'price' => $v['price'],
                 'stock' => $v['stock'],
                 'sku' => $v['sku'] ?? null,
@@ -100,7 +100,7 @@ class ProductService
                     [
                         'product_id' => $product->id,
                         'product_color_id' => $colorId,
-                        'size' => $v['size'],
+                        'size' => Product::normalizeSize($v['size'] ?? null),
                     ],
                     $data
                 );
