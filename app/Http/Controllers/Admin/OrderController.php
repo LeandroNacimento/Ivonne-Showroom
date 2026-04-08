@@ -133,30 +133,8 @@ class OrderController extends Controller
                     $order->update(['status' => $newStatus]);
                 }
             } elseif ($oldStatus === Order::STATUS_RESERVED) {
-                $clientId = $request->client_id;
-
-                if (! $clientId && $request->filled('new_client_name')) {
-                    $client = \App\Models\Client::create([
-                        'name' => $request->new_client_name,
-                        'phone' => $request->new_client_phone,
-                        'instagram' => $request->new_client_instagram,
-                        'email' => $request->new_client_email,
-                        'notes' => $request->new_client_notes,
-                    ]);
-                    $clientId = $client->id;
-                }
-
-                // Ítems bloqueados: solo actualizar campos de cabecera y estado
-                $total = $order->items->sum('subtotal') + (float) ($request->shipping_cost ?? 0);
-
-                $order->update([
-                    'client_id' => $clientId,
-                    'date' => $request->date,
-                    'payment_method' => $request->payment_method,
-                    'delivery_type' => $request->delivery_type,
-                    'shipping_cost' => (float) ($request->shipping_cost ?? 0),
-                    'total' => $total,
-                ]);
+                // Ítems bloqueados: solo actualizar cabecera; la transición sigue separada.
+                $orderService->updateReservedOrderHeader($order, $request->validated());
 
                 // Ejecutar transición de estado si cambió
                 if ($oldStatus !== $newStatus) {
