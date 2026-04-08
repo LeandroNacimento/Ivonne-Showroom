@@ -57,6 +57,27 @@ class OrderService
         return $order;
     }
 
+    /**
+     * Update the editable header fields of a reserved order.
+     * Item mutations and status transitions must be handled separately by the caller.
+     */
+    public function updateReservedOrderHeader(Order $order, array $data): Order
+    {
+        $shippingCost = (float) ($data['shipping_cost'] ?? 0);
+        $itemsTotal = (float) $order->items()->sum('subtotal');
+
+        $order->update([
+            'client_id' => $this->resolveClientId($data),
+            'date' => $data['date'],
+            'payment_method' => $data['payment_method'],
+            'delivery_type' => $data['delivery_type'],
+            'shipping_cost' => $shippingCost,
+            'total' => $itemsTotal + $shippingCost,
+        ]);
+
+        return $order;
+    }
+
     private function buildPendingOrderPayload(array $data): array
     {
         if (empty($data['items'])) {
