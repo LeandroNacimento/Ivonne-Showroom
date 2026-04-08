@@ -35,7 +35,7 @@ class ProductPage extends Component
             ->map(fn ($variation) => [
                 'id' => $variation->id,
                 'color' => $variation->productColor->name ?? 'Único',
-                'size' => Product::presentSize($variation->size),
+                'size_label' => Product::presentSize($variation->size),
                 'price' => $variation->price,
                 'stock' => $variation->stock,
             ])

@@ -74,9 +74,7 @@
                             @if ($product->has_sizes)
                                 <!-- Variation Selector (filtered by active color) -->
                                 <div class="mb-5">
-                                    <h3 class="text-sm text-gray-900 font-medium mb-2"
-                                        x-text="activeVariations.some(v => v.size !== 'Único') ? 'Seleccioná tu talle:' : 'Seleccioná una opción:'">
-                                    </h3>
+                                    <h3 class="text-sm text-gray-900 font-medium mb-2">Seleccioná tu talle:</h3>
                                     <div class="flex gap-3 flex-wrap">
                                         <template x-for="variation in activeVariations" :key="variation.id">
                                             <label
@@ -89,9 +87,7 @@
                                                 }">
                                                 <input type="radio" name="variation_id" :value="variation.id"
                                                     class="sr-only" x-model="selectedVariation" required>
-                                                <span class="font-medium text-sm"
-                                                    x-text="variation.size !== 'Único' ? variation.size : 'Único'">
-                                                </span>
+                                                <span class="font-medium text-sm" x-text="variation.size_label"></span>
                                             </label>
                                         </template>
                                     </div>
