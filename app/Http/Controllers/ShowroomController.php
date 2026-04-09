@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\CartService;
+use App\Services\HomeHeroService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 class ShowroomController extends Controller
 {
-    public function index()
+    public function index(HomeHeroService $homeHeroService)
     {
         $featuredProducts = Product::where('is_featured', true)
             ->with([
@@ -22,8 +24,11 @@ class ShowroomController extends Controller
             ->take(4)
             ->get();
         $categories = Category::all();
+        $homeHero = $homeHeroService->getRenderableHero();
+        $homeHeroSlides = $homeHero?->activeSlides ?? collect();
+        $homeHeroMode = $this->resolveHomeHeroMode($homeHeroSlides);
 
-        return view('home', compact('featuredProducts', 'categories'));
+        return view('home', compact('featuredProducts', 'categories', 'homeHero', 'homeHeroSlides', 'homeHeroMode'));
     }
 
     public function catalog()
@@ -56,5 +61,14 @@ class ShowroomController extends Controller
     public function contact()
     {
         return view('contact');
+    }
+
+    private function resolveHomeHeroMode(Collection $slides): string
+    {
+        return match (true) {
+            $slides->count() >= 2 => 'carousel',
+            $slides->count() === 1 => 'static',
+            default => 'fallback',
+        };
     }
 }
