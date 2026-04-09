@@ -28,7 +28,7 @@ class HomeHeroAdminTest extends TestCase
         $response = $this->actingAs($admin)->get(route('admin.home.hero.edit'));
 
         $response->assertOk();
-        $response->assertSee('Hero principal');
+        $response->assertSee('Portada principal de la tienda');
         $this->assertDatabaseHas('home_heroes', [
             'singleton_key' => HomeHero::SINGLETON_KEY,
         ]);

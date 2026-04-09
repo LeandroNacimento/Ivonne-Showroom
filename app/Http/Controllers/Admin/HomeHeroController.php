@@ -35,7 +35,7 @@ class HomeHeroController extends Controller
 
         return redirect()
             ->route('admin.home.hero.edit')
-            ->with('success', 'Contenido del hero actualizado con éxito.');
+            ->with('success', 'Texto principal de la portada actualizado con exito.');
     }
 
     public function storeSlide(StoreHomeHeroSlideRequest $request): RedirectResponse
@@ -47,7 +47,7 @@ class HomeHeroController extends Controller
 
         return redirect()
             ->route('admin.home.hero.edit')
-            ->with('success', 'Slide creada con éxito.');
+            ->with('success', 'Imagen agregada a la portada con exito.');
     }
 
     public function updateSlide(UpdateHomeHeroSlideRequest $request, HomeHeroSlide $slide): RedirectResponse
@@ -56,7 +56,7 @@ class HomeHeroController extends Controller
 
         return redirect()
             ->route('admin.home.hero.edit')
-            ->with('success', 'Slide actualizada con éxito.');
+            ->with('success', 'Imagen actualizada con exito.');
     }
 
     public function destroySlide(HomeHeroSlide $slide): RedirectResponse
@@ -65,6 +65,6 @@ class HomeHeroController extends Controller
 
         return redirect()
             ->route('admin.home.hero.edit')
-            ->with('success', 'Slide eliminada con éxito.');
+            ->with('success', 'Imagen eliminada de la portada con exito.');
     }
 }
