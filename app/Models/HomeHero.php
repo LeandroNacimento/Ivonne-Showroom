@@ -47,10 +47,7 @@ class HomeHero extends Model
 
     public function getIsRenderableAttribute(): bool
     {
-        $hasRequiredContent = filled(trim((string) $this->title))
-            && filled(trim((string) $this->description));
-
-        if (! $hasRequiredContent || ! $this->hasConsistentCta()) {
+        if (! $this->hasConsistentCta()) {
             return false;
         }
 

@@ -49,7 +49,9 @@ class HomeHeroValidator
             'alt_text' => $requireImage
                 ? ['required', 'string', 'max:255']
                 : ['sometimes', 'required', 'string', 'max:255'],
-            'position' => ['sometimes', 'integer', 'min:0'],
+            'position' => $requireImage
+                ? ['nullable', 'integer', 'min:0']
+                : ['sometimes', 'integer', 'min:0'],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }

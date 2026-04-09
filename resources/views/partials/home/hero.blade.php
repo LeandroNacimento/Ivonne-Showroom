@@ -1,7 +1,12 @@
 @php
     $primarySlide = $homeHeroSlides->first();
     $hasAdminHero = $homeHero !== null && $primarySlide !== null;
-    $hasPrimaryCta = $hasAdminHero && filled($homeHero->cta_label) && filled($homeHero->cta_url);
+    $hasHeroText = $hasAdminHero
+        && (
+            filled($homeHero->eyebrow)
+            || filled($homeHero->title)
+            || filled($homeHero->description)
+        );
 @endphp
 
 @if ($hasAdminHero && $homeHeroMode === 'carousel')
@@ -19,8 +24,8 @@
                 x-transition:leave="transition ease-in duration-500"
                 x-transition:leave-start="opacity-100"
                 x-transition:leave-end="opacity-0"
-                class="{{ $loop->first ? '' : 'hidden' }} absolute inset-0 bg-cover bg-center bg-no-repeat lg:bg-right-top"
-                style="background-image: url('{{ $slide->public_image_url }}');">
+                class="absolute inset-0 bg-cover bg-center bg-no-repeat lg:bg-right-top"
+                style="{{ $loop->first ? '' : 'display: none; ' }}background-image: url('{{ $slide->public_image_url }}');">
                 <div class="absolute inset-0 bg-black/60"></div>
             </div>
         @endforeach
@@ -29,43 +34,32 @@
             class="absolute inset-0 bg-gradient-to-r from-white/90 via-white/40 to-transparent sm:from-white/95 sm:via-white/25">
         </div>
 
-        <div class="relative w-full h-full flex items-center max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
-            <main class="lg:w-1/2 xl:w-2/5">
-                <div class="sm:text-center lg:text-left">
-                    @if (filled($homeHero->eyebrow))
-                        <p class="reveal text-sm font-semibold uppercase tracking-[0.24em] text-brand-pink">
-                            {{ $homeHero->eyebrow }}
-                        </p>
-                    @endif
-
-                    <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl reveal">
-                        {{ $homeHero->title }}
-                    </h1>
-                    <p class="reveal mt-4 text-base text-gray-700 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0 font-medium"
-                        style="transition-delay: 100ms;">
-                        {{ $homeHero->description }}
-                    </p>
-                    <div class="reveal mt-8 sm:flex sm:justify-center lg:justify-start gap-4"
-                        style="transition-delay: 200ms;">
-                        @if ($hasPrimaryCta)
-                            <div class="rounded-full shadow-lg">
-                                <a href="{{ $homeHero->cta_url }}"
-                                    class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-white bg-brand-pink hover:bg-brand-heart hover:scale-105 transform transition-all duration-300 md:py-4 md:text-lg md:px-10">
-                                    {{ $homeHero->cta_label }}
-                                </a>
-                            </div>
+        @if ($hasHeroText)
+            <div class="relative w-full h-full flex items-center max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
+                <main class="lg:w-1/2 xl:w-2/5">
+                    <div class="sm:text-center lg:text-left">
+                        @if (filled($homeHero->eyebrow))
+                            <p class="reveal text-sm font-semibold uppercase tracking-[0.24em] text-brand-pink">
+                                {{ $homeHero->eyebrow }}
+                            </p>
                         @endif
 
-                        <div class="{{ $hasPrimaryCta ? 'mt-3 sm:mt-0' : '' }}">
-                            <a href="{{ route('contact') }}"
-                                class="w-full flex items-center justify-center px-8 py-3 border-2 border-brand-pink text-base font-medium rounded-full text-brand-pink bg-white/50 backdrop-blur-sm hover:bg-brand-pink hover:text-white md:py-4 md:text-lg md:px-10 transition-all duration-300">
-                                Contactar
-                            </a>
-                        </div>
+                        @if (filled($homeHero->title))
+                            <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl reveal">
+                                {{ $homeHero->title }}
+                            </h1>
+                        @endif
+
+                        @if (filled($homeHero->description))
+                            <p class="reveal text-base font-medium text-gray-700 sm:text-lg md:text-xl {{ filled($homeHero->title) ? 'mt-4 sm:mt-5 sm:max-w-xl sm:mx-auto md:mt-5 lg:mx-0' : '' }}"
+                                style="transition-delay: 100ms;">
+                                {{ $homeHero->description }}
+                            </p>
+                        @endif
                     </div>
-                </div>
-            </main>
-        </div>
+                </main>
+            </div>
+        @endif
 
         <button type="button" @click="prev()"
             class="absolute left-4 top-1/2 z-20 hidden -translate-y-1/2 rounded-full bg-white/85 p-3 text-gray-800 shadow-lg backdrop-blur-sm transition hover:bg-white md:flex">
@@ -105,43 +99,32 @@
             class="absolute inset-0 bg-gradient-to-r from-white/90 via-white/40 to-transparent sm:from-white/95 sm:via-white/25">
         </div>
 
-        <div class="relative w-full h-full flex items-center max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
-            <main class="lg:w-1/2 xl:w-2/5">
-                <div class="sm:text-center lg:text-left">
-                    @if (filled($homeHero->eyebrow))
-                        <p class="reveal text-sm font-semibold uppercase tracking-[0.24em] text-brand-pink">
-                            {{ $homeHero->eyebrow }}
-                        </p>
-                    @endif
-
-                    <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl reveal">
-                        {{ $homeHero->title }}
-                    </h1>
-                    <p class="reveal mt-4 text-base text-gray-700 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0 font-medium"
-                        style="transition-delay: 100ms;">
-                        {{ $homeHero->description }}
-                    </p>
-                    <div class="reveal mt-8 sm:flex sm:justify-center lg:justify-start gap-4"
-                        style="transition-delay: 200ms;">
-                        @if ($hasPrimaryCta)
-                            <div class="rounded-full shadow-lg">
-                                <a href="{{ $homeHero->cta_url }}"
-                                    class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-white bg-brand-pink hover:bg-brand-heart hover:scale-105 transform transition-all duration-300 md:py-4 md:text-lg md:px-10">
-                                    {{ $homeHero->cta_label }}
-                                </a>
-                            </div>
+        @if ($hasHeroText)
+            <div class="relative w-full h-full flex items-center max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
+                <main class="lg:w-1/2 xl:w-2/5">
+                    <div class="sm:text-center lg:text-left">
+                        @if (filled($homeHero->eyebrow))
+                            <p class="reveal text-sm font-semibold uppercase tracking-[0.24em] text-brand-pink">
+                                {{ $homeHero->eyebrow }}
+                            </p>
                         @endif
 
-                        <div class="{{ $hasPrimaryCta ? 'mt-3 sm:mt-0' : '' }}">
-                            <a href="{{ route('contact') }}"
-                                class="w-full flex items-center justify-center px-8 py-3 border-2 border-brand-pink text-base font-medium rounded-full text-brand-pink bg-white/50 backdrop-blur-sm hover:bg-brand-pink hover:text-white md:py-4 md:text-lg md:px-10 transition-all duration-300">
-                                Contactar
-                            </a>
-                        </div>
+                        @if (filled($homeHero->title))
+                            <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl reveal">
+                                {{ $homeHero->title }}
+                            </h1>
+                        @endif
+
+                        @if (filled($homeHero->description))
+                            <p class="reveal text-base font-medium text-gray-700 sm:text-lg md:text-xl {{ filled($homeHero->title) ? 'mt-4 sm:mt-5 sm:max-w-xl sm:mx-auto md:mt-5 lg:mx-0' : '' }}"
+                                style="transition-delay: 100ms;">
+                                {{ $homeHero->description }}
+                            </p>
+                        @endif
                     </div>
-                </div>
-            </main>
-        </div>
+                </main>
+            </div>
+        @endif
     </div>
 @else
     <div id="inicio" data-home-hero-mode="fallback"
@@ -162,7 +145,7 @@
                     </h1>
                     <p class="reveal mt-4 text-base text-gray-700 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0 font-medium"
                         style="transition-delay: 100ms;">
-                        Descubre nuestra colección exclusiva. Prendas seleccionadas con amor para resaltar tu belleza y
+                        Descubre nuestra coleccion exclusiva. Prendas seleccionadas con amor para resaltar tu belleza y
                         confianza en cada paso.
                     </p>
                     <div class="reveal mt-8 sm:flex sm:justify-center lg:justify-start gap-4"
@@ -170,7 +153,7 @@
                         <div class="rounded-full shadow-lg">
                             <a href="{{ route('catalog') }}"
                                 class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-white bg-brand-pink hover:bg-brand-heart hover:scale-105 transform transition-all duration-300 md:py-4 md:text-lg md:px-10">
-                                Ver Catálogo
+                                Ver Catalogo
                             </a>
                         </div>
 

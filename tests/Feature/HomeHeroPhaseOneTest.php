@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\HomeHero;
-use App\Models\HomeHeroSlide;
 use App\Services\HomeHeroService;
 use App\Support\HomeHeroValidator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -16,7 +15,7 @@ class HomeHeroPhaseOneTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_singleton_hero_only_becomes_renderable_when_minimum_public_requirements_are_met(): void
+    public function test_singleton_hero_becomes_renderable_when_at_least_one_active_slide_exists(): void
     {
         Storage::fake('public');
 
@@ -26,14 +25,6 @@ class HomeHeroPhaseOneTest extends TestCase
         self::assertSame(HomeHero::SINGLETON_KEY, $hero->singleton_key);
         self::assertFalse($hero->is_renderable);
         self::assertNull($service->getRenderableHero());
-
-        $hero = $service->updateContent([
-            'eyebrow' => 'Nueva temporada',
-            'title' => 'Coleccion principal',
-            'description' => 'Una portada principal para la home.',
-        ]);
-
-        self::assertFalse($hero->is_renderable);
 
         $slide = $service->createSlide($hero, [
             'image' => UploadedFile::fake()->image('hero.jpg', 1600, 900),
@@ -216,6 +207,23 @@ class HomeHeroPhaseOneTest extends TestCase
             self::assertArrayHasKey('cta_url', $e->errors());
         }
 
+        self::assertSame(
+            [
+                'eyebrow' => null,
+                'title' => null,
+                'description' => null,
+                'cta_label' => null,
+                'cta_url' => null,
+            ],
+            HomeHeroValidator::validateContent([
+                'eyebrow' => '   ',
+                'title' => '',
+                'description' => ' ',
+                'cta_label' => null,
+                'cta_url' => '',
+            ])
+        );
+
         try {
             HomeHeroValidator::validateSlideCreate([
                 'position' => 0,
@@ -248,5 +256,28 @@ class HomeHeroPhaseOneTest extends TestCase
 
         self::assertFalse($hero->fresh()->is_renderable);
         self::assertNull(app(HomeHeroService::class)->getRenderableHero());
+    }
+
+    public function test_cta_is_optional_for_renderable_hero_when_slide_is_active(): void
+    {
+        $hero = HomeHero::singleton();
+
+        $hero->forceFill([
+            'eyebrow' => null,
+            'title' => null,
+            'description' => null,
+            'cta_label' => null,
+            'cta_url' => null,
+        ])->save();
+
+        $hero->slides()->create([
+            'image_path' => 'home-hero/cta-optional.jpg',
+            'alt_text' => 'Portada principal',
+            'position' => 0,
+            'is_active' => true,
+        ]);
+
+        self::assertTrue($hero->fresh()->is_renderable);
+        self::assertNotNull(app(HomeHeroService::class)->getRenderableHero());
     }
 }

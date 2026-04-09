@@ -49,17 +49,47 @@ class HomeHeroAdminTest extends TestCase
 
         $response = $this->actingAs($admin)->put(route('admin.home.hero.update'), [
             'eyebrow' => 'Nueva temporada',
-            'title' => 'Colección Otoño',
+            'title' => 'Coleccion Otono',
             'description' => 'Una portada principal simple y clara.',
-            'cta_label' => 'Ver catálogo',
+            'cta_label' => 'Ver catalogo',
             'cta_url' => 'https://example.com/catalogo',
         ]);
 
         $response->assertRedirect(route('admin.home.hero.edit'));
         $this->assertDatabaseHas('home_heroes', [
             'singleton_key' => HomeHero::SINGLETON_KEY,
-            'title' => 'Colección Otoño',
-            'cta_label' => 'Ver catálogo',
+            'title' => 'Coleccion Otono',
+            'cta_label' => 'Ver catalogo',
+        ]);
+    }
+
+    public function test_admin_can_clear_all_optional_home_hero_text_fields(): void
+    {
+        $admin = User::factory()->admin()->create();
+        HomeHero::singleton()->update([
+            'eyebrow' => 'Nueva temporada',
+            'title' => 'Coleccion Otono',
+            'description' => 'Una portada principal simple y clara.',
+            'cta_label' => 'Ver catalogo',
+            'cta_url' => 'https://example.com/catalogo',
+        ]);
+
+        $response = $this->actingAs($admin)->put(route('admin.home.hero.update'), [
+            'eyebrow' => '',
+            'title' => '',
+            'description' => '',
+            'cta_label' => '',
+            'cta_url' => '',
+        ]);
+
+        $response->assertRedirect(route('admin.home.hero.edit'));
+        $this->assertDatabaseHas('home_heroes', [
+            'singleton_key' => HomeHero::SINGLETON_KEY,
+            'eyebrow' => null,
+            'title' => null,
+            'description' => null,
+            'cta_label' => null,
+            'cta_url' => null,
         ]);
     }
 
@@ -110,6 +140,37 @@ class HomeHeroAdminTest extends TestCase
         Storage::disk('public')->assertMissing($replacementPath);
     }
 
+    public function test_admin_can_add_a_new_slide_without_position_and_it_is_appended_to_the_end(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::factory()->admin()->create();
+        $hero = HomeHero::singleton();
+
+        $hero->slides()->create([
+            'image_path' => 'home-hero/existing-slide.jpg',
+            'alt_text' => 'Existing slide',
+            'position' => 0,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.home.hero.slides.store'), [
+            'image' => UploadedFile::fake()->image('hero-slide-appended.jpg', 1600, 900),
+            'alt_text' => 'Nueva slide al final',
+            'position' => '',
+            'is_active' => '1',
+        ]);
+
+        $response->assertRedirect(route('admin.home.hero.edit'));
+        $response->assertSessionDoesntHaveErrors();
+
+        $appendedSlide = $hero->fresh()->slides()->where('alt_text', 'Nueva slide al final')->first();
+
+        $this->assertNotNull($appendedSlide);
+        $this->assertSame(1, $appendedSlide->position);
+        Storage::disk('public')->assertExists($appendedSlide->image_path);
+    }
+
     public function test_admin_requests_validate_home_hero_constraints(): void
     {
         Storage::fake('public');
@@ -122,12 +183,12 @@ class HomeHeroAdminTest extends TestCase
                 'eyebrow' => '',
                 'title' => '',
                 'description' => '',
-                'cta_label' => 'Ver catálogo',
+                'cta_label' => 'Ver catalogo',
                 'cta_url' => '',
             ]);
 
         $contentResponse->assertRedirect(route('admin.home.hero.edit'));
-        $contentResponse->assertSessionHasErrors(['title', 'description', 'cta_url'], null, 'heroContent');
+        $contentResponse->assertSessionHasErrors(['cta_url'], null, 'heroContent');
 
         $slideResponse = $this->from(route('admin.home.hero.edit'))
             ->actingAs($admin)
@@ -166,7 +227,7 @@ class HomeHeroAdminTest extends TestCase
         $service = app(HomeHeroService::class);
 
         $hero = $service->updateContent([
-            'title' => 'Colección Otoño',
+            'title' => 'Coleccion Otono',
             'description' => 'Portada principal simple y clara.',
         ]);
 

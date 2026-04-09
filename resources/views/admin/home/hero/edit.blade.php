@@ -70,81 +70,6 @@
 
         <div class="rounded-xl border border-gray-200 bg-white shadow-sm">
             <div class="border-b border-gray-200 px-6 py-5">
-                <h2 class="text-lg font-semibold text-gray-900">Texto principal de la portada</h2>
-                <p class="mt-1 text-sm text-gray-500">
-                    Este contenido se comparte en toda la portada. Si completas el boton, se mostrara igual para todas las imagenes visibles.
-                </p>
-            </div>
-
-            <form action="{{ route('admin.home.hero.update') }}" method="POST" class="px-6 py-6">
-                @csrf
-                @method('PUT')
-
-                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    <div class="lg:col-span-2">
-                        <label for="eyebrow" class="block text-sm font-medium text-gray-700">Etiqueta corta</label>
-                        <input type="text" name="eyebrow" id="eyebrow"
-                            value="{{ old('eyebrow', $hero->eyebrow) }}"
-                            class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
-                        <p class="mt-1 text-xs text-gray-500">Opcional. Sirve para una frase breve arriba del titulo, por ejemplo "Nueva temporada".</p>
-                        @if ($errors->heroContent->has('eyebrow'))
-                            <p class="mt-1 text-sm text-red-600">{{ $errors->heroContent->first('eyebrow') }}</p>
-                        @endif
-                    </div>
-
-                    <div class="lg:col-span-2">
-                        <label for="title" class="block text-sm font-medium text-gray-700">Titulo principal</label>
-                        <input type="text" name="title" id="title" required
-                            value="{{ old('title', $hero->title) }}"
-                            class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
-                        @if ($errors->heroContent->has('title'))
-                            <p class="mt-1 text-sm text-red-600">{{ $errors->heroContent->first('title') }}</p>
-                        @endif
-                    </div>
-
-                    <div class="lg:col-span-2">
-                        <label for="description" class="block text-sm font-medium text-gray-700">Descripcion</label>
-                        <textarea name="description" id="description" rows="4" required
-                            class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">{{ old('description', $hero->description) }}</textarea>
-                        @if ($errors->heroContent->has('description'))
-                            <p class="mt-1 text-sm text-red-600">{{ $errors->heroContent->first('description') }}</p>
-                        @endif
-                    </div>
-
-                    <div>
-                        <label for="cta_label" class="block text-sm font-medium text-gray-700">Texto del boton</label>
-                        <input type="text" name="cta_label" id="cta_label"
-                            value="{{ old('cta_label', $hero->cta_label) }}"
-                            class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
-                        @if ($errors->heroContent->has('cta_label'))
-                            <p class="mt-1 text-sm text-red-600">{{ $errors->heroContent->first('cta_label') }}</p>
-                        @endif
-                    </div>
-
-                    <div>
-                        <label for="cta_url" class="block text-sm font-medium text-gray-700">Enlace del boton</label>
-                        <input type="url" name="cta_url" id="cta_url"
-                            value="{{ old('cta_url', $hero->cta_url) }}"
-                            class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
-                        @if ($errors->heroContent->has('cta_url'))
-                            <p class="mt-1 text-sm text-red-600">{{ $errors->heroContent->first('cta_url') }}</p>
-                        @endif
-                    </div>
-                </div>
-
-                <p class="mt-4 text-xs text-gray-500">Si quieres mostrar un boton en la portada, completa el texto y el enlace.</p>
-
-                <div class="mt-6 flex justify-end">
-                    <button type="submit"
-                        class="rounded-md bg-brand-pink px-6 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-heart">
-                        Guardar texto principal
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <div class="rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div class="border-b border-gray-200 px-6 py-5">
                 <h2 class="text-lg font-semibold text-gray-900">Imagenes de la portada</h2>
                 <p class="mt-1 text-sm text-gray-500">
                     Aqui defines que imagenes se muestran en la web, en que orden aparecen y cuales quedan ocultas.
@@ -159,6 +84,12 @@
                     <form action="{{ route('admin.home.hero.slides.store') }}" method="POST" enctype="multipart/form-data"
                         class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
                         @csrf
+
+                        @if ($errors->createSlide->any())
+                            <div class="lg:col-span-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                Revisa los datos de la nueva imagen antes de guardarla.
+                            </div>
+                        @endif
 
                         <div class="lg:col-span-2">
                             <label for="new_slide_image" class="block text-sm font-medium text-gray-700">Archivo de imagen</label>
@@ -200,6 +131,9 @@
                                 <label for="new_slide_is_active" class="ml-3 text-sm font-medium text-gray-700">Mostrar esta imagen en la web</label>
                             </div>
                             <p class="mt-2 text-xs text-gray-500">Si la dejas desmarcada, la imagen queda guardada pero no se muestra todavia.</p>
+                            @if ($errors->createSlide->has('is_active'))
+                                <p class="mt-2 text-sm text-red-600">{{ $errors->createSlide->first('is_active') }}</p>
+                            @endif
                         </div>
 
                         <div class="lg:col-span-2 flex justify-end">
@@ -318,7 +252,7 @@
 
                                         <div class="lg:col-span-2 flex justify-end">
                                             <button type="submit"
-                                                class="rounded-md bg-gray-900 px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-gray-800">
+                                                class="rounded-md bg-brand-pink px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-heart">
                                                 Guardar cambios de esta imagen
                                             </button>
                                         </div>
@@ -345,6 +279,85 @@
                     @endforelse
                 </div>
             </div>
+        </div>
+
+        <div class="rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div class="border-b border-gray-200 px-6 py-5">
+                <h2 class="text-lg font-semibold text-gray-900">Texto principal de la portada</h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    Todo este contenido es opcional. Puedes dejar la portada funcionando solo con imagen y usar estos campos solo cuando realmente quieras sumar texto.
+                </p>
+            </div>
+
+            <form action="{{ route('admin.home.hero.update') }}" method="POST" class="px-6 py-6">
+                @csrf
+                @method('PUT')
+
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <div class="lg:col-span-2">
+                        <label for="eyebrow" class="block text-sm font-medium text-gray-700">Etiqueta corta</label>
+                        <input type="text" name="eyebrow" id="eyebrow"
+                            value="{{ old('eyebrow', $hero->eyebrow) }}"
+                            class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
+                        <p class="mt-1 text-xs text-gray-500">Opcional. Sirve para una frase breve arriba del contenido principal si quieres sumar contexto.</p>
+                        @if ($errors->heroContent->has('eyebrow'))
+                            <p class="mt-1 text-sm text-red-600">{{ $errors->heroContent->first('eyebrow') }}</p>
+                        @endif
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <label for="title" class="block text-sm font-medium text-gray-700">Titulo principal</label>
+                        <input type="text" name="title" id="title"
+                            value="{{ old('title', $hero->title) }}"
+                            class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
+                        <p class="mt-1 text-xs text-gray-500">Opcional. Si lo dejas vacio, la portada publica no mostrara titulo.</p>
+                        @if ($errors->heroContent->has('title'))
+                            <p class="mt-1 text-sm text-red-600">{{ $errors->heroContent->first('title') }}</p>
+                        @endif
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <label for="description" class="block text-sm font-medium text-gray-700">Descripcion</label>
+                        <textarea name="description" id="description" rows="4"
+                            class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">{{ old('description', $hero->description) }}</textarea>
+                        <p class="mt-1 text-xs text-gray-500">Opcional. Puedes usarla para una bajada breve o dejar la imagen sola.</p>
+                        @if ($errors->heroContent->has('description'))
+                            <p class="mt-1 text-sm text-red-600">{{ $errors->heroContent->first('description') }}</p>
+                        @endif
+                    </div>
+
+                    <div>
+                        <label for="cta_label" class="block text-sm font-medium text-gray-700">Texto del boton</label>
+                        <input type="text" name="cta_label" id="cta_label"
+                            value="{{ old('cta_label', $hero->cta_label) }}"
+                            class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
+                        <p class="mt-1 text-xs text-gray-500">Opcional. En esta etapa no se muestra en la home publica, pero se guarda para uso futuro.</p>
+                        @if ($errors->heroContent->has('cta_label'))
+                            <p class="mt-1 text-sm text-red-600">{{ $errors->heroContent->first('cta_label') }}</p>
+                        @endif
+                    </div>
+
+                    <div>
+                        <label for="cta_url" class="block text-sm font-medium text-gray-700">Enlace del boton</label>
+                        <input type="url" name="cta_url" id="cta_url"
+                            value="{{ old('cta_url', $hero->cta_url) }}"
+                            class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
+                        <p class="mt-1 text-xs text-gray-500">Opcional. Si decides usar CTA, el texto y el enlace deben completarse juntos.</p>
+                        @if ($errors->heroContent->has('cta_url'))
+                            <p class="mt-1 text-sm text-red-600">{{ $errors->heroContent->first('cta_url') }}</p>
+                        @endif
+                    </div>
+                </div>
+
+                <p class="mt-4 text-xs text-gray-500">Puedes dejar todos estos campos vacios y publicar la portada solo con imagen. Si usas CTA, completa texto y enlace juntos.</p>
+
+                <div class="mt-6 flex justify-end">
+                    <button type="submit"
+                        class="rounded-md bg-brand-pink px-6 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-heart">
+                        Guardar texto principal
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 @endsection

@@ -17,8 +17,8 @@ class UpdateHomeHeroContentRequest extends FormRequest
     {
         return [
             'eyebrow' => ['nullable', 'string', 'max:80'],
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string', 'max:2000'],
+            'title' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:2000'],
             'cta_label' => ['nullable', 'string', 'max:80', 'required_with:cta_url'],
             'cta_url' => ['nullable', 'url', 'max:2048', 'required_with:cta_label'],
         ];
