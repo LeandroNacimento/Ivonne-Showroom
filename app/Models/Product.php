@@ -5,25 +5,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
-    public const SIZE_ORDER = [
-        'XS' => 1,
-        'S' => 2,
-        'M' => 3,
-        'L' => 4,
-        'XL' => 5,
-        'XXL' => 6,
-    ];
+    public const DEFAULT_SIZE_TYPE = 'alpha';
+
+    public const ONE_SIZE_TYPE = 'one_size';
+
+    public const ONE_SIZE_VALUE = 'UNICO';
 
     protected $fillable = [
         'category_id',
         'name',
         'slug',
         'description',
+        'size_type',
         'is_featured',
     ];
 
@@ -52,6 +52,127 @@ class Product extends Model
         return $this->hasManyThrough(ProductImage::class, ProductColor::class)
             ->orderBy('product_images.position')
             ->orderBy('product_images.id');
+    }
+
+    public static function sizeTypeRegistry(): array
+    {
+        return config('product_sizes.types', []);
+    }
+
+    public static function sizeTypeOptions(): array
+    {
+        return collect(self::sizeTypeRegistry())
+            ->mapWithKeys(fn (array $config, string $type) => [$type => $config['label']])
+            ->all();
+    }
+
+    public static function isValidSizeType(?string $sizeType): bool
+    {
+        return is_string($sizeType) && array_key_exists($sizeType, self::sizeTypeRegistry());
+    }
+
+    public static function getSizeTypeConfig(?string $sizeType): array
+    {
+        $resolvedType = self::isValidSizeType($sizeType)
+            ? $sizeType
+            : config('product_sizes.default', self::DEFAULT_SIZE_TYPE);
+
+        return self::sizeTypeRegistry()[$resolvedType] ?? [];
+    }
+
+    public static function getAllowedSizes(?string $sizeType): array
+    {
+        return self::getSizeTypeConfig($sizeType)['values'] ?? [];
+    }
+
+    public static function normalizeSize(null|string|int $size): ?string
+    {
+        if ($size === null) {
+            return null;
+        }
+
+        $normalized = str_replace("\xC2\xA0", ' ', (string) $size);
+        $normalized = trim($normalized);
+
+        if ($normalized === '') {
+            return '';
+        }
+
+        $normalized = mb_strtoupper(Str::ascii($normalized), 'UTF-8');
+
+        if ($normalized === 'UNICO') {
+            return self::ONE_SIZE_VALUE;
+        }
+
+        return $normalized;
+    }
+
+    public static function presentSize(?string $size): string
+    {
+        $normalized = self::normalizeSize($size);
+
+        if ($normalized === self::ONE_SIZE_VALUE) {
+            return config('product_sizes.one_size_label', 'Único');
+        }
+
+        return $normalized ?? '';
+    }
+
+    public static function sortSizes(iterable $sizes, ?string $sizeType): array
+    {
+        $allowedSizes = self::getAllowedSizes($sizeType);
+        $order = array_flip($allowedSizes);
+
+        return collect($sizes)
+            ->map(fn ($size) => self::normalizeSize($size))
+            ->filter(fn ($size) => $size !== null && $size !== '')
+            ->unique()
+            ->sortBy(fn ($size) => $order[$size] ?? PHP_INT_MAX)
+            ->values()
+            ->all();
+    }
+
+    public static function sizeSortIndex(?string $size, ?string $sizeType): int
+    {
+        $normalized = self::normalizeSize($size);
+        $order = array_flip(self::getAllowedSizes($sizeType));
+
+        return $order[$normalized] ?? PHP_INT_MAX;
+    }
+
+    public static function inferSizeTypeFromSizes(array $sizes, ?bool $fallbackSupportsSize = null): string
+    {
+        $normalizedSizes = collect($sizes)
+            ->map(fn ($size) => self::normalizeSize($size))
+            ->filter(fn ($size) => $size !== null && $size !== '')
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($normalizedSizes === []) {
+            return $fallbackSupportsSize === false
+                ? config('product_sizes.one_size_type', self::ONE_SIZE_TYPE)
+                : config('product_sizes.default', self::DEFAULT_SIZE_TYPE);
+        }
+
+        foreach (self::sizeTypeRegistry() as $type => $config) {
+            $allowedSizes = $config['values'] ?? [];
+
+            if ($allowedSizes !== [] && count(array_diff($normalizedSizes, $allowedSizes)) === 0) {
+                return $type;
+            }
+        }
+
+        return $fallbackSupportsSize === false
+            ? config('product_sizes.one_size_type', self::ONE_SIZE_TYPE)
+            : config('product_sizes.default', self::DEFAULT_SIZE_TYPE);
+    }
+
+    public function sortVariationCollectionBySize(Collection $variations): Collection
+    {
+        return $variations
+            ->sortBy(fn ($variation) => self::sizeSortIndex($variation->size ?? null, $this->resolved_size_type))
+            ->values();
     }
 
     /**
@@ -139,41 +260,50 @@ class Product extends Model
         return $this->cover_url;
     }
 
+    public function getResolvedSizeTypeAttribute(): string
+    {
+        if (self::isValidSizeType($this->size_type)) {
+            return $this->size_type;
+        }
+
+        $sizes = $this->relationLoaded('variations')
+            ? $this->variations->pluck('size')->all()
+            : $this->variations()->pluck('size')->all();
+
+        return self::inferSizeTypeFromSizes($sizes, $this->category?->supports_size);
+    }
+
     public function getAvailableSizesAttribute(): array
     {
         if (! $this->relationLoaded('variations')) {
             $this->load('variations');
         }
 
-        return $this->variations
-            ->where('stock', '>', 0)
-            ->pluck('size')
-            ->filter()
-            ->unique()
-            ->sortBy(fn ($size) => self::SIZE_ORDER[$size] ?? 999)
-            ->values()
-            ->toArray();
+        $sortedSizes = self::sortSizes(
+            $this->variations->where('stock', '>', 0)->pluck('size')->all(),
+            $this->resolved_size_type
+        );
+
+        return array_map(fn ($size) => self::presentSize($size), $sortedSizes);
     }
 
     public function getHasSizesAttribute(): bool
     {
-        return $this->category?->supports_size ?? false;
+        return $this->resolved_size_type !== config('product_sizes.one_size_type', self::ONE_SIZE_TYPE);
     }
 
     public function getAvailabilityLabelAttribute(): string
     {
         if (! $this->has_sizes) {
-            return $this->total_stock > 0 ? 'Disponible' : 'Sin stock';
+            return $this->total_stock > 0
+                ? config('product_sizes.one_size_availability_label', 'Talle único')
+                : 'Sin stock';
         }
 
         $sizes = $this->available_sizes;
 
         if (count($sizes) === 0) {
             return 'Sin stock';
-        }
-
-        if (count($sizes) === 1) {
-            return 'Talle único';
         }
 
         return 'Disponible en '.implode(' - ', $sizes);

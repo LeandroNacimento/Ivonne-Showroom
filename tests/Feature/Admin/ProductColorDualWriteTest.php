@@ -44,6 +44,7 @@ class ProductColorDualWriteTest extends TestCase
             'name' => 'Basic Tee',
             'category_id' => $category->id,
             'description' => 'A basic tee',
+            'size_type' => Product::DEFAULT_SIZE_TYPE,
             'variations' => [
                 ['color' => 'Red', 'size' => 'S', 'price' => 10, 'stock' => 5],
                 ['color' => 'Red', 'size' => 'M', 'price' => 10, 'stock' => 10],
@@ -93,6 +94,7 @@ class ProductColorDualWriteTest extends TestCase
         $this->post(route('admin.products.store'), [
             'name' => 'Shirt',
             'category_id' => $category->id,
+            'size_type' => Product::DEFAULT_SIZE_TYPE,
             'variations' => [
                 ['color' => 'OldRed', 'size' => 'S', 'price' => 10, 'stock' => 5],
             ],
@@ -110,6 +112,7 @@ class ProductColorDualWriteTest extends TestCase
         $this->put(route('admin.products.update', $product), [
             'name' => 'Shirt Updated',
             'category_id' => $category->id,
+            'size_type' => Product::DEFAULT_SIZE_TYPE,
             'variations' => [
                 [
                     'id' => $variation->id,
@@ -145,6 +148,7 @@ class ProductColorDualWriteTest extends TestCase
         $this->post(route('admin.products.store'), [
             'name' => 'Shirt',
             'category_id' => $category->id,
+            'size_type' => Product::DEFAULT_SIZE_TYPE,
             'variations' => [
                 ['color' => 'Red', 'size' => 'S', 'price' => 10, 'stock' => 5],
                 ['color' => 'Blue', 'size' => 'M', 'price' => 10, 'stock' => 5],
@@ -171,6 +175,7 @@ class ProductColorDualWriteTest extends TestCase
         $this->put(route('admin.products.update', $product), [
             'name' => 'Shirt',
             'category_id' => $category->id,
+            'size_type' => Product::DEFAULT_SIZE_TYPE,
             'variations' => [
                 [
                     'id' => $redVar->id,
@@ -202,6 +207,7 @@ class ProductColorDualWriteTest extends TestCase
         $this->post(route('admin.products.store'), [
             'name' => 'Stock Shirt',
             'category_id' => $category->id,
+            'size_type' => Product::DEFAULT_SIZE_TYPE,
             'variations' => [
                 ['color' => 'A', 'size' => 'S', 'price' => 10, 'stock' => 10],
                 ['color' => 'B', 'size' => 'M', 'price' => 10, 'stock' => 25],
