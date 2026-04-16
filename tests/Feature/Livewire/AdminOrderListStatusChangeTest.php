@@ -39,6 +39,20 @@ class AdminOrderListStatusChangeTest extends TestCase
         $this->assertSame(3, $variation->fresh()->stock);
     }
 
+    public function test_it_can_deliver_a_pending_order_inline_when_payment_method_is_sent(): void
+    {
+        $variation = $this->createVariation(stock: 5, price: 1800);
+        $order = $this->createPendingOrder($variation, 2, null);
+
+        Livewire::test(OrderList::class)
+            ->call('changeStatus', $order->id, Order::STATUS_DELIVERED, Order::PAYMENT_METHOD_CASH)
+            ->assertSet('feedbackType', 'success');
+
+        $this->assertSame(Order::STATUS_DELIVERED, $order->fresh()->status);
+        $this->assertSame(Order::PAYMENT_METHOD_CASH, $order->fresh()->payment_method);
+        $this->assertSame(3, $variation->fresh()->stock);
+    }
+
     public function test_it_cancels_a_reserved_order_inline_and_restores_stock(): void
     {
         $variation = $this->createVariation(stock: 5, price: 1800);
@@ -82,10 +96,10 @@ class AdminOrderListStatusChangeTest extends TestCase
         $this->assertSame(5, $variation->fresh()->stock);
     }
 
-    public function test_it_rejects_invalid_inline_transitions_without_changing_the_order(): void
+    public function test_it_requires_payment_method_for_pending_to_delivered_inline_transitions(): void
     {
         $variation = $this->createVariation(stock: 5, price: 1800);
-        $order = $this->createPendingOrder($variation, 2);
+        $order = $this->createPendingOrder($variation, 2, null);
 
         Livewire::test(OrderList::class)
             ->call('changeStatus', $order->id, Order::STATUS_DELIVERED)
@@ -93,6 +107,19 @@ class AdminOrderListStatusChangeTest extends TestCase
 
         $this->assertSame(Order::STATUS_PENDING, $order->fresh()->status);
         $this->assertSame(5, $variation->fresh()->stock);
+    }
+
+    public function test_it_rejects_invalid_inline_transitions_without_changing_the_order(): void
+    {
+        $variation = $this->createVariation(stock: 5, price: 1800);
+        $order = $this->createReservedOrder($variation, 2);
+
+        Livewire::test(OrderList::class)
+            ->call('changeStatus', $order->id, Order::STATUS_PENDING)
+            ->assertSet('feedbackType', 'error');
+
+        $this->assertSame(Order::STATUS_RESERVED, $order->fresh()->status);
+        $this->assertSame(3, $variation->fresh()->stock);
     }
 
     public function test_it_keeps_the_current_page_after_an_inline_status_change(): void
@@ -168,14 +195,14 @@ class AdminOrderListStatusChangeTest extends TestCase
         ]);
     }
 
-    private function createPendingOrder(ProductVariation $variation, int $quantity): Order
+    private function createPendingOrder(ProductVariation $variation, int $quantity, ?string $paymentMethod = Order::PAYMENT_METHOD_CASH): Order
     {
         $client = Client::factory()->create();
 
         $order = Order::factory()->create([
             'client_id' => $client->id,
             'status' => Order::STATUS_PENDING,
-            'payment_method' => 'cash',
+            'payment_method' => $paymentMethod,
             'delivery_type' => 'showroom',
             'shipping_cost' => 0,
             'total' => $variation->price * $quantity,

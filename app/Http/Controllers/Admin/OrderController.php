@@ -109,7 +109,7 @@ class OrderController extends Controller
             ];
         })->values();
 
-        $statusOptions = $orderService->availableStatusesFor($order);
+        $statusOptions = $orderService->statusOptionsFor($order);
 
         return view('admin.orders.edit', compact('order', 'clients', 'existingItems', 'statusOptions'));
     }
@@ -131,7 +131,7 @@ class OrderController extends Controller
 
                 // Ejecutar transición de estado si cambió
                 if ($oldStatus !== $newStatus) {
-                    $orderService->transitionStatus($order, $newStatus);
+                    $orderService->transitionStatus($order, $newStatus, $request->validated());
                 }
             } elseif ($oldStatus === Order::STATUS_RESERVED) {
                 // Ítems bloqueados: solo actualizar cabecera; la transición sigue separada.
@@ -139,7 +139,7 @@ class OrderController extends Controller
 
                 // Ejecutar transición de estado si cambió
                 if ($oldStatus !== $newStatus) {
-                    $orderService->transitionStatus($order, $newStatus);
+                    $orderService->transitionStatus($order, $newStatus, $request->validated());
                 }
             }
         });

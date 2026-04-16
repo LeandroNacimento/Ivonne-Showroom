@@ -52,7 +52,7 @@ class OrderList extends Component
         $this->resetPage();
     }
 
-    public function changeStatus(int $orderId, string $newStatus): void
+    public function changeStatus(int $orderId, string $newStatus, ?string $paymentMethod = null): void
     {
         $this->feedbackMessage = null;
         $this->feedbackType = null;
@@ -77,7 +77,9 @@ class OrderList extends Component
         }
 
         try {
-            $updatedOrder = $this->orderService->transitionStatus($order, $newStatus);
+            $updatedOrder = $this->orderService->transitionStatus($order, $newStatus, [
+                'payment_method' => $paymentMethod,
+            ]);
             $this->feedbackType = 'success';
             $this->feedbackMessage = "Estado del pedido #{$updatedOrder->id} actualizado a ".Order::statusLabel($updatedOrder->status).'.';
 
@@ -93,7 +95,7 @@ class OrderList extends Component
 
     public function statusOptionsFor(Order $order): array
     {
-        return $this->orderService->availableStatusesFor($order);
+        return $this->orderService->statusOptionsFor($order);
     }
 
     private function handleStatusUpdateFailure(int $orderId, string $status, string $message): void

@@ -13,7 +13,7 @@ class OrderStatusTransitionHandler
      * Transiciones permitidas: [oldStatus => [allowedNewStatuses]]
      */
     private const ALLOWED_TRANSITIONS = [
-        Order::STATUS_PENDING => [Order::STATUS_RESERVED, Order::STATUS_CANCELLED],
+        Order::STATUS_PENDING => [Order::STATUS_RESERVED, Order::STATUS_DELIVERED, Order::STATUS_CANCELLED],
         Order::STATUS_RESERVED => [Order::STATUS_DELIVERED, Order::STATUS_CANCELLED],
     ];
 
@@ -64,6 +64,11 @@ class OrderStatusTransitionHandler
 
         // pendiente → reservado: descontar stock
         if ($oldStatus === Order::STATUS_PENDING && $newStatus === Order::STATUS_RESERVED) {
+            $this->decreaseOrderStock($order);
+        }
+
+        // pendiente → entregado: descontar stock
+        if ($oldStatus === Order::STATUS_PENDING && $newStatus === Order::STATUS_DELIVERED) {
             $this->decreaseOrderStock($order);
         }
 

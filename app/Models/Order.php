@@ -29,6 +29,21 @@ class Order extends Model
         self::STATUS_CANCELLED,
     ];
 
+    public const PAYMENT_METHOD_CASH = 'cash';
+
+    public const PAYMENT_METHOD_TRANSFER = 'transfer';
+
+    public const PAYMENT_METHOD_MERCADOPAGO = 'mercadopago';
+
+    public const PAYMENT_METHOD_OTHER = 'other';
+
+    public const PAYMENT_METHODS = [
+        self::PAYMENT_METHOD_CASH,
+        self::PAYMENT_METHOD_TRANSFER,
+        self::PAYMENT_METHOD_MERCADOPAGO,
+        self::PAYMENT_METHOD_OTHER,
+    ];
+
     protected $fillable = [
         'client_id',
         'status',
@@ -66,6 +81,25 @@ class Order extends Model
             self::STATUS_DELIVERED => 'Entregado',
             self::STATUS_CANCELLED => 'Cancelado',
             default => ucfirst($status),
+        };
+    }
+
+    public static function statusRequiresPaymentMethod(string $status): bool
+    {
+        return in_array($status, [
+            self::STATUS_RESERVED,
+            self::STATUS_DELIVERED,
+        ], true);
+    }
+
+    public static function paymentMethodLabel(string $paymentMethod): string
+    {
+        return match ($paymentMethod) {
+            self::PAYMENT_METHOD_CASH => 'Efectivo',
+            self::PAYMENT_METHOD_TRANSFER => 'Transferencia',
+            self::PAYMENT_METHOD_MERCADOPAGO => 'Mercado Pago',
+            self::PAYMENT_METHOD_OTHER => 'Otro',
+            default => ucfirst($paymentMethod),
         };
     }
 }
