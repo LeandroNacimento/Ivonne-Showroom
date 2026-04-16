@@ -9,8 +9,8 @@ use App\Models\Product;
 use App\Models\ProductColor;
 use App\Models\ProductVariation;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class OrderPendingUpdateTest extends TestCase

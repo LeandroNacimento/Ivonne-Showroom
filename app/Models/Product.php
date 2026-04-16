@@ -371,7 +371,7 @@ class Product extends Model
 
     public function scopeWithStorefrontPricing($query)
     {
-        $effectivePriceExpression = "MIN(CASE WHEN product_variations.sale_price IS NOT NULL AND product_variations.sale_price < product_variations.price THEN product_variations.sale_price ELSE product_variations.price END)";
+        $effectivePriceExpression = 'MIN(CASE WHEN product_variations.sale_price IS NOT NULL AND product_variations.sale_price < product_variations.price THEN product_variations.sale_price ELSE product_variations.price END)';
 
         return $query
             ->addSelect([
