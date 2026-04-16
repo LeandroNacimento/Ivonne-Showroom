@@ -135,4 +135,3 @@ For commit suggestions:
 * use Conventional Commits
 * keep scope descriptive
 * avoid generic messages
-    
