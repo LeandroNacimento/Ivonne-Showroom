@@ -19,6 +19,15 @@
 
     <!-- Filters & Table Container -->
     <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
+        @if ($feedbackMessage)
+            <div
+                class="border-b px-4 py-4 sm:px-6 {{ $feedbackType === 'error' ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50' }}">
+                <p class="text-sm font-medium {{ $feedbackType === 'error' ? 'text-red-700' : 'text-green-700' }}">
+                    {{ $feedbackMessage }}
+                </p>
+            </div>
+        @endif
+
         <!-- Filter Bar -->
         <div class="border-b border-gray-200 px-4 py-5 sm:px-6">
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -80,33 +89,95 @@
                 </thead>
                 <tbody class="divide-y divide-gray-200 bg-white">
                     @forelse($orders as $order)
-                        <tr class="hover:bg-gray-50 transition-colors group" wire:key="order-{{ $order->id }}">
+                        @php
+                            $statusClasses = match ($order->status) {
+                                \App\Models\Order::STATUS_PENDING => 'text-gray-600',
+                                \App\Models\Order::STATUS_RESERVED => 'text-yellow-600',
+                                \App\Models\Order::STATUS_DELIVERED => 'text-green-600',
+                                \App\Models\Order::STATUS_CANCELLED => 'text-red-600',
+                                default => 'text-gray-600',
+                            };
+                            $statusOptions = $this->statusOptionsFor($order);
+                        @endphp
+                        <tr class="hover:bg-gray-50 transition-colors group"
+                            wire:key="order-{{ $order->id }}"
+                            x-data="{
+                                orderId: {{ $order->id }},
+                                currentStatus: @js($order->status),
+                                selectedStatus: @js($order->status),
+                                isSubmitting: false,
+                                confirmationMessage(oldStatus, newStatus) {
+                                    const messages = {
+                                        'pendiente:reservado': '¿Confirmar cambio a Reservado? Se descontará el stock de este pedido.',
+                                        'pendiente:cancelado': '¿Confirmar cancelación del pedido? Esta acción no modificará el stock.',
+                                        'reservado:entregado': '¿Confirmar cambio a Entregado? El pedido pasará a estado terminal.',
+                                        'reservado:cancelado': '¿Confirmar cancelación del pedido? Se devolverá el stock reservado.',
+                                    };
+
+                                    return messages[`${oldStatus}:${newStatus}`] ?? '¿Confirmar cambio de estado del pedido?';
+                                },
+                                submitStatusChange() {
+                                    if (this.selectedStatus === this.currentStatus) {
+                                        return;
+                                    }
+
+                                    const nextStatus = this.selectedStatus;
+
+                                    if (! window.confirm(this.confirmationMessage(this.currentStatus, nextStatus))) {
+                                        this.selectedStatus = this.currentStatus;
+
+                                        return;
+                                    }
+
+                                    this.isSubmitting = true;
+
+                                    $wire.changeStatus(this.orderId, nextStatus)
+                                        .catch(() => {
+                                            this.selectedStatus = this.currentStatus;
+                                            this.isSubmitting = false;
+                                        });
+                                },
+                            }"
+                            x-on:order-status-updated.window="
+                                if ($event.detail.orderId === orderId) {
+                                    currentStatus = $event.detail.status;
+                                    selectedStatus = $event.detail.status;
+                                    isSubmitting = false;
+                                }
+                            "
+                            x-on:order-status-update-failed.window="
+                                if ($event.detail.orderId === orderId) {
+                                    selectedStatus = $event.detail.status;
+                                    isSubmitting = false;
+                                }
+                            ">
                             <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-mono text-gray-500 sm:pl-6">
                                 #{{ $order->id }}</td>
                             <td class="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-900">
                                 {{ $order->client->name }}</td>
                             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                 {{ $order->date->format('d/m/Y') }}</td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm">
-                                @php
-                                    $statusClasses = match ($order->status) {
-                                        \App\Models\Order::STATUS_PENDING => 'text-gray-600',
-                                        \App\Models\Order::STATUS_RESERVED => 'text-yellow-600',
-                                        \App\Models\Order::STATUS_DELIVERED => 'text-green-600',
-                                        \App\Models\Order::STATUS_CANCELLED => 'text-red-600',
-                                        default => 'text-gray-600',
-                                    };
-                                    $statusLabel = match ($order->status) {
-                                        \App\Models\Order::STATUS_PENDING => 'Pendiente',
-                                        \App\Models\Order::STATUS_RESERVED => 'Reservado',
-                                        \App\Models\Order::STATUS_DELIVERED => 'Entregado',
-                                        \App\Models\Order::STATUS_CANCELLED => 'Cancelado',
-                                        default => ucfirst($order->status),
-                                    };
-                                @endphp
-                                <span class="inline-flex items-center font-semibold {{ $statusClasses }}">
-                                    {{ $statusLabel }}
-                                </span>
+                            <td class="px-3 py-4 text-sm">
+                                @if ($order->isTerminal())
+                                    <span class="inline-flex items-center font-semibold {{ $statusClasses }}">
+                                        {{ \App\Models\Order::statusLabel($order->status) }}
+                                    </span>
+                                @else
+                                    <div class="flex flex-col items-start gap-2">
+                                        <select x-model="selectedStatus" @change="submitStatusChange()"
+                                            :disabled="isSubmitting"
+                                            class="block w-full min-w-40 rounded-md border-0 py-1.5 pr-8 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-brand-pink disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500">
+                                            @foreach ($statusOptions as $statusOption)
+                                                <option value="{{ $statusOption }}">
+                                                    {{ \App\Models\Order::statusLabel($statusOption) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <span x-cloak x-show="isSubmitting" class="text-xs font-medium text-gray-500">
+                                            Actualizando...
+                                        </span>
+                                    </div>
+                                @endif
                             </td>
                             <td class="whitespace-nowrap px-3 py-4 text-sm font-semibold text-gray-900">
                                 ${{ number_format($order->total, 0, ',', '.') }}</td>

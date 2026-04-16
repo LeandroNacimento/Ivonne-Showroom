@@ -36,6 +36,9 @@ Apply these rules:
 * A refactor or relevant technical improvement MUST start on a new branch.
 * Never assume the current branch is valid for new work.
 * Never continue new scoped work on the current branch unless the user explicitly says to do so.
+* When the user asks to implement or fix something, assume they want execution to begin immediately.
+* Before editing files for a new scoped task, create and switch to the correct new branch automatically.
+* Do not wait for an extra confirmation to create or switch to that branch when the user already requested implementation or a fix.
 * Do not work directly on `main` by initiative.
 * Do not commit by initiative.
 * Do not push by initiative.
@@ -57,9 +60,9 @@ If the request is:
 then you MUST:
 
 1. determine the correct branch type
-2. warn if the work should start on a new branch
-3. suggest a branch name
-4. stop before any Git action unless the user explicitly authorizes it
+2. create and switch to the new branch before implementation
+3. choose a clear branch name consistent with the task
+4. continue with implementation without waiting for extra Git confirmation
 
 Do not skip this check.
 
@@ -90,20 +93,20 @@ Classify as `hotfix/*` only when:
 
 Default to:
 
-* warning when a task should live in a new branch
-* suggesting branch names instead of creating them autonomously
+* creating and switching to the correct new branch before implementation
+* choosing branch names autonomously from the task context
 * suggesting commit messages instead of committing autonomously
 * stopping before irreversible actions
-* stopping before implementation when a new branch is required but not yet resolved
+* proceeding with implementation once the branch is ready
 
 ## Required Default Response
 
 When the user requests a new feature, respond by:
 
-1. stating that the work should live on a new `feature/*` branch
-2. suggesting a branch name
+1. creating and switching to a new `feature/*` branch
+2. stating the branch name chosen
 3. outlining the implementation plan
-4. stopping before Git actions unless explicitly authorized
+4. proceeding with the requested work
 
 ## Escalate When
 
@@ -123,6 +126,7 @@ For Gitflow continuation:
 * review local changes
 * prepare staging plan
 * suggest commit message
+* create/switch branch automatically when implementation or a fix is requested
 * stop before irreversible actions unless explicitly requested
 
 For commit suggestions:

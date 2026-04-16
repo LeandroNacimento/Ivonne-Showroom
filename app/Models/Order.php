@@ -52,4 +52,20 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    public function isTerminal(): bool
+    {
+        return in_array($this->status, self::TERMINAL_STATES, true);
+    }
+
+    public static function statusLabel(string $status): string
+    {
+        return match ($status) {
+            self::STATUS_PENDING => 'Pendiente',
+            self::STATUS_RESERVED => 'Reservado',
+            self::STATUS_DELIVERED => 'Entregado',
+            self::STATUS_CANCELLED => 'Cancelado',
+            default => ucfirst($status),
+        };
+    }
 }

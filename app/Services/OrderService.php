@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Order;
 use App\Models\ProductVariation;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class OrderService
 {
@@ -31,10 +32,7 @@ class OrderService
 
             // Transicionar estado de ser necesario
             if ($data['status'] === Order::STATUS_RESERVED) {
-                // Reload para tener todo instanciado antes del handler
-                $order->load(['items.variation.productColor', 'items.product']);
-                $this->handler->handle($order, Order::STATUS_PENDING, Order::STATUS_RESERVED);
-                $order->update(['status' => Order::STATUS_RESERVED]);
+                $order = $this->transitionStatus($order, Order::STATUS_RESERVED);
             }
 
             return $order;
@@ -76,6 +74,37 @@ class OrderService
         ]);
 
         return $order;
+    }
+
+    public function transitionStatus(Order $order, string $newStatus): Order
+    {
+        return DB::transaction(function () use ($order, $newStatus) {
+            $order = Order::query()->findOrFail($order->id);
+            $oldStatus = $order->status;
+
+            if (! in_array($newStatus, Order::STATUSES, true)) {
+                throw ValidationException::withMessages([
+                    'status' => 'El estado seleccionado no es válido.',
+                ]);
+            }
+
+            if ($oldStatus === $newStatus) {
+                return $order->fresh();
+            }
+
+            $order->load(['items.variation.productColor', 'items.product']);
+            $this->handler->handle($order, $oldStatus, $newStatus);
+            $order->update(['status' => $newStatus]);
+
+            return $order->fresh(['client', 'items.variation.productColor', 'items.product']);
+        });
+    }
+
+    public function availableStatusesFor(Order|string $order): array
+    {
+        $status = $order instanceof Order ? $order->status : $order;
+
+        return $this->handler->availableStatusesFor($status);
     }
 
     private function buildPendingOrderPayload(array $data): array

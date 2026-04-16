@@ -9,7 +9,6 @@ use App\Models\Client;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Services\OrderService;
-use App\Services\OrderStatusTransitionHandler;
 use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
@@ -40,10 +39,10 @@ class OrderController extends Controller
         return view('admin.orders.show', compact('order'));
     }
 
-    public function edit(Order $order)
+    public function edit(Order $order, OrderService $orderService)
     {
         // Bloquear edición si el pedido está en estado terminal
-        if (in_array($order->status, Order::TERMINAL_STATES)) {
+        if ($order->isTerminal()) {
             return redirect()->route('admin.orders.show', $order)
                 ->with('error', "El pedido está en estado '{$order->status}' y no puede editarse.");
         }
@@ -110,17 +109,19 @@ class OrderController extends Controller
             ];
         })->values();
 
-        return view('admin.orders.edit', compact('order', 'clients', 'existingItems'));
+        $statusOptions = $orderService->availableStatusesFor($order);
+
+        return view('admin.orders.edit', compact('order', 'clients', 'existingItems', 'statusOptions'));
     }
 
-    public function update(UpdateOrderRequest $request, Order $order, OrderStatusTransitionHandler $handler, OrderService $orderService)
+    public function update(UpdateOrderRequest $request, Order $order, OrderService $orderService)
     {
         // Bloquear actualización si ya está en estado terminal
-        if (in_array($order->status, Order::TERMINAL_STATES)) {
+        if ($order->isTerminal()) {
             abort(403, "No se puede modificar un pedido en estado '{$order->status}'.");
         }
 
-        DB::transaction(function () use ($request, $order, $handler, $orderService) {
+        DB::transaction(function () use ($request, $order, $orderService) {
             $oldStatus = $order->status;
             $newStatus = $request->status;
 
@@ -130,9 +131,7 @@ class OrderController extends Controller
 
                 // Ejecutar transición de estado si cambió
                 if ($oldStatus !== $newStatus) {
-                    $order->load(['items.variation.productColor', 'items.product']);
-                    $handler->handle($order, Order::STATUS_PENDING, $newStatus);
-                    $order->update(['status' => $newStatus]);
+                    $orderService->transitionStatus($order, $newStatus);
                 }
             } elseif ($oldStatus === Order::STATUS_RESERVED) {
                 // Ítems bloqueados: solo actualizar cabecera; la transición sigue separada.
@@ -140,9 +139,7 @@ class OrderController extends Controller
 
                 // Ejecutar transición de estado si cambió
                 if ($oldStatus !== $newStatus) {
-                    $order->load(['items.variation.productColor', 'items.product']);
-                    $handler->handle($order, Order::STATUS_RESERVED, $newStatus);
-                    $order->update(['status' => $newStatus]);
+                    $orderService->transitionStatus($order, $newStatus);
                 }
             }
         });
@@ -153,7 +150,7 @@ class OrderController extends Controller
     public function destroy(Order $order)
     {
         // Bloquear eliminación si está en estado terminal
-        if (in_array($order->status, Order::TERMINAL_STATES)) {
+        if ($order->isTerminal()) {
             return redirect()->route('admin.orders.index')
                 ->with('error', "No se puede eliminar un pedido en estado '{$order->status}'.");
         }
