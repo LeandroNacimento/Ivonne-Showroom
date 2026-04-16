@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Admin\Product;
 
-use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -13,12 +12,19 @@ class VariationsForm extends Component
 
     public string $basePrice = '';
 
+    public string $sizeType = Product::DEFAULT_SIZE_TYPE;
+
+    public array $sizeOptions = [];
+
     public bool $supportsSize = true;
 
-    public function mount(?Product $product = null, ?int $categoryId = null): void
+    public function mount(?Product $product = null, ?string $sizeType = null): void
     {
         if ($product && $product->exists) {
-            $this->supportsSize = $product->category->supports_size ?? true;
+            $this->sizeType = Product::isValidSizeType($sizeType)
+                ? $sizeType
+                : $product->resolved_size_type;
+
             $product->load(['colors.variations']);
 
             foreach ($product->colors as $colorModel) {
@@ -29,53 +35,46 @@ class VariationsForm extends Component
                     'variations' => [],
                 ];
 
-                foreach ($colorModel->variations as $v) {
+                foreach ($colorModel->variations as $variation) {
                     $group['variations'][] = [
                         'uuid' => Str::uuid()->toString(),
-                        'id' => $v->id,
-                        'size' => $v->size,
-                        'price' => $v->price,
-                        'stock' => (int) $v->stock,
-                        'sku' => $v->sku ?? '',
+                        'id' => $variation->id,
+                        'size' => Product::normalizeSize($variation->size) ?? '',
+                        'price' => $variation->price,
+                        'sale_price' => $variation->sale_price,
+                        'stock' => (int) $variation->stock,
+                        'sku' => $variation->sku ?? '',
                     ];
                 }
 
                 $this->colors[] = $group;
             }
-        } elseif ($categoryId) {
-            $cat = Category::find($categoryId);
-            $this->supportsSize = $cat ? ($cat->supports_size ?? true) : true;
+        } elseif (Product::isValidSizeType($sizeType)) {
+            $this->sizeType = $sizeType;
         }
 
-        // Always have at least one color group
-        if (empty($this->colors)) {
+        $this->refreshSizeState();
+
+        if ($this->colors === []) {
             $this->addColor();
         }
 
+        $this->syncVariationSizesForCurrentType();
         $this->dispatchColorSync();
     }
 
-    /* ──────────────── Category Change Listener ──────────────── */
-
-    #[\Livewire\Attributes\On('category-changed')]
-    public function updateCategory(int $categoryId): void
+    #[\Livewire\Attributes\On('size-type-changed')]
+    public function updateSizeType(string $sizeType): void
     {
-        $cat = Category::find($categoryId);
-        $this->supportsSize = $cat ? ($cat->supports_size ?? true) : true;
-
-        // Si la categoría no soporta talle, dejar solo una variación por color
-        if (! $this->supportsSize) {
-            foreach ($this->colors as $cIdx => $color) {
-                if (count($color['variations']) > 1) {
-                    $this->colors[$cIdx]['variations'] = [
-                        $color['variations'][0],
-                    ];
-                }
-            }
+        if (! Product::isValidSizeType($sizeType)) {
+            return;
         }
-    }
 
-    /* ──────────────── Color CRUD ──────────────── */
+        $this->sizeType = $sizeType;
+        $this->refreshSizeState();
+        $this->syncVariationSizesForCurrentType();
+        $this->validateDuplicates();
+    }
 
     public function addColor(): void
     {
@@ -102,10 +101,12 @@ class VariationsForm extends Component
         $this->dispatchColorSync();
     }
 
-    /* ──────────────── Variation CRUD ──────────────── */
-
     public function addVariation(int $colorIndex): void
     {
+        if (! $this->supportsSize) {
+            return;
+        }
+
         $this->colors[$colorIndex]['variations'][] = $this->emptyVariation();
     }
 
@@ -121,8 +122,6 @@ class VariationsForm extends Component
         );
     }
 
-    /* ──────────────── Base Price Helper ──────────────── */
-
     public function applyBasePrice(): void
     {
         if (! is_numeric($this->basePrice) || $this->basePrice <= 0) {
@@ -130,57 +129,67 @@ class VariationsForm extends Component
         }
 
         foreach ($this->colors as &$color) {
-            foreach ($color['variations'] as &$v) {
-                $v['price'] = $this->basePrice;
+            foreach ($color['variations'] as &$variation) {
+                $variation['price'] = $this->basePrice;
             }
-            unset($v); // liberar referencia al último elemento
+            unset($variation);
         }
-        unset($color); // liberar referencia al último color
+        unset($color);
     }
-
-    /* ──────────────── Real-time Validation ──────────────── */
 
     public function updated($propertyName): void
     {
-        // Validate individual fields as they change
-        if (str_starts_with($propertyName, 'colors.')) {
-            $parts = explode('.', $propertyName);
+        if (! str_starts_with($propertyName, 'colors.')) {
+            return;
+        }
 
-            // colors.{colorIdx}.variations.{varIdx}.{field}
-            if (count($parts) === 5 && $parts[2] === 'variations') {
-                $field = $parts[4];
-                $colorIdx = (int) $parts[1];
-                $varIdx = (int) $parts[3];
+        $parts = explode('.', $propertyName);
 
-                if ($field === 'price') {
-                    $value = $this->colors[$colorIdx]['variations'][$varIdx]['price'] ?? '';
-                    if ($value !== '' && (! is_numeric($value) || $value < 0)) {
-                        $this->addError($propertyName, 'El precio debe ser mayor o igual a 0.');
-                    }
-                }
+        if (count($parts) === 5 && $parts[2] === 'variations') {
+            $field = $parts[4];
+            $colorIdx = (int) $parts[1];
+            $varIdx = (int) $parts[3];
 
-                if ($field === 'stock') {
-                    $value = $this->colors[$colorIdx]['variations'][$varIdx]['stock'] ?? '';
-                    if ($value !== '' && (! is_numeric($value) || $value < 0)) {
-                        $this->addError($propertyName, 'El stock debe ser mayor o igual a 0.');
-                    }
-                }
+            if ($field === 'size') {
+                $this->colors[$colorIdx]['variations'][$varIdx]['size'] = $this->normalizeVariationSize(
+                    $this->colors[$colorIdx]['variations'][$varIdx]['size'] ?? ''
+                );
+                $this->validateDuplicates();
+            }
 
-                // Check duplicate color + size
-                if ($field === 'size') {
-                    $this->validateDuplicates();
+            if ($field === 'price') {
+                $value = $this->colors[$colorIdx]['variations'][$varIdx]['price'] ?? '';
+                if ($value !== '' && (! is_numeric($value) || $value < 0)) {
+                    $this->addError($propertyName, 'El precio debe ser mayor o igual a 0.');
                 }
             }
 
-            // colors.{colorIdx}.name — also check duplicates
-            if (count($parts) === 3 && $parts[2] === 'name') {
-                $this->validateDuplicates();
-                $this->dispatchColorSync();
+            if ($field === 'stock') {
+                $value = $this->colors[$colorIdx]['variations'][$varIdx]['stock'] ?? '';
+                if ($value !== '' && (! is_numeric($value) || $value < 0)) {
+                    $this->addError($propertyName, 'El stock debe ser mayor o igual a 0.');
+                }
+            }
+
+            if ($field === 'sale_price') {
+                $value = $this->colors[$colorIdx]['variations'][$varIdx]['sale_price'] ?? '';
+                $price = $this->colors[$colorIdx]['variations'][$varIdx]['price'] ?? null;
+
+                if ($value !== '' && (! is_numeric($value) || $value <= 0)) {
+                    $this->addError($propertyName, 'El precio de oferta debe ser mayor a 0.');
+                }
+
+                if ($value !== '' && $price !== '' && is_numeric($value) && is_numeric($price) && (float) $value >= (float) $price) {
+                    $this->addError($propertyName, 'El precio de oferta debe ser menor al precio base.');
+                }
             }
         }
-    }
 
-    /* ──────────────── Computed: Flat Array for Form ──────────────── */
+        if (count($parts) === 3 && $parts[2] === 'name') {
+            $this->validateDuplicates();
+            $this->dispatchColorSync();
+        }
+    }
 
     public function getFlatVariationsProperty(): array
     {
@@ -190,15 +199,18 @@ class VariationsForm extends Component
             $colorName = $color['name'];
             $colorId = $color['id'] ?? null;
 
-            foreach ($color['variations'] as $v) {
+            foreach ($color['variations'] as $variation) {
                 $flat[] = [
-                    'id' => $v['id'] ?? '',
+                    'id' => $variation['id'] ?? '',
                     'color_id' => $colorId,
                     'color' => $colorName,
-                    'size' => $this->supportsSize ? ($v['size'] ?? '') : 'Único',
-                    'price' => $v['price'] ?? '',
-                    'stock' => $v['stock'] ?? '',
-                    'sku' => $v['sku'] ?? '',
+                    'size' => $this->supportsSize
+                        ? $this->normalizeVariationSize($variation['size'] ?? '')
+                        : Product::ONE_SIZE_VALUE,
+                    'price' => $variation['price'] ?? '',
+                    'sale_price' => $variation['sale_price'] ?? '',
+                    'stock' => $variation['stock'] ?? '',
+                    'sku' => $variation['sku'] ?? '',
                 ];
             }
         }
@@ -206,32 +218,57 @@ class VariationsForm extends Component
         return $flat;
     }
 
-    /* ──────────────── Render ──────────────── */
-
     public function render()
     {
         return view('livewire.admin.product.variations-form');
     }
-
-    /* ──────────────── Helpers ──────────────── */
 
     private function emptyVariation(): array
     {
         return [
             'uuid' => Str::uuid()->toString(),
             'id' => '',
-            'size' => '',
+            'size' => $this->supportsSize ? '' : Product::ONE_SIZE_VALUE,
             'price' => '',
+            'sale_price' => '',
             'stock' => '',
             'sku' => '',
         ];
+    }
+
+    private function refreshSizeState(): void
+    {
+        $this->supportsSize = $this->sizeType !== config('product_sizes.one_size_type', Product::ONE_SIZE_TYPE);
+        $this->sizeOptions = Product::getAllowedSizes($this->sizeType);
+    }
+
+    private function syncVariationSizesForCurrentType(): void
+    {
+        foreach ($this->colors as $colorIndex => $color) {
+            foreach ($color['variations'] as $variationIndex => $variation) {
+                if ($this->supportsSize) {
+                    $normalized = $this->normalizeVariationSize($variation['size'] ?? '');
+
+                    $this->colors[$colorIndex]['variations'][$variationIndex]['size'] = in_array($normalized, $this->sizeOptions, true)
+                        ? $normalized
+                        : '';
+                } else {
+                    $this->colors[$colorIndex]['variations'][$variationIndex]['size'] = Product::ONE_SIZE_VALUE;
+                }
+            }
+        }
+    }
+
+    private function normalizeVariationSize(null|string|int $size): string
+    {
+        return Product::normalizeSize($size) ?? '';
     }
 
     private function dispatchColorSync(): void
     {
         $names = collect($this->colors)
             ->pluck('name')
-            ->filter(fn ($n) => trim($n) !== '')
+            ->filter(fn ($name) => trim($name) !== '')
             ->values()
             ->toArray();
 
@@ -242,11 +279,11 @@ class VariationsForm extends Component
     {
         $seen = [];
 
-        foreach ($this->colors as $cIdx => $color) {
+        foreach ($this->colors as $colorIndex => $color) {
             $colorName = strtolower(trim($color['name']));
 
-            foreach ($color['variations'] as $vIdx => $v) {
-                $size = strtolower(trim($v['size'] ?? ''));
+            foreach ($color['variations'] as $variationIndex => $variation) {
+                $size = strtolower(trim((string) ($variation['size'] ?? '')));
 
                 if ($colorName === '' || $size === '') {
                     continue;
@@ -256,7 +293,7 @@ class VariationsForm extends Component
 
                 if (isset($seen[$key])) {
                     $this->addError(
-                        "colors.{$cIdx}.variations.{$vIdx}.size",
+                        "colors.{$colorIndex}.variations.{$variationIndex}.size",
                         'Combinación color + talle duplicada.'
                     );
                 } else {

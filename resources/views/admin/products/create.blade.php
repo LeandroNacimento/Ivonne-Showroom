@@ -1,8 +1,8 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="max-w-4xl mx-auto">
-        <div class="flex justify-between items-center mb-6">
+    <div class="mx-auto max-w-4xl">
+        <div class="mb-6 flex items-center justify-between">
             <h1 class="text-2xl font-bold text-gray-800">Nuevo Producto</h1>
             <a href="{{ route('admin.products.index') }}" class="text-gray-600 hover:text-gray-900">
                 &larr; Volver
@@ -11,65 +11,80 @@
 
         <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Main Info -->
-                <div class="md:col-span-2 space-y-6">
-                    <div class="bg-white rounded-lg shadow-sm p-6">
-                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Información General</h2>
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <div class="space-y-6 md:col-span-2">
+                    <div class="rounded-lg bg-white p-6 shadow-sm">
+                        <h2 class="mb-4 text-lg font-semibold text-gray-900">Información General</h2>
 
                         <div class="mb-4">
-                            <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                            <label for="name" class="mb-1 block text-sm font-medium text-gray-700">Nombre</label>
                             <input type="text" name="name" id="name" value="{{ old('name') }}"
                                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
                                 required>
                         </div>
 
                         <div class="mb-4">
-                            <label for="description"
-                                class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                            <label for="description" class="mb-1 block text-sm font-medium text-gray-700">Descripción</label>
                             <textarea name="description" id="description" rows="4"
                                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">{{ old('description') }}</textarea>
                         </div>
                     </div>
 
-                    {{-- Variaciones (Livewire) --}}
-                    <div class="bg-white rounded-lg shadow-sm p-6">
-                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Variaciones</h2>
-                        @livewire('admin.product.variations-form')
+                    <div class="rounded-lg bg-white p-6 shadow-sm">
+                        <h2 class="mb-4 text-lg font-semibold text-gray-900">Variaciones</h2>
+                        @livewire('admin.product.variations-form', ['sizeType' => old('size_type', \App\Models\Product::DEFAULT_SIZE_TYPE)])
                     </div>
                 </div>
 
-                <!-- Sidebar -->
                 <div class="space-y-6">
-                    <div class="bg-white rounded-lg shadow-sm p-6">
-                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Detalles</h2>
+                    <div class="rounded-lg bg-white p-6 shadow-sm">
+                        <h2 class="mb-4 text-lg font-semibold text-gray-900">Detalles</h2>
 
                         <div class="mb-4">
-                            <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+                            <label for="category_id" class="mb-1 block text-sm font-medium text-gray-700">Categoría</label>
                             <select name="category_id" id="category_id"
-                                x-on:change="Livewire.dispatch('category-changed', { categoryId: parseInt($event.target.value) })"
                                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
                                 required>
                                 @foreach ($categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>
+                                        {{ $category->name }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
 
-                        <div class="flex items-center mb-4">
+                        <div class="mb-4">
+                            <label for="size_type" class="mb-1 block text-sm font-medium text-gray-700">Tipo de talles</label>
+                            <select name="size_type" id="size_type"
+                                x-on:change="Livewire.dispatch('size-type-changed', { sizeType: $event.target.value })"
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
+                                required>
+                                @foreach ($sizeTypeOptions as $value => $label)
+                                    <option value="{{ $value }}" @selected(old('size_type', \App\Models\Product::DEFAULT_SIZE_TYPE) === $value)>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('size_type')
+                                <span class="mt-1 block text-xs text-red-500">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="mb-4 flex items-center">
                             <input type="checkbox" name="is_featured" id="is_featured"
-                                class="rounded border-gray-300 text-brand-pink shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
+                                class="rounded border-gray-300 text-brand-pink shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
+                                @checked(old('is_featured'))>
                             <label for="is_featured" class="ml-2 block text-sm text-gray-900">Destacar en Home</label>
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-lg shadow-sm p-6">
-                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Imágenes</h2>
+                    <div class="rounded-lg bg-white p-6 shadow-sm">
+                        <h2 class="mb-4 text-lg font-semibold text-gray-900">Imágenes</h2>
                         @livewire('admin.product.images-form')
                     </div>
 
                     <button type="submit"
-                        class="w-full bg-brand-pink text-white px-6 py-3 rounded-md hover:bg-brand-heart transition-colors font-bold shadow-md">
+                        class="w-full rounded-md bg-brand-pink px-6 py-3 font-bold text-white shadow-md transition-colors hover:bg-brand-heart">
                         Publicar Producto
                     </button>
                 </div>

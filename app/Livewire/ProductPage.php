@@ -21,42 +21,40 @@ class ProductPage extends Component
     public function mount($slug)
     {
         $this->product = Product::where('slug', $slug)
-            ->with(['category', 'colors', 'variations.productColor'])
+            ->withStorefrontPricing()
+            ->with(['category', 'colors.images', 'variations.productColor'])
             ->firstOrFail();
 
         $this->relatedProducts = Product::where('category_id', $this->product->category_id)
             ->where('id', '!=', $this->product->id)
-            ->with(['colors'])
+            ->withStorefrontPricing()
+            ->with(['colors.images', 'variations'])
             ->take(4)
             ->get();
 
-        // Prepare sorted variations for Alpine
-        $this->sortedVariations = $this->product->variations
-            ->where('stock', '>', 0)
-            ->sortBy(fn ($v) => Product::SIZE_ORDER[strtoupper($v->size)] ?? 99)
-            ->map(fn ($v) => [
-                'id' => $v->id,
-                'color' => $v->productColor->name ?? 'Único',
-                'size' => $v->size,
-                'price' => $v->price,
-                'stock' => $v->stock,
+        $this->sortedVariations = $this->product
+            ->sortVariationCollectionBySize($this->product->variations->where('stock', '>', 0))
+            ->map(fn ($variation) => [
+                'id' => $variation->id,
+                'color' => $variation->productColor->name ?? 'Único',
+                'size_label' => Product::presentSize($variation->size),
+                'effective_price' => (float) $variation->effective_price,
+                'original_price' => (float) $variation->original_price,
+                'has_active_offer' => $variation->has_active_offer,
+                'stock' => $variation->stock,
             ])
             ->values();
 
-        // Group images by color for Alpine.js dynamic gallery
         $this->imagesByColor = [];
         foreach ($this->product->colors as $color) {
-            if ($color->image) {
-                $this->imagesByColor[$color->name] = [$color->image_url];
-            }
+            $this->imagesByColor[$color->name] = $color->public_gallery_urls;
         }
 
-        // Initial active color determination
         $requestedColorSlug = request()->query('color');
 
         if ($requestedColorSlug) {
-            $requestedVariation = $this->sortedVariations->first(function ($v) use ($requestedColorSlug) {
-                return \Illuminate\Support\Str::slug($v['color']) === $requestedColorSlug && $v['stock'] > 0;
+            $requestedVariation = $this->sortedVariations->first(function ($variation) use ($requestedColorSlug) {
+                return \Illuminate\Support\Str::slug($variation['color']) === $requestedColorSlug && $variation['stock'] > 0;
             });
 
             if ($requestedVariation) {
@@ -64,7 +62,6 @@ class ProductPage extends Component
             }
         }
 
-        // Fallback if no valid color was requested
         if (! isset($this->initialColor)) {
             $this->initialColor = $this->product->variations->where('stock', '>', 0)->first()?->productColor?->name
                 ?? ($this->product->colors->first()?->name ?? 'Único');
@@ -73,7 +70,6 @@ class ProductPage extends Component
 
     public function addToCart($variationId, $quantity, CartService $cartService)
     {
-        // Add to cart using the injected service
         $success = $cartService->addToCart($this->product->id, $variationId, $quantity);
 
         if ($success) {

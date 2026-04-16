@@ -1,12 +1,13 @@
 export default function orderForm(initialData = {}) {
     return {
         items: [],
-        deliveryType: initialData.deliveryType || 'showroom',
+        status: initialData.status || "pendiente",
+        deliveryType: initialData.deliveryType || "showroom",
         shippingCost: initialData.shippingCost || 0,
         freeShipping: initialData.freeShipping || false,
-        clientMode: initialData.clientMode || 'existing',
+        clientMode: initialData.clientMode || "existing",
         clientId: initialData.clientId || null,
-        clientSearch: initialData.clientSearch || '',
+        clientSearch: initialData.clientSearch || "",
         clientResults: [],
         showClientResults: false,
         isSearchingClient: false,
@@ -20,10 +21,12 @@ export default function orderForm(initialData = {}) {
 
             return {
                 id: String(variation.id),
-                color: variation.product_color?.name || variation.color || 'N/A',
-                size: variation.size || 'ÚNICO',
+                color: variation.product_color?.name || variation.color || "N/A",
+                size: variation.size || "ÚNICO",
                 stock: variation.stock ?? 0,
-                price: variation.price ?? 0,
+                effectivePrice: variation.effective_price ?? 0,
+                originalPrice: variation.original_price ?? variation.effective_price ?? 0,
+                hasActiveOffer: Boolean(variation.has_active_offer),
             };
         },
 
@@ -33,11 +36,17 @@ export default function orderForm(initialData = {}) {
             }
 
             return {
-                id: option.id !== null && option.id !== undefined ? String(option.id) : null,
-                color: option.color || 'N/A',
-                size: option.size || 'ÚNICO',
+                id:
+                    option.id !== null && option.id !== undefined
+                        ? String(option.id)
+                        : null,
+                color: option.color || "N/A",
+                size: option.size || "ÚNICO",
                 stock: option.stock ?? null,
-                price: option.price ?? 0,
+                effectivePrice: option.effective_price ?? 0,
+                originalPrice:
+                    option.original_price ?? option.effective_price ?? 0,
+                hasActiveOffer: Boolean(option.has_active_offer),
                 label: option.label || null,
                 missing: Boolean(option.missing),
             };
@@ -46,13 +55,17 @@ export default function orderForm(initialData = {}) {
         mergeVariationOptions(initialOption, fetchedVariations) {
             const merged = [];
             const seen = new Set();
-            const normalizedInitialOption = this.normalizeInitialVariationOption(initialOption);
-            const normalizedFetchedVariations = (fetchedVariations || []).map((variation) => ({
-                ...variation,
-                id: String(variation.id),
-            }));
+            const normalizedInitialOption =
+                this.normalizeInitialVariationOption(initialOption);
+            const normalizedFetchedVariations = (fetchedVariations || [])
+                .map((variation) => this.normalizeVariation(variation))
+                .filter(Boolean);
 
-            if (normalizedInitialOption && !normalizedInitialOption.missing && normalizedInitialOption.id !== null) {
+            if (
+                normalizedInitialOption &&
+                !normalizedInitialOption.missing &&
+                normalizedInitialOption.id !== null
+            ) {
                 merged.push(normalizedInitialOption);
                 seen.add(normalizedInitialOption.id);
             }
@@ -72,17 +85,25 @@ export default function orderForm(initialData = {}) {
         findMatchingInitialVariationOption(item) {
             const existingItems = initialData.existingItems || [];
 
-            return existingItems.find((existingItem) => {
-                if (String(existingItem.product_id ?? '') !== String(item.product_id ?? '')) {
-                    return false;
-                }
+            return (
+                existingItems.find((existingItem) => {
+                    if (
+                        String(existingItem.product_id ?? "") !==
+                        String(item.product_id ?? "")
+                    ) {
+                        return false;
+                    }
 
-                if (item.variation_id && existingItem.variation_id) {
-                    return String(existingItem.variation_id) === String(item.variation_id);
-                }
+                    if (item.variation_id && existingItem.variation_id) {
+                        return (
+                            String(existingItem.variation_id) ===
+                            String(item.variation_id)
+                        );
+                    }
 
-                return Boolean(existingItem.initial_variation_option);
-            })?.initial_variation_option ?? null;
+                    return Boolean(existingItem.initial_variation_option);
+                })?.initial_variation_option ?? null
+            );
         },
 
         getMatchingVariation(item, variationId = item?.variationId) {
@@ -90,20 +111,27 @@ export default function orderForm(initialData = {}) {
                 return null;
             }
 
-            return item.variations.find((variation) => String(variation.id) === String(variationId)) ?? null;
+            return (
+                item.variations.find(
+                    (variation) => String(variation.id) === String(variationId),
+                ) ?? null
+            );
         },
 
         syncVariationState(item, variationId = item?.variationId) {
-            const normalizedVariationId = variationId ? String(variationId) : '';
+            const normalizedVariationId = variationId ? String(variationId) : "";
 
             if (!normalizedVariationId) {
-                item.variationId = '';
+                item.variationId = "";
                 item.selectedVariation = null;
                 item.maxStock = null;
                 return null;
             }
 
-            const selectedOption = this.getMatchingVariation(item, normalizedVariationId);
+            const selectedOption = this.getMatchingVariation(
+                item,
+                normalizedVariationId,
+            );
 
             if (!selectedOption) {
                 item.selectedVariation = null;
@@ -114,33 +142,38 @@ export default function orderForm(initialData = {}) {
             item.variationId = String(selectedOption.id);
             item.selectedVariation = selectedOption;
             item.maxStock = selectedOption.stock ?? null;
+            item.unitPrice = selectedOption.effectivePrice ?? 0;
 
             return selectedOption;
         },
 
         syncVariationSelect(select, item) {
-            const desiredValue = item?.variationId ? String(item.variationId) : '';
-            const optionSignature = (item?.variations || []).map((variation) => String(variation.id)).join('|');
+            const desiredValue = item?.variationId ? String(item.variationId) : "";
+            const optionSignature = (item?.variations || [])
+                .map((variation) => String(variation.id))
+                .join("|");
             const selectedOption = this.syncVariationState(item, desiredValue);
 
             void optionSignature;
 
             this.$nextTick(() => {
                 if (!desiredValue || !selectedOption) {
-                    if (select.value !== '') {
-                        select.value = '';
+                    if (select.value !== "") {
+                        select.value = "";
                     }
 
                     return;
                 }
 
-                const hasMatchingOption = Array.from(select.options).some((option) => option.value === desiredValue);
+                const hasMatchingOption = Array.from(select.options).some(
+                    (option) => option.value === desiredValue,
+                );
                 if (!hasMatchingOption) {
                     return;
                 }
 
                 if (select.value !== desiredValue) {
-                    select.value = '';
+                    select.value = "";
                     select.value = desiredValue;
                 }
             });
@@ -149,29 +182,35 @@ export default function orderForm(initialData = {}) {
         init() {
             this.API = window.ORDER_ENDPOINTS;
             if (!this.API) {
-                console.error('ORDER_ENDPOINTS no está definido');
+                console.error("ORDER_ENDPOINTS no está definido");
                 return;
             }
 
             const oldItems = initialData.oldItems;
-            
-            // Prefer old input if available (after validation error)
+
             if (oldItems && Object.keys(oldItems).length > 0) {
                 this.items = [];
-                Object.values(oldItems).forEach(item => {
-                    const initialVariationOption = this.normalizeInitialVariationOption(
-                        this.findMatchingInitialVariationOption(item)
-                    );
+                Object.values(oldItems).forEach((item) => {
+                    const initialVariationOption =
+                        this.normalizeInitialVariationOption(
+                            this.findMatchingInitialVariationOption(item),
+                        );
 
                     this.items.push({
-                        productId: item.product_id || '',
-                        productName: item.product_id ? 'Cargando producto...' : '',
-                        productSearch: item.product_id ? 'Cargando producto...' : '',
-                        variationId: item.variation_id ? String(item.variation_id) : '',
-                        selectedVariation: initialVariationOption && !initialVariationOption.missing
-                            ? initialVariationOption
-                            : null,
-                        initialVariationOption: initialVariationOption,
+                        productId: item.product_id || "",
+                        productName: item.product_id ? "Cargando producto..." : "",
+                        productSearch: item.product_id
+                            ? "Cargando producto..."
+                            : "",
+                        variationId: item.variation_id
+                            ? String(item.variation_id)
+                            : "",
+                        selectedVariation:
+                            initialVariationOption &&
+                            !initialVariationOption.missing
+                                ? initialVariationOption
+                                : null,
+                        initialVariationOption,
                         quantity: item.quantity || 1,
                         unitPrice: item.unit_price || 0,
                         maxStock: null,
@@ -179,29 +218,46 @@ export default function orderForm(initialData = {}) {
                         isSearching: false,
                         hasSearched: false,
                         searchResults: [],
-                        variations: initialVariationOption && !initialVariationOption.missing
-                            ? [initialVariationOption]
-                            : []
+                        variations:
+                            initialVariationOption &&
+                            !initialVariationOption.missing
+                                ? [initialVariationOption]
+                                : [],
                     });
+
                     this.syncVariationState(this.items[this.items.length - 1]);
                     if (item.product_id) {
-                        this.loadVariationsForItem(this.items.length - 1, item.product_id);
+                        this.loadVariationsForItem(
+                            this.items.length - 1,
+                            item.product_id,
+                        );
                     }
                 });
-            } else if (initialData.existingItems && initialData.existingItems.length > 0) {
-                // Fallback to DB items (for Edit mode)
-                initialData.existingItems.forEach(item => {
-                    const initialVariationOption = this.normalizeInitialVariationOption(item.initial_variation_option);
+            } else if (
+                initialData.existingItems &&
+                initialData.existingItems.length > 0
+            ) {
+                initialData.existingItems.forEach((item) => {
+                    const initialVariationOption =
+                        this.normalizeInitialVariationOption(
+                            item.initial_variation_option,
+                        );
 
                     this.items.push({
                         productId: item.product_id,
-                        productName: item.product ? item.product.name : 'Producto Eliminado',
-                        productSearch: item.product ? item.product.name : 'Producto Eliminado',
-                        variationId: item.variation_id ? String(item.variation_id) : '',
-                        selectedVariation: initialVariationOption && !initialVariationOption.missing
-                            ? initialVariationOption
-                            : this.normalizeVariation(item.variation),
-                        initialVariationOption: initialVariationOption,
+                        productName: item.product ? item.product.name : "Producto Eliminado",
+                        productSearch: item.product
+                            ? item.product.name
+                            : "Producto Eliminado",
+                        variationId: item.variation_id
+                            ? String(item.variation_id)
+                            : "",
+                        selectedVariation:
+                            initialVariationOption &&
+                            !initialVariationOption.missing
+                                ? initialVariationOption
+                                : this.normalizeVariation(item.variation),
+                        initialVariationOption,
                         quantity: item.quantity,
                         unitPrice: item.unit_price,
                         maxStock: null,
@@ -209,12 +265,18 @@ export default function orderForm(initialData = {}) {
                         isSearching: false,
                         hasSearched: false,
                         searchResults: [],
-                        variations: initialVariationOption && !initialVariationOption.missing
-                            ? [initialVariationOption]
-                            : []
+                        variations:
+                            initialVariationOption &&
+                            !initialVariationOption.missing
+                                ? [initialVariationOption]
+                                : [],
                     });
+
                     this.syncVariationState(this.items[this.items.length - 1]);
-                    this.loadVariationsForItem(this.items.length - 1, item.product_id);
+                    this.loadVariationsForItem(
+                        this.items.length - 1,
+                        item.product_id,
+                    );
                 });
             } else {
                 this.addItem();
@@ -223,10 +285,10 @@ export default function orderForm(initialData = {}) {
 
         addItem() {
             this.items.push({
-                productId: '',
-                productName: '',
-                productSearch: '',
-                variationId: '',
+                productId: "",
+                productName: "",
+                productSearch: "",
+                variationId: "",
                 selectedVariation: null,
                 initialVariationOption: null,
                 quantity: 1,
@@ -236,7 +298,7 @@ export default function orderForm(initialData = {}) {
                 isSearching: false,
                 hasSearched: false,
                 searchResults: [],
-                variations: []
+                variations: [],
             });
         },
 
@@ -258,17 +320,19 @@ export default function orderForm(initialData = {}) {
 
             this._searchTimeout = setTimeout(() => {
                 item.isSearching = true;
-                fetch(`${this.API.searchProducts}?q=${encodeURIComponent(item.productSearch)}`)
-                    .then(async res => {
+                fetch(
+                    `${this.API.searchProducts}?q=${encodeURIComponent(item.productSearch)}`,
+                )
+                    .then(async (res) => {
                         if (!res.ok) throw new Error(`HTTP ${res.status}`);
                         return res.json();
                     })
-                    .then(data => {
+                    .then((data) => {
                         item.searchResults = data || [];
                         item.hasSearched = true;
                         item.showResults = true;
                     })
-                    .catch(err => {
+                    .catch((err) => {
                         console.error("Search error:", err);
                         item.searchResults = [];
                         item.hasSearched = true;
@@ -297,16 +361,15 @@ export default function orderForm(initialData = {}) {
             item.productName = product.name;
             item.showResults = false;
             item.productSearch = product.name;
-            item.variationId = '';
+            item.variationId = "";
             item.selectedVariation = null;
             item.initialVariationOption = null;
             item.unitPrice = 0;
             item.maxStock = null;
-            item.variations = (product.variations || []).map((variation) => ({
-                ...variation,
-                id: String(variation.id),
-            }));
-            
+            item.variations = (product.variations || [])
+                .map((variation) => this.normalizeVariation(variation))
+                .filter(Boolean);
+
             this.clearError(`items.${index}.product_id`);
             this.clearError(`items.${index}.variation_id`);
             this.loadVariationsForItem(index, product.id);
@@ -318,12 +381,14 @@ export default function orderForm(initialData = {}) {
             }
 
             fetch(`${this.API.searchProducts}?q=${encodeURIComponent(String(productId))}`)
-                .then(async res => {
+                .then(async (res) => {
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     return res.json();
                 })
-                .then(products => {
-                    const product = products.find(p => String(p.id) === String(productId));
+                .then((products) => {
+                    const product = products.find(
+                        (p) => String(p.id) === String(productId),
+                    );
                     if (product) {
                         let item = this.items[index];
                         if (!item || String(item.productId) !== String(productId)) {
@@ -334,22 +399,24 @@ export default function orderForm(initialData = {}) {
                         item.productSearch = product.name;
                         item.variations = this.mergeVariationOptions(
                             item.initialVariationOption,
-                            product.variations || []
+                            product.variations || [],
                         );
                         this.syncVariationState(item);
                     }
                 })
-                .catch(err => console.error("Error loading variations:", err));
+                .catch((err) =>
+                    console.error("Error loading variations:", err),
+                );
         },
 
         clearProduct(index, options = {}) {
             let item = this.items[index];
             const preserveSearch = options.preserveSearch === true;
             const currentSearch = item.productSearch;
-            item.productId = '';
-            item.productName = '';
-            item.productSearch = preserveSearch ? currentSearch : '';
-            item.variationId = '';
+            item.productId = "";
+            item.productName = "";
+            item.productSearch = preserveSearch ? currentSearch : "";
+            item.variationId = "";
             item.selectedVariation = null;
             item.initialVariationOption = null;
             item.unitPrice = 0;
@@ -371,7 +438,9 @@ export default function orderForm(initialData = {}) {
             this.isSearchingClient = true;
 
             try {
-                const response = await fetch(`${this.API.searchClients}?q=${encodeURIComponent(this.clientSearch)}`);
+                const response = await fetch(
+                    `${this.API.searchClients}?q=${encodeURIComponent(this.clientSearch)}`,
+                );
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
 
@@ -389,24 +458,24 @@ export default function orderForm(initialData = {}) {
             this.clientId = client.id;
             this.clientSearch = client.name;
             this.showClientResults = false;
-            this.clearError('client_id');
+            this.clearError("client_id");
         },
 
         clearClient() {
             this.clientId = null;
-            this.clientSearch = '';
+            this.clientSearch = "";
             this.clientResults = [];
         },
 
         updatePrice(index) {
             let item = this.items[index];
-            const variation = item.variations.find(v => v.id == item.variationId);
+            const variation = item.variations.find((v) => v.id == item.variationId);
             if (variation) {
                 item.selectedVariation = variation;
-                item.unitPrice = variation.price;
+                item.unitPrice = variation.effectivePrice;
                 item.maxStock = variation.stock;
                 if (item.quantity > variation.stock) item.quantity = variation.stock;
-                
+
                 this.clearError(`items.${index}.variation_id`);
             }
         },
@@ -419,18 +488,26 @@ export default function orderForm(initialData = {}) {
         },
 
         formatCurrency(value) {
-            return new Intl.NumberFormat('es-AR', {
-                style: 'currency',
-                currency: 'ARS'
+            return new Intl.NumberFormat("es-AR", {
+                style: "currency",
+                currency: "ARS",
             }).format(value);
+        },
+
+        calculateTotal() {
+            return this.total;
         },
 
         get total() {
             let t = this.items.reduce((sum, item) => {
-                return sum + (parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0);
+                return (
+                    sum +
+                    (parseFloat(item.quantity) || 0) *
+                        (parseFloat(item.unitPrice) || 0)
+                );
             }, 0);
-            
-            if (this.deliveryType === 'shipping' && !this.freeShipping) {
+
+            if (this.deliveryType === "shipping" && !this.freeShipping) {
                 t += parseFloat(this.shippingCost) || 0;
             }
             return t;
@@ -444,6 +521,6 @@ export default function orderForm(initialData = {}) {
             if (this.errors && this.errors[key]) {
                 delete this.errors[key];
             }
-        }
+        },
     };
 }

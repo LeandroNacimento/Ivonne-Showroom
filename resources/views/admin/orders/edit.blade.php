@@ -2,10 +2,7 @@
 
 @section('content')
     @php
-        $pendingStatus = \App\Models\Order::STATUS_PENDING;
         $reservedStatus = \App\Models\Order::STATUS_RESERVED;
-        $deliveredStatus = \App\Models\Order::STATUS_DELIVERED;
-        $cancelledStatus = \App\Models\Order::STATUS_CANCELLED;
     @endphp
 
     <div class="max-w-7xl mx-auto">
@@ -26,6 +23,7 @@
                 oldItems: {!! json_encode(old('items')) !!},
                 existingItems: {!! json_encode($existingItems) !!},
                 errors: {!! json_encode($errors->toArray()) !!},
+                status: @json(old('status', $order->status)),
                 deliveryType: @json(old('delivery_type', $order->delivery_type ?? 'showroom')),
                 shippingCost: {!! json_encode(old('shipping_cost', $order->shipping_cost) ?: 0) !!},
                 freeShipping: {{ old('delivery_type', $order->delivery_type ?? '') === 'shipping' && (old('shipping_cost', $order->shipping_cost) == 0 && old('shipping_cost', $order->shipping_cost) !== null) ? 'true' : 'false' }},
@@ -320,28 +318,15 @@
                             <div class="mb-4">
                                 <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
                                 <select name="status" id="status"
+                                    x-model="status"
                                     class="w-full rounded-md border-[{{ $errors->has('status') ? 'red-500' : 'gray-300' }}] shadow-sm focus:border-brand-pink focus:ring-brand-pink focus:ring-opacity-50"
                                     required>
-                                    @if ($order->status === $pendingStatus)
-                                        <option value="{{ $pendingStatus }}"
-                                            {{ old('status') === $pendingStatus ? 'selected' : (old('status') ? '' : 'selected') }}>
-                                            Pendiente</option>
-                                        <option value="{{ $reservedStatus }}" {{ old('status') === $reservedStatus ? 'selected' : '' }}>
-                                            Reservado</option>
-                                        <option value="{{ $cancelledStatus }}" {{ old('status') === $cancelledStatus ? 'selected' : '' }}>
-                                            Cancelado</option>
-                                    @elseif($order->status === $reservedStatus)
-                                        <option value="{{ $reservedStatus }}"
-                                            {{ old('status') === $reservedStatus ? 'selected' : (old('status') ? '' : 'selected') }}>
-                                            Reservado</option>
-                                        <option value="{{ $deliveredStatus }}" {{ old('status') === $deliveredStatus ? 'selected' : '' }}>
-                                            Entregado</option>
-                                        <option value="{{ $cancelledStatus }}" {{ old('status') === $cancelledStatus ? 'selected' : '' }}>
-                                            Cancelado</option>
-                                    @else
-                                        <option value="{{ $order->status }}" selected>{{ ucfirst($order->status) }}
+                                    @foreach ($statusOptions as $statusOption)
+                                        <option value="{{ $statusOption['value'] }}"
+                                            {{ old('status', $order->status) === $statusOption['value'] ? 'selected' : '' }}>
+                                            {{ $statusOption['label'] }}
                                         </option>
-                                    @endif
+                                    @endforeach
                                 </select>
                                 @error('status')
                                     <div class="text-xs text-red-500 mt-1">{{ $message }}</div>
@@ -356,7 +341,7 @@
                                     Pago</label>
                                 <select name="payment_method" id="payment_method"
                                     class="w-full rounded-md border-[{{ $errors->has('payment_method') ? 'red-500' : 'gray-300' }}] shadow-sm focus:border-brand-pink focus:ring-brand-pink focus:ring-opacity-50"
-                                    required>
+                                    :required="['{{ \App\Models\Order::STATUS_RESERVED }}', '{{ \App\Models\Order::STATUS_DELIVERED }}'].includes(status)">
                                     <option value="">Seleccionar...</option>
                                     <option value="cash"
                                         {{ (old('payment_method') ?? $order->payment_method) == 'cash' ? 'selected' : '' }}>

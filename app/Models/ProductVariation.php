@@ -15,42 +15,20 @@ class ProductVariation extends Model
         'size',
         'stock',
         'price',
+        'sale_price',
         'sku',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
+        'sale_price' => 'decimal:2',
         'stock' => 'integer',
     ];
 
-    public const ALLOWED_SIZES = [
-        'XS',
-        'S',
-        'M',
-        'L',
-        'XL',
-        'XXL',
-        'ÚNICO',
-    ];
-
-    /**
-     * Mutator para normalizar automáticamente el tamaño y validar estrictamente.
-     * Elimina Non-breaking spaces (NBSP), hace trim, convierte a mayúsculas y valida.
-     */
     public function setSizeAttribute($value)
     {
-        if (is_string($value)) {
-            // Reemplaza el Non-breaking space (Unicode \xC2\xA0 / CHAR(160)) por un espacio normal
-            $normalized = str_replace("\xC2\xA0", ' ', $value);
-
-            // Aplica trim regular y convierte a mayúsculas
-            $size = mb_strtoupper(trim($normalized), 'UTF-8');
-
-            if (! in_array($size, self::ALLOWED_SIZES)) {
-                throw new \InvalidArgumentException("Invalid size: '{$size}'. Allowed sizes are: ".implode(', ', self::ALLOWED_SIZES));
-            }
-
-            $this->attributes['size'] = $size;
+        if (is_string($value) || is_int($value)) {
+            $this->attributes['size'] = Product::normalizeSize($value);
         } else {
             $this->attributes['size'] = $value;
         }
@@ -104,6 +82,25 @@ class ProductVariation extends Model
     public function productColor()
     {
         return $this->belongsTo(ProductColor::class);
+    }
+
+    public function getOriginalPriceAttribute(): ?string
+    {
+        return $this->price;
+    }
+
+    public function getEffectivePriceAttribute(): ?string
+    {
+        if ($this->sale_price !== null && (float) $this->sale_price < (float) $this->price) {
+            return $this->sale_price;
+        }
+
+        return $this->price;
+    }
+
+    public function getHasActiveOfferAttribute(): bool
+    {
+        return $this->sale_price !== null && (float) $this->sale_price < (float) $this->price;
     }
 
     public function getCartImageAttribute()

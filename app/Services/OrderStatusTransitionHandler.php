@@ -13,9 +13,26 @@ class OrderStatusTransitionHandler
      * Transiciones permitidas: [oldStatus => [allowedNewStatuses]]
      */
     private const ALLOWED_TRANSITIONS = [
-        Order::STATUS_PENDING => [Order::STATUS_RESERVED, Order::STATUS_CANCELLED],
+        Order::STATUS_PENDING => [Order::STATUS_RESERVED, Order::STATUS_DELIVERED, Order::STATUS_CANCELLED],
         Order::STATUS_RESERVED => [Order::STATUS_DELIVERED, Order::STATUS_CANCELLED],
     ];
+
+    public function allowedTransitionsFrom(string $oldStatus): array
+    {
+        return self::ALLOWED_TRANSITIONS[$oldStatus] ?? [];
+    }
+
+    public function availableStatusesFor(string $oldStatus): array
+    {
+        if (in_array($oldStatus, self::TERMINAL_STATES, true)) {
+            return [$oldStatus];
+        }
+
+        return array_values(array_unique([
+            $oldStatus,
+            ...$this->allowedTransitionsFrom($oldStatus),
+        ]));
+    }
 
     /**
      * Maneja la transición de estado de un pedido y su impacto en el stock.
@@ -31,15 +48,15 @@ class OrderStatusTransitionHandler
         }
 
         // Bloquear transiciones desde estados terminales.
-        if (in_array($oldStatus, self::TERMINAL_STATES)) {
+        if (in_array($oldStatus, self::TERMINAL_STATES, true)) {
             throw ValidationException::withMessages([
                 'status' => "El pedido está en estado '{$oldStatus}' y no puede ser modificado.",
             ]);
         }
 
         // Validar que la transición sea permitida.
-        $allowed = self::ALLOWED_TRANSITIONS[$oldStatus] ?? [];
-        if (! in_array($newStatus, $allowed)) {
+        $allowed = $this->allowedTransitionsFrom($oldStatus);
+        if (! in_array($newStatus, $allowed, true)) {
             throw ValidationException::withMessages([
                 'status' => "La transición de '{$oldStatus}' a '{$newStatus}' no está permitida.",
             ]);
@@ -47,6 +64,11 @@ class OrderStatusTransitionHandler
 
         // pendiente → reservado: descontar stock
         if ($oldStatus === Order::STATUS_PENDING && $newStatus === Order::STATUS_RESERVED) {
+            $this->decreaseOrderStock($order);
+        }
+
+        // pendiente → entregado: descontar stock
+        if ($oldStatus === Order::STATUS_PENDING && $newStatus === Order::STATUS_DELIVERED) {
             $this->decreaseOrderStock($order);
         }
 

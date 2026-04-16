@@ -1,12 +1,13 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Admin;
 
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductColor;
 use App\Models\ProductImage;
 use App\Models\ProductVariation;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -23,6 +24,7 @@ class ProductColorDualWriteTest extends TestCase
         // Assuming there's a user factory and role logic, we'll act as admin.
         $this->admin = \App\Models\User::factory()->create(['role' => 'admin']);
         $this->actingAs($this->admin);
+        $this->withoutMiddleware(ValidateCsrfToken::class);
 
         Storage::fake('public');
     }
@@ -44,6 +46,7 @@ class ProductColorDualWriteTest extends TestCase
             'name' => 'Basic Tee',
             'category_id' => $category->id,
             'description' => 'A basic tee',
+            'size_type' => Product::DEFAULT_SIZE_TYPE,
             'variations' => [
                 ['color' => 'Red', 'size' => 'S', 'price' => 10, 'stock' => 5],
                 ['color' => 'Red', 'size' => 'M', 'price' => 10, 'stock' => 10],
@@ -93,6 +96,7 @@ class ProductColorDualWriteTest extends TestCase
         $this->post(route('admin.products.store'), [
             'name' => 'Shirt',
             'category_id' => $category->id,
+            'size_type' => Product::DEFAULT_SIZE_TYPE,
             'variations' => [
                 ['color' => 'OldRed', 'size' => 'S', 'price' => 10, 'stock' => 5],
             ],
@@ -110,6 +114,7 @@ class ProductColorDualWriteTest extends TestCase
         $this->put(route('admin.products.update', $product), [
             'name' => 'Shirt Updated',
             'category_id' => $category->id,
+            'size_type' => Product::DEFAULT_SIZE_TYPE,
             'variations' => [
                 [
                     'id' => $variation->id,
@@ -145,6 +150,7 @@ class ProductColorDualWriteTest extends TestCase
         $this->post(route('admin.products.store'), [
             'name' => 'Shirt',
             'category_id' => $category->id,
+            'size_type' => Product::DEFAULT_SIZE_TYPE,
             'variations' => [
                 ['color' => 'Red', 'size' => 'S', 'price' => 10, 'stock' => 5],
                 ['color' => 'Blue', 'size' => 'M', 'price' => 10, 'stock' => 5],
@@ -171,6 +177,7 @@ class ProductColorDualWriteTest extends TestCase
         $this->put(route('admin.products.update', $product), [
             'name' => 'Shirt',
             'category_id' => $category->id,
+            'size_type' => Product::DEFAULT_SIZE_TYPE,
             'variations' => [
                 [
                     'id' => $redVar->id,
@@ -202,6 +209,7 @@ class ProductColorDualWriteTest extends TestCase
         $this->post(route('admin.products.store'), [
             'name' => 'Stock Shirt',
             'category_id' => $category->id,
+            'size_type' => Product::DEFAULT_SIZE_TYPE,
             'variations' => [
                 ['color' => 'A', 'size' => 'S', 'price' => 10, 'stock' => 10],
                 ['color' => 'B', 'size' => 'M', 'price' => 10, 'stock' => 25],
