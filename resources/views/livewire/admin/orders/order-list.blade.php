@@ -1,5 +1,47 @@
-<div class="space-y-6">
-    <!-- Page Header -->
+<div class="space-y-6"
+    x-data="{
+        modalOpen: false,
+        modalOrderId: null,
+        modalOldStatus: '',
+        modalNewStatus: '',
+        modalPaymentMethod: '',
+        modalError: '',
+        openPaymentModal(detail) {
+            this.modalOrderId = detail.orderId;
+            this.modalOldStatus = detail.oldStatus;
+            this.modalNewStatus = detail.newStatus;
+            this.modalPaymentMethod = detail.currentPaymentMethod || '';
+            this.modalError = '';
+            this.modalOpen = true;
+        },
+        closePaymentModal() {
+            this.modalOpen = false;
+            this.modalOrderId = null;
+            this.modalOldStatus = '';
+            this.modalNewStatus = '';
+            this.modalPaymentMethod = '';
+            this.modalError = '';
+        },
+        submitPaymentModal() {
+            if (!this.modalPaymentMethod) {
+                this.modalError = 'Debe seleccionar un metodo de pago.';
+                return;
+            }
+
+            const payload = {
+                orderId: this.modalOrderId,
+                newStatus: this.modalNewStatus,
+                paymentMethod: this.modalPaymentMethod,
+            };
+
+            this.$dispatch('order-status-submitting', {
+                orderId: payload.orderId,
+            });
+            this.closePaymentModal();
+            $wire.changeStatus(payload.orderId, payload.newStatus, payload.paymentMethod);
+        },
+    }"
+    x-on:open-order-status-payment-modal.window="openPaymentModal($event.detail)">
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Pedidos</h1>
@@ -17,12 +59,18 @@
         </div>
     </div>
 
-    <!-- Filters & Table Container -->
     <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
-        <!-- Filter Bar -->
+        @if ($feedbackMessage)
+            <div
+                class="border-b px-4 py-4 sm:px-6 {{ $feedbackType === 'error' ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50' }}">
+                <p class="text-sm font-medium {{ $feedbackType === 'error' ? 'text-red-700' : 'text-green-700' }}">
+                    {{ $feedbackMessage }}
+                </p>
+            </div>
+        @endif
+
         <div class="border-b border-gray-200 px-4 py-5 sm:px-6">
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <!-- Text Search -->
                 <div class="relative">
                     <input wire:model.live.debounce.300ms="search" type="text"
                         class="block w-full rounded-md border-0 py-1.5 pl-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-pink sm:text-sm sm:leading-6"
@@ -33,7 +81,6 @@
                     </div>
                 </div>
 
-                <!-- Status Select -->
                 <div>
                     <select wire:model.live="status"
                         class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-brand-pink sm:text-sm sm:leading-6">
@@ -45,14 +92,12 @@
                     </select>
                 </div>
 
-                <!-- Date From -->
                 <div class="flex items-center gap-2">
                     <span class="text-sm text-gray-500 w-12">Desde:</span>
                     <input type="date" wire:model.live="date_from"
                         class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-pink sm:text-sm sm:leading-6">
                 </div>
 
-                <!-- Date To -->
                 <div class="flex items-center gap-2">
                     <span class="text-sm text-gray-500 w-12">Hasta:</span>
                     <input type="date" wire:model.live="date_to"
@@ -61,15 +106,13 @@
             </div>
         </div>
 
-        <!-- Table -->
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead>
                     <tr class="bg-gray-50/50">
                         <th scope="col"
                             class="py-3.5 pl-4 pr-3 text-left text-xs font-semibold text-gray-900 sm:pl-6">ID</th>
-                        <th scope="col" class="px-3 py-3.5 text-left text-xs font-semibold text-gray-900">Cliente
-                        </th>
+                        <th scope="col" class="px-3 py-3.5 text-left text-xs font-semibold text-gray-900">Cliente</th>
                         <th scope="col" class="px-3 py-3.5 text-left text-xs font-semibold text-gray-900">Fecha</th>
                         <th scope="col" class="px-3 py-3.5 text-left text-xs font-semibold text-gray-900">Estado</th>
                         <th scope="col" class="px-3 py-3.5 text-left text-xs font-semibold text-gray-900">Total</th>
@@ -80,36 +123,128 @@
                 </thead>
                 <tbody class="divide-y divide-gray-200 bg-white">
                     @forelse($orders as $order)
-                        <tr class="hover:bg-gray-50 transition-colors group" wire:key="order-{{ $order->id }}">
+                        @php
+                            $statusClasses = match ($order->status) {
+                                \App\Models\Order::STATUS_PENDING => 'text-gray-600',
+                                \App\Models\Order::STATUS_RESERVED => 'text-yellow-600',
+                                \App\Models\Order::STATUS_DELIVERED => 'text-green-600',
+                                \App\Models\Order::STATUS_CANCELLED => 'text-red-600',
+                                default => 'text-gray-600',
+                            };
+                            $statusOptions = $this->statusOptionsFor($order);
+                        @endphp
+                        <tr class="hover:bg-gray-50 transition-colors group"
+                            wire:key="order-{{ $order->id }}"
+                            x-data="{
+                                orderId: {{ $order->id }},
+                                currentStatus: @js($order->status),
+                                selectedStatus: @js($order->status),
+                                currentPaymentMethod: @js($order->payment_method),
+                                isSubmitting: false,
+                                statusOptions: @js($statusOptions),
+                                getStatusOption(status) {
+                                    return this.statusOptions.find((option) => option.value === status) ?? null;
+                                },
+                                transitionNeedsPayment(status) {
+                                    return Boolean(this.getStatusOption(status)?.requires_payment_method);
+                                },
+                                confirmationMessage(oldStatus, newStatus) {
+                                    const messages = {
+                                        'pendiente:reservado': '¿Confirmar cambio a Reservado? Se descontará el stock de este pedido.',
+                                        'pendiente:entregado': '¿Confirmar cambio a Entregado? Se descontará el stock y el pedido quedará cerrado.',
+                                        'pendiente:cancelado': '¿Confirmar cancelación del pedido? Esta acción no modificará el stock.',
+                                        'reservado:entregado': '¿Confirmar cambio a Entregado? El pedido pasará a estado terminal.',
+                                        'reservado:cancelado': '¿Confirmar cancelación del pedido? Se devolverá el stock reservado.',
+                                    };
+
+                                    return messages[`${oldStatus}:${newStatus}`] ?? '¿Confirmar cambio de estado del pedido?';
+                                },
+                                submitStatusChange() {
+                                    if (this.selectedStatus === this.currentStatus) {
+                                        return;
+                                    }
+
+                                    const nextStatus = this.selectedStatus;
+
+                                    if (this.transitionNeedsPayment(nextStatus)) {
+                                        this.selectedStatus = this.currentStatus;
+                                        this.$dispatch('open-order-status-payment-modal', {
+                                            orderId: this.orderId,
+                                            oldStatus: this.currentStatus,
+                                            newStatus: nextStatus,
+                                            currentPaymentMethod: this.currentPaymentMethod,
+                                        });
+
+                                        return;
+                                    }
+
+                                    if (!window.confirm(this.confirmationMessage(this.currentStatus, nextStatus))) {
+                                        this.selectedStatus = this.currentStatus;
+
+                                        return;
+                                    }
+
+                                    this.isSubmitting = true;
+
+                                    $wire.changeStatus(this.orderId, nextStatus).catch(() => {
+                                        this.selectedStatus = this.currentStatus;
+                                        this.isSubmitting = false;
+                                    });
+                                },
+                            }"
+                            x-on:order-status-submitting.window="
+                                if ($event.detail.orderId === orderId) {
+                                    isSubmitting = true;
+                                }
+                            "
+                            x-on:order-status-updated.window="
+                                if ($event.detail.orderId === orderId) {
+                                    currentStatus = $event.detail.status;
+                                    selectedStatus = $event.detail.status;
+                                    isSubmitting = false;
+                                }
+                            "
+                            x-on:order-status-update-failed.window="
+                                if ($event.detail.orderId === orderId) {
+                                    currentStatus = $event.detail.status;
+                                    selectedStatus = $event.detail.status;
+                                    isSubmitting = false;
+                                }
+                            ">
                             <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-mono text-gray-500 sm:pl-6">
-                                #{{ $order->id }}</td>
+                                #{{ $order->id }}
+                            </td>
                             <td class="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-900">
-                                {{ $order->client->name }}</td>
+                                {{ $order->client->name }}
+                            </td>
                             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {{ $order->date->format('d/m/Y') }}</td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm">
-                                @php
-                                    $statusClasses = match ($order->status) {
-                                        \App\Models\Order::STATUS_PENDING => 'text-gray-600',
-                                        \App\Models\Order::STATUS_RESERVED => 'text-yellow-600',
-                                        \App\Models\Order::STATUS_DELIVERED => 'text-green-600',
-                                        \App\Models\Order::STATUS_CANCELLED => 'text-red-600',
-                                        default => 'text-gray-600',
-                                    };
-                                    $statusLabel = match ($order->status) {
-                                        \App\Models\Order::STATUS_PENDING => 'Pendiente',
-                                        \App\Models\Order::STATUS_RESERVED => 'Reservado',
-                                        \App\Models\Order::STATUS_DELIVERED => 'Entregado',
-                                        \App\Models\Order::STATUS_CANCELLED => 'Cancelado',
-                                        default => ucfirst($order->status),
-                                    };
-                                @endphp
-                                <span class="inline-flex items-center font-semibold {{ $statusClasses }}">
-                                    {{ $statusLabel }}
-                                </span>
+                                {{ $order->date->format('d/m/Y') }}
+                            </td>
+                            <td class="px-3 py-4 text-sm">
+                                @if ($order->isTerminal())
+                                    <span class="inline-flex items-center font-semibold {{ $statusClasses }}">
+                                        {{ \App\Models\Order::statusLabel($order->status) }}
+                                    </span>
+                                @else
+                                    <div class="flex flex-col items-start gap-2">
+                                        <select x-model="selectedStatus" @change="submitStatusChange()"
+                                            :disabled="isSubmitting"
+                                            class="block w-full min-w-40 rounded-md border-0 py-1.5 pr-8 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-brand-pink disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500">
+                                            @foreach ($statusOptions as $statusOption)
+                                                <option value="{{ $statusOption['value'] }}">
+                                                    {{ $statusOption['label'] }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <span x-cloak x-show="isSubmitting" class="text-xs font-medium text-gray-500">
+                                            Actualizando...
+                                        </span>
+                                    </div>
+                                @endif
                             </td>
                             <td class="whitespace-nowrap px-3 py-4 text-sm font-semibold text-gray-900">
-                                ${{ number_format($order->total, 0, ',', '.') }}</td>
+                                ${{ number_format($order->total, 0, ',', '.') }}
+                            </td>
                             <td
                                 class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                 <div
@@ -161,6 +296,53 @@
         </div>
         <div class="border-t border-gray-200 px-4 py-3 sm:px-6">
             {{ $orders->links() }}
+        </div>
+    </div>
+
+    <div x-cloak x-show="modalOpen" class="fixed inset-0 z-40 bg-gray-900/40" x-transition.opacity></div>
+    <div x-cloak x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        x-transition.opacity>
+        <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl ring-1 ring-gray-900/10">
+            <div class="mb-4">
+                <h2 class="text-lg font-semibold text-gray-900">Confirmar cambio de estado</h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    Para completar esta transición necesitás registrar el método de pago.
+                </p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label for="inline_payment_method" class="block text-sm font-medium text-gray-700 mb-1">
+                        Método de Pago
+                    </label>
+                    <select id="inline_payment_method" x-model="modalPaymentMethod"
+                        class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-brand-pink sm:text-sm">
+                        <option value="">Seleccionar...</option>
+                        @foreach (\App\Models\Order::PAYMENT_METHODS as $paymentMethod)
+                            <option value="{{ $paymentMethod }}">
+                                {{ \App\Models\Order::paymentMethodLabel($paymentMethod) }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <p x-cloak x-show="modalError" class="mt-1 text-xs text-red-600" x-text="modalError"></p>
+                </div>
+
+                <div class="rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-600">
+                    El pedido se actualizará a
+                    <span class="font-semibold text-gray-900 capitalize" x-text="modalNewStatus"></span>.
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end gap-3">
+                <button type="button" @click="closePaymentModal()"
+                    class="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                    Cancelar
+                </button>
+                <button type="button" @click="submitPaymentModal()"
+                    class="inline-flex items-center rounded-md bg-brand-pink px-4 py-2 text-sm font-semibold text-white hover:bg-brand-heart">
+                    Confirmar
+                </button>
+            </div>
         </div>
     </div>
 </div>

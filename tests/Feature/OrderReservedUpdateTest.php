@@ -108,6 +108,47 @@ class OrderReservedUpdateTest extends TestCase
         ]);
     }
 
+    public function test_it_preserves_payment_method_when_cancelling_a_reserved_order_without_sending_a_new_one(): void
+    {
+        $client = Client::factory()->create();
+        $order = Order::factory()->create([
+            'client_id' => $client->id,
+            'status' => Order::STATUS_RESERVED,
+            'payment_method' => Order::PAYMENT_METHOD_TRANSFER,
+            'delivery_type' => 'showroom',
+            'shipping_cost' => 0,
+            'total' => 1800,
+        ]);
+
+        $variationData = $this->createVariation('Vestido corto', 'Negro', 'M', 8, 1800);
+        OrderItem::create([
+            'order_id' => $order->id,
+            'product_id' => $variationData['product']->id,
+            'variation_id' => $variationData['variation']->id,
+            'color' => $variationData['color']->name,
+            'size' => $variationData['variation']->size,
+            'quantity' => 1,
+            'unit_price' => 1800,
+            'subtotal' => 1800,
+        ]);
+
+        $response = $this->put(route('admin.orders.update', $order), [
+            'client_id' => $client->id,
+            'date' => now()->subMinutes(5)->format('Y-m-d H:i:s'),
+            'status' => Order::STATUS_CANCELLED,
+            'payment_method' => null,
+            'delivery_type' => 'showroom',
+            'shipping_cost' => 0,
+        ]);
+
+        $response->assertRedirect(route('admin.orders.index'));
+
+        $order->refresh();
+
+        $this->assertSame(Order::STATUS_CANCELLED, $order->status);
+        $this->assertSame(Order::PAYMENT_METHOD_TRANSFER, $order->payment_method);
+    }
+
     private function createVariation(string $productName, string $colorName, string $size, int $stock, float $price): array
     {
         $product = Product::factory()->create(['name' => $productName]);

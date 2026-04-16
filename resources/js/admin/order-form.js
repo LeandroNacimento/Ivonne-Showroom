@@ -1,6 +1,7 @@
 export default function orderForm(initialData = {}) {
     return {
         items: [],
+        status: initialData.status || "pendiente",
         deliveryType: initialData.deliveryType || "showroom",
         shippingCost: initialData.shippingCost || 0,
         freeShipping: initialData.freeShipping || false,

@@ -76,6 +76,16 @@ class OrderStatusTransitionTest extends TestCase
         $this->assertSame(8, $this->variation->fresh()->stock);
     }
 
+    public function test_it_reduce_el_stock_al_pasar_de_pending_a_delivered(): void
+    {
+        $this->assertSame(10, $this->variation->fresh()->stock);
+
+        $this->handler->handle($this->order, Order::STATUS_PENDING, Order::STATUS_DELIVERED);
+        $this->order->update(['status' => Order::STATUS_DELIVERED]);
+
+        $this->assertSame(8, $this->variation->fresh()->stock);
+    }
+
     public function test_it_no_altera_el_stock_en_transiciones_posteriores(): void
     {
         $this->handler->handle($this->order, Order::STATUS_PENDING, Order::STATUS_RESERVED);
