@@ -18,6 +18,8 @@ class CatalogPage extends Component
 
     public string $sort = 'latest';
 
+    public bool $offerOnly = false;
+
     public int $perPage = 12;
 
     public $categories;
@@ -39,23 +41,32 @@ class CatalogPage extends Component
         $this->resetPage();
     }
 
+    public function updatingOfferOnly()
+    {
+        $this->resetPage();
+    }
+
     protected function queryBuilder()
     {
         $query = Product::query()
+            ->withStorefrontPricing()
             ->when($this->categoryId, function ($q) {
                 $q->where('category_id', $this->categoryId);
+            })
+            ->when($this->offerOnly, function ($q) {
+                $q->whereHas('variations', function ($variationQuery) {
+                    $variationQuery
+                        ->where('stock', '>', 0)
+                        ->whereNotNull('sale_price')
+                        ->whereColumn('sale_price', '<', 'price');
+                });
             })
             ->whereHas('colors.variations', function ($q) {
                 $q->where('stock', '>', 0);
             })
-            ->withMin([
-                'variations as variations_min_price' => function ($q) {
-                    $q->where('stock', '>', 0);
-                },
-            ], 'price')
             ->with([
                 'category',
-                'variations:product_variations.id,product_variations.product_id,product_variations.product_color_id,product_variations.size,product_variations.stock,product_variations.price',
+                'variations:product_variations.id,product_variations.product_id,product_variations.product_color_id,product_variations.size,product_variations.stock,product_variations.price,product_variations.sale_price',
                 'colors' => function ($q) {
                     $q->whereHas('variations', function ($v) {
                         $v->where('stock', '>', 0);
@@ -72,8 +83,8 @@ class CatalogPage extends Component
             ]);
 
         return match ($this->sort) {
-            'price_asc' => $query->orderBy('variations_min_price', 'asc'),
-            'price_desc' => $query->orderBy('variations_min_price', 'desc'),
+            'price_asc' => $query->orderBy('storefront_display_price', 'asc'),
+            'price_desc' => $query->orderBy('storefront_display_price', 'desc'),
             default => $query->latest(),
         };
     }

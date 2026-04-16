@@ -10,6 +10,7 @@ use App\Models\ProductColor;
 use App\Models\ProductVariation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Tests\TestCase;
 
 class OrderPendingUpdateTest extends TestCase
@@ -21,6 +22,7 @@ class OrderPendingUpdateTest extends TestCase
         parent::setUp();
 
         $this->actingAs(User::factory()->admin()->create());
+        $this->withoutMiddleware(ValidateCsrfToken::class);
     }
 
     public function test_it_rebuilds_a_pending_order_completely_when_updating_its_content(): void

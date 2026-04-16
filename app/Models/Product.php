@@ -175,6 +175,48 @@ class Product extends Model
             ->values();
     }
 
+    public function availableVariations()
+    {
+        return $this->variations()->where('stock', '>', 0);
+    }
+
+    public function getDisplayPriceAttribute(): ?float
+    {
+        if (array_key_exists('storefront_display_price', $this->attributes)) {
+            $value = $this->attributes['storefront_display_price'];
+
+            return $value !== null ? (float) $value : null;
+        }
+
+        $variation = $this->resolveDisplayVariation();
+
+        return $variation ? (float) $variation->effective_price : null;
+    }
+
+    public function getDisplayOriginalPriceAttribute(): ?float
+    {
+        if (array_key_exists('storefront_display_original_price', $this->attributes)) {
+            $value = $this->attributes['storefront_display_original_price'];
+
+            return $value !== null ? (float) $value : null;
+        }
+
+        $variation = $this->resolveDisplayVariation();
+
+        return $variation ? (float) $variation->original_price : null;
+    }
+
+    public function getDisplayHasActiveOfferAttribute(): bool
+    {
+        if (array_key_exists('storefront_display_has_active_offer', $this->attributes)) {
+            return (bool) $this->attributes['storefront_display_has_active_offer'];
+        }
+
+        $variations = $this->resolveAvailableVariations();
+
+        return $variations->contains(fn (ProductVariation $variation) => $variation->has_active_offer);
+    }
+
     /**
      * Precio mínimo entre todas las variaciones (usa query agregada o collection).
      */
@@ -325,5 +367,56 @@ class Product extends Model
         $total = $this->total_stock;
 
         return $total > 0 && $total <= 3;
+    }
+
+    public function scopeWithStorefrontPricing($query)
+    {
+        $effectivePriceExpression = "MIN(CASE WHEN product_variations.sale_price IS NOT NULL AND product_variations.sale_price < product_variations.price THEN product_variations.sale_price ELSE product_variations.price END)";
+
+        return $query
+            ->addSelect([
+                'storefront_display_price' => ProductVariation::query()
+                    ->selectRaw($effectivePriceExpression)
+                    ->whereColumn('product_variations.product_id', 'products.id')
+                    ->where('product_variations.stock', '>', 0),
+                'storefront_display_has_active_offer' => ProductVariation::query()
+                    ->selectRaw('MAX(CASE WHEN product_variations.sale_price IS NOT NULL AND product_variations.sale_price < product_variations.price THEN 1 ELSE 0 END)')
+                    ->whereColumn('product_variations.product_id', 'products.id')
+                    ->where('product_variations.stock', '>', 0),
+            ]);
+    }
+
+    private function resolveAvailableVariations(): Collection
+    {
+        if ($this->relationLoaded('variations')) {
+            return $this->variations
+                ->where('stock', '>', 0)
+                ->values();
+        }
+
+        return $this->availableVariations()
+            ->orderBy('id')
+            ->get();
+    }
+
+    private function resolveDisplayVariation(): ?ProductVariation
+    {
+        $variations = $this->resolveAvailableVariations();
+
+        if ($variations->isEmpty()) {
+            return null;
+        }
+
+        return $variations
+            ->sort(function (ProductVariation $left, ProductVariation $right) {
+                $priceComparison = (float) $left->effective_price <=> (float) $right->effective_price;
+
+                if ($priceComparison !== 0) {
+                    return $priceComparison;
+                }
+
+                return $left->id <=> $right->id;
+            })
+            ->first();
     }
 }

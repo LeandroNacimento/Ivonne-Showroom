@@ -1,13 +1,15 @@
-export default (allImages, allVariations, initialColor) => ({
+export default (allImages, allVariations, initialColor, initialPricing) => ({
     allImages,
     allVariations,
     activeColor: initialColor,
     selectedVariation: null,
     currentSlide: 0,
+    initialPricing,
 
     get colorNames() {
-        return [...new Set(this.allVariations.map((v) => v.color))];
+        return [...new Set(this.allVariations.map((variation) => variation.color))];
     },
+
     get activeImages() {
         if (
             this.allImages[this.activeColor] &&
@@ -15,29 +17,43 @@ export default (allImages, allVariations, initialColor) => ({
         ) {
             return this.allImages[this.activeColor];
         }
+
         const firstColor = Object.keys(this.allImages)[0];
         return firstColor ? this.allImages[firstColor] : [];
     },
+
     get activeVariations() {
-        return this.allVariations.filter((v) => v.color === this.activeColor);
-    },
-    get selectedPrice() {
-        if (!this.selectedVariation) return null;
-        const v = this.allVariations.find(
-            (v) => v.id == this.selectedVariation,
+        return this.allVariations.filter(
+            (variation) => variation.color === this.activeColor,
         );
-        return v ? v.price : null;
     },
+
+    get selectedVariationData() {
+        if (!this.selectedVariation) {
+            return null;
+        }
+
+        return (
+            this.allVariations.find(
+                (variation) => variation.id == this.selectedVariation,
+            ) ?? null
+        );
+    },
+
+    get displayPricing() {
+        if (this.selectedVariationData) {
+            return {
+                price: this.selectedVariationData.effective_price,
+                originalPrice: this.selectedVariationData.original_price,
+                hasActiveOffer: this.selectedVariationData.has_active_offer,
+            };
+        }
+
+        return this.initialPricing;
+    },
+
     get selectedStock() {
-        if (!this.selectedVariation) return null;
-        const v = this.allVariations.find(
-            (v) => v.id == this.selectedVariation,
-        );
-        return v ? v.stock : null;
-    },
-    get minPrice() {
-        if (this.activeVariations.length === 0) return 0;
-        return Math.min(...this.activeVariations.map((v) => v.price));
+        return this.selectedVariationData ? this.selectedVariationData.stock : null;
     },
 
     selectColor(color) {
@@ -45,6 +61,7 @@ export default (allImages, allVariations, initialColor) => ({
         this.selectedVariation = null;
         this.currentSlide = 0;
     },
+
     formatPrice(price) {
         return (
             "$" +

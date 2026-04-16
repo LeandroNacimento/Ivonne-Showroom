@@ -65,7 +65,7 @@ class OrderController extends Controller
                     'color' => $color,
                     'size' => $size,
                     'stock' => $stock,
-                    'price' => $item->variation->price,
+                    'effective_price' => (float) $item->variation->effective_price,
                     'label' => "{$color}{$separator}{$sizeLabel} (Stock: {$stock})",
                     'missing' => false,
                 ];
@@ -80,7 +80,7 @@ class OrderController extends Controller
                     'color' => $color,
                     'size' => $size,
                     'stock' => null,
-                    'price' => $item->unit_price,
+                    'effective_price' => (float) $item->unit_price,
                     'label' => "{$color}{$separator}{$sizeLabel}",
                     'missing' => true,
                 ];
@@ -97,7 +97,9 @@ class OrderController extends Controller
                     'id' => $item->variation->id,
                     'size' => $item->variation->size,
                     'stock' => $item->variation->stock,
-                    'price' => $item->variation->price,
+                    'effective_price' => (float) $item->variation->effective_price,
+                    'original_price' => (float) $item->variation->original_price,
+                    'has_active_offer' => $item->variation->has_active_offer,
                     'product_color' => $item->variation->productColor ? [
                         'name' => $item->variation->productColor->name,
                     ] : null,

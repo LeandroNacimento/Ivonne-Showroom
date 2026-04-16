@@ -78,6 +78,11 @@
                 class="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-4 xl:gap-x-8 reveal-stagger-container">
                 @foreach ($featuredProducts as $product)
                     <div class="group relative bg-white rounded-lg shadow-sm overflow-hidden reveal-child">
+                        @if ($product->display_has_active_offer)
+                            <div class="absolute left-3 top-3 z-10 rounded bg-brand-pink px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+                                Oferta
+                            </div>
+                        @endif
                         <div
                             class="w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-t-lg overflow-hidden group-hover:opacity-75 lg:h-80 lg:aspect-none flex items-center justify-center">
                             <img src="{{ $product->public_primary_image_url }}" alt="{{ $product->name }}"
@@ -93,9 +98,18 @@
                                 </h3>
                                 <p class="mt-1 text-sm text-gray-500">{{ $product->category->name }}</p>
                             </div>
-                            <p class="text-sm font-medium text-gray-900">
-                                ${{ number_format($product->min_price, 0, ',', '.') }}
-                            </p>
+                            @if ($product->display_price !== null)
+                                <div class="text-right">
+                                    @if ($product->display_original_price !== null && $product->display_original_price > $product->display_price)
+                                        <p class="text-xs text-gray-400 line-through">
+                                            ${{ number_format($product->display_original_price, 0, ',', '.') }}
+                                        </p>
+                                    @endif
+                                    <p class="text-sm font-medium text-gray-900">
+                                        ${{ number_format($product->display_price, 0, ',', '.') }}
+                                    </p>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @endforeach

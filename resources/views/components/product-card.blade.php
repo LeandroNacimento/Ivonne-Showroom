@@ -1,7 +1,7 @@
 @props(['product'])
 
 @php
-    $images = $product->colors->map(fn($color) => $color->public_primary_image_url)->values()->toArray();
+    $images = $product->colors->map(fn ($color) => $color->public_primary_image_url)->values()->toArray();
 
     if ($images === []) {
         $images = [asset('img/placeholder-product.jpg')];
@@ -9,7 +9,7 @@
 
     $colorsData = $product->colors
         ->map(
-            fn($color) => [
+            fn ($color) => [
                 'id' => $color->id,
                 'name' => $color->name,
                 'image' => $color->public_primary_image_url,
@@ -46,25 +46,29 @@
         this.startCarousel();
     }
 }" @mouseenter="startCarousel()" @mouseleave="stopCarousel()"
-    class="group flex flex-col h-full bg-white rounded-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02] relative">
+    class="group relative flex h-full flex-col rounded-md bg-white transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
 
-    {{-- Smart Badges --}}
-    <div class="absolute top-2 left-2 z-30 flex flex-col gap-1 pointer-events-none">
+    <div class="pointer-events-none absolute left-2 top-2 z-30 flex flex-col gap-1">
+        @if ($product->display_has_active_offer)
+            <span
+                class="rounded bg-brand-pink px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+                Oferta
+            </span>
+        @endif
+
         @if ($product->is_low_stock)
             <span
-                class="bg-red-50 text-red-600 text-[10px] font-bold px-2 py-1 rounded shadow-sm border border-red-100 uppercase tracking-wide">
+                class="rounded border border-red-100 bg-red-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-red-600 shadow-sm">
                 Últimas unidades
             </span>
         @elseif ($product->is_new)
-            <span
-                class="bg-brand-gold text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm uppercase tracking-wide">
+            <span class="rounded bg-brand-gold px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
                 Nuevo
             </span>
         @endif
     </div>
 
-    {{-- Grid Wrapper --}}
-    <div class="relative w-full aspect-[4/5] overflow-hidden bg-stone-50 rounded-t-md cursor-pointer"
+    <div class="relative aspect-[4/5] w-full cursor-pointer overflow-hidden rounded-t-md bg-stone-50"
         @click="window.location.href = '{{ route('product.show', $product->slug) }}'">
 
         @foreach ($images as $index => $image)
@@ -73,51 +77,55 @@
                 x-transition:enter="transition opacity duration-500 ease-in-out" x-transition:enter-start="opacity-0"
                 x-transition:enter-end="opacity-100" x-transition:leave="transition opacity duration-500 ease-in-out"
                 x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                class="absolute inset-0 w-full h-full object-cover object-center {{ $index === 0 ? '' : 'hidden' }}"
+                class="absolute inset-0 h-full w-full object-cover object-center {{ $index === 0 ? '' : 'hidden' }}"
                 :class="{ 'hidden': false }">
         @endforeach
     </div>
 
-    {{-- Cuerpo de Información --}}
-    <a href="{{ route('product.show', $product->slug) }}" class="flex flex-col flex-grow p-4 focus:outline-none">
-
-        {{-- Swatches de Colores --}}
+    <a href="{{ route('product.show', $product->slug) }}" class="flex flex-grow flex-col p-4 focus:outline-none">
         @if ($uniqueColors->count() > 0)
-            <div class="flex items-center space-x-1.5 mb-3" @click.stop.prevent>
+            <div class="mb-3 flex items-center space-x-1.5" @click.stop.prevent>
                 @foreach ($visibleColors as $color)
                     <div @click.stop.prevent="window.location.assign('{{ route('product.show', $product->slug) }}?color={{ Str::slug($color->name) }}')"
-                        class="w-4 h-4 block rounded-full border shadow-sm overflow-hidden relative cursor-pointer hover:scale-110 transition-transform"
+                        class="relative block h-4 w-4 cursor-pointer overflow-hidden rounded-full border shadow-sm transition-transform hover:scale-110"
                         :class="previewIndex === {{ collect($colorsData)->search(fn($c) => $c['id'] == $color->id) }} ?
                             'border-brand-pink ring-1 ring-brand-pink' : 'border-gray-200'"
                         title="{{ $color->name }}"
                         @mouseenter="setPreview({{ collect($colorsData)->search(fn($c) => $c['id'] == $color->id) }})"
                         @mouseleave="clearPreview()">
-                        <img src="{{ $color->public_primary_image_url }}" class="w-full h-full object-cover"
+                        <img src="{{ $color->public_primary_image_url }}" class="h-full w-full object-cover"
                             alt="{{ $color->name }}" loading="lazy">
                     </div>
                 @endforeach
                 @if ($extraColorsCount > 0)
-                    <span class="text-[10px] font-medium text-gray-400 ml-1 cursor-default" @click.stop.prevent>
+                    <span class="ml-1 cursor-default text-[10px] font-medium text-gray-400" @click.stop.prevent>
                         +{{ $extraColorsCount }}
                     </span>
                 @endif
             </div>
         @else
-            <div class="h-4 mb-3"></div>
+            <div class="mb-3 h-4"></div>
         @endif
 
-        {{-- Nombre --}}
         <h3
-            class="text-sm md:text-base font-medium text-text-dark line-clamp-2 leading-relaxed group-hover:text-brand-pink transition-colors duration-300">
+            class="line-clamp-2 text-sm font-medium leading-relaxed text-text-dark transition-colors duration-300 group-hover:text-brand-pink md:text-base">
             {{ $product->name }}
         </h3>
 
-        {{-- Precio y Disponibilidad --}}
-        <div class="mt-auto pt-3 flex flex-col items-start gap-1">
-            <p class="text-base font-semibold text-text-dark">
-                ${{ number_format($product->min_price, 0, ',', '.') }}
-            </p>
-            <p class="text-[10px] text-gray-500 uppercase tracking-wider font-medium">
+        <div class="mt-auto flex flex-col items-start gap-1 pt-3">
+            @if ($product->display_price !== null)
+                <div class="flex flex-wrap items-center gap-2">
+                    @if ($product->display_original_price !== null && $product->display_original_price > $product->display_price)
+                        <p class="text-sm text-gray-400 line-through">
+                            ${{ number_format($product->display_original_price, 0, ',', '.') }}
+                        </p>
+                    @endif
+                    <p class="text-base font-semibold text-text-dark">
+                        ${{ number_format($product->display_price, 0, ',', '.') }}
+                    </p>
+                </div>
+            @endif
+            <p class="text-[10px] font-medium uppercase tracking-wider text-gray-500">
                 {{ $product->availability_label }}
             </p>
         </div>

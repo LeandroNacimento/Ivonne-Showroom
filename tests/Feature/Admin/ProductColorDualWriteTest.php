@@ -8,6 +8,7 @@ use App\Models\ProductColor;
 use App\Models\ProductImage;
 use App\Models\ProductVariation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -23,6 +24,7 @@ class ProductColorDualWriteTest extends TestCase
         // Assuming there's a user factory and role logic, we'll act as admin.
         $this->admin = \App\Models\User::factory()->create(['role' => 'admin']);
         $this->actingAs($this->admin);
+        $this->withoutMiddleware(ValidateCsrfToken::class);
 
         Storage::fake('public');
     }

@@ -23,13 +23,15 @@ class OrderProductSelector extends Component
         ])->find($productId);
 
         if ($product) {
-            $variationsPayload = $product->variations->map(function ($v) use ($product) {
+            $variationsPayload = $product->variations->map(function ($v) {
                 return [
                     'id' => $v->id,
                     'color' => $v->productColor->name ?? 'N/A',
                     'size' => $v->size,
                     'stock' => $v->stock,
-                    'price' => $v->price ?? $product->price,
+                    'effective_price' => (float) $v->effective_price,
+                    'original_price' => (float) $v->original_price,
+                    'has_active_offer' => $v->has_active_offer,
                 ];
             })->values()->toArray();
 
@@ -38,7 +40,6 @@ class OrderProductSelector extends Component
                 product: [
                     'id' => $product->id,
                     'name' => $product->name,
-                    'price' => $product->price,
                 ],
                 variations: $variationsPayload
             );

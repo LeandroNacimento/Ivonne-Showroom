@@ -13,9 +13,11 @@ class ShowroomController extends Controller
 {
     public function index(HomeHeroService $homeHeroService)
     {
-        $featuredProducts = Product::where('is_featured', true)
+        $featuredProducts = Product::withStorefrontPricing()
+            ->where('is_featured', true)
             ->with([
                 'category',
+                'variations',
                 'colors' => function ($query) {
                     $query->select('product_colors.id', 'product_colors.product_id', 'product_colors.name', 'product_colors.image', 'product_colors.position')
                         ->with('images:id,product_color_id,path,position');

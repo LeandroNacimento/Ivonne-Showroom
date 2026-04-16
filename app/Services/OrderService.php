@@ -101,7 +101,7 @@ class OrderService
                 throw new \Exception('Stock insuficiente para el producto seleccionado.');
             }
 
-            $price = collect([$variation->price, $variation->product?->price])->filter()->first() ?? 0;
+            $price = (float) $variation->effective_price;
             $subtotal = $price * $item['quantity'];
 
             $itemsData[] = [

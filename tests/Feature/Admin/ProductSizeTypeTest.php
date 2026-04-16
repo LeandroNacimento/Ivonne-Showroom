@@ -10,6 +10,7 @@ use App\Models\ProductColor;
 use App\Models\ProductVariation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
@@ -27,6 +28,7 @@ class ProductSizeTypeTest extends TestCase
 
         $this->admin = User::factory()->create(['role' => 'admin']);
         $this->actingAs($this->admin);
+        $this->withoutMiddleware(ValidateCsrfToken::class);
     }
 
     public function test_it_persists_numeric_size_type_and_sorts_sizes_in_catalog_and_pdp(): void

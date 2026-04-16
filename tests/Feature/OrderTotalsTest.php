@@ -25,6 +25,7 @@ class OrderTotalsTest extends TestCase
             'product_color_id' => $color->id,
             'stock' => 10,
             'price' => 1500.00,
+            'sale_price' => 1200.00,
             'size' => 'M',
         ]);
 
@@ -46,6 +47,7 @@ class OrderTotalsTest extends TestCase
 
         $order = app(OrderService::class)->create($orderData);
 
-        $this->assertSame(3000.0, (float) $order->total);
+        $this->assertSame(2400.0, (float) $order->total);
+        $this->assertSame(1200.0, (float) $order->items()->first()->unit_price);
     }
 }
