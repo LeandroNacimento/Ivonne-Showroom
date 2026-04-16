@@ -184,6 +184,101 @@ class OrderPendingUpdateTest extends TestCase
         $this->assertSame(9600.0, (float) $order->total);
     }
 
+    public function test_it_allows_updating_a_pending_order_without_payment_method_when_it_stays_pending(): void
+    {
+        $client = Client::factory()->create();
+        $order = Order::factory()->create([
+            'client_id' => $client->id,
+            'status' => Order::STATUS_PENDING,
+            'payment_method' => 'cash',
+            'delivery_type' => 'showroom',
+            'shipping_cost' => 0,
+            'total' => 900,
+        ]);
+
+        $variationData = $this->createVariation('Remera base', 'Negro', 'M', 10, 900);
+        OrderItem::create([
+            'order_id' => $order->id,
+            'product_id' => $variationData['product']->id,
+            'variation_id' => $variationData['variation']->id,
+            'color' => $variationData['color']->name,
+            'size' => $variationData['variation']->size,
+            'quantity' => 1,
+            'unit_price' => 900,
+            'subtotal' => 900,
+        ]);
+
+        $response = $this->put(route('admin.orders.update', $order), [
+            'client_id' => $client->id,
+            'date' => now()->subMinutes(10)->format('Y-m-d H:i:s'),
+            'status' => Order::STATUS_PENDING,
+            'payment_method' => null,
+            'delivery_type' => 'showroom',
+            'shipping_cost' => 0,
+            'items' => [
+                [
+                    'product_id' => $variationData['product']->id,
+                    'variation_id' => $variationData['variation']->id,
+                    'quantity' => 1,
+                ],
+            ],
+        ]);
+
+        $response->assertRedirect(route('admin.orders.index'));
+
+        $this->assertNull($order->fresh()->payment_method);
+        $this->assertSame(Order::STATUS_PENDING, $order->fresh()->status);
+    }
+
+    public function test_it_can_transition_a_pending_order_to_delivered_when_payment_method_is_provided(): void
+    {
+        $client = Client::factory()->create();
+        $order = Order::factory()->create([
+            'client_id' => $client->id,
+            'status' => Order::STATUS_PENDING,
+            'payment_method' => null,
+            'delivery_type' => 'showroom',
+            'shipping_cost' => 0,
+            'total' => 1200,
+        ]);
+
+        $variationData = $this->createVariation('Pantalon sastrero', 'Negro', 'M', 6, 1200);
+        OrderItem::create([
+            'order_id' => $order->id,
+            'product_id' => $variationData['product']->id,
+            'variation_id' => $variationData['variation']->id,
+            'color' => $variationData['color']->name,
+            'size' => $variationData['variation']->size,
+            'quantity' => 2,
+            'unit_price' => 1200,
+            'subtotal' => 2400,
+        ]);
+
+        $response = $this->put(route('admin.orders.update', $order), [
+            'client_id' => $client->id,
+            'date' => now()->subMinutes(20)->format('Y-m-d H:i:s'),
+            'status' => Order::STATUS_DELIVERED,
+            'payment_method' => Order::PAYMENT_METHOD_CASH,
+            'delivery_type' => 'showroom',
+            'shipping_cost' => 0,
+            'items' => [
+                [
+                    'product_id' => $variationData['product']->id,
+                    'variation_id' => $variationData['variation']->id,
+                    'quantity' => 2,
+                ],
+            ],
+        ]);
+
+        $response->assertRedirect(route('admin.orders.index'));
+
+        $order->refresh();
+
+        $this->assertSame(Order::STATUS_DELIVERED, $order->status);
+        $this->assertSame(Order::PAYMENT_METHOD_CASH, $order->payment_method);
+        $this->assertSame(4, $variationData['variation']->fresh()->stock);
+    }
+
     private function createVariation(string $productName, string $colorName, string $size, int $stock, float $price): array
     {
         $product = Product::factory()->create(['name' => $productName]);

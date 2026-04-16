@@ -9,7 +9,9 @@ use Illuminate\Validation\Rule;
 
 class UpdateOrderRequest extends FormRequest
 {
-    use ValidatesOrderItems;
+    use ValidatesOrderItems {
+        withValidator as withOrderItemValidator;
+    }
 
     public function authorize(): bool
     {
@@ -30,7 +32,7 @@ class UpdateOrderRequest extends FormRequest
 
             'date' => ['required', 'date', 'before_or_equal:now'],
             'status' => ['required', Rule::in([Order::STATUS_PENDING, Order::STATUS_RESERVED, Order::STATUS_DELIVERED, Order::STATUS_CANCELLED])],
-            'payment_method' => ['required', Rule::in(['cash', 'transfer', 'mercadopago', 'other'])],
+            'payment_method' => ['nullable', Rule::in(Order::PAYMENT_METHODS)],
             'delivery_type' => ['required', Rule::in(['showroom', 'shipping'])],
             'shipping_cost' => ['required_if:delivery_type,shipping', 'nullable', 'numeric', 'min:0'],
         ];
@@ -43,5 +45,37 @@ class UpdateOrderRequest extends FormRequest
         }
 
         return $rules;
+    }
+
+    public function withValidator($validator): void
+    {
+        $this->withOrderItemValidator($validator);
+
+        $validator->after(function ($validator) {
+            $order = $this->route('order');
+
+            if (! $order) {
+                return;
+            }
+
+            $targetStatus = $this->input('status', $order->status);
+            $incomingPaymentMethod = $this->normalizePaymentMethod($this->input('payment_method'));
+            $effectivePaymentMethod = $incomingPaymentMethod ?? $order->payment_method;
+
+            if (Order::statusRequiresPaymentMethod($targetStatus) && blank($effectivePaymentMethod)) {
+                $validator->errors()->add('payment_method', 'Debe seleccionar un metodo de pago.');
+            }
+        });
+    }
+
+    private function normalizePaymentMethod($paymentMethod): ?string
+    {
+        if (! is_string($paymentMethod)) {
+            return null;
+        }
+
+        $paymentMethod = trim($paymentMethod);
+
+        return $paymentMethod === '' ? null : $paymentMethod;
     }
 }
