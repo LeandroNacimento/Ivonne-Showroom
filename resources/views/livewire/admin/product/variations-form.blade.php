@@ -57,6 +57,7 @@
                             <tr class="text-center text-xs font-medium uppercase tracking-wider text-gray-500">
                                 <th class="px-3 pb-3">Talle</th>
                                 <th class="px-3 pb-3">Precio</th>
+                                <th class="px-3 pb-3">Oferta</th>
                                 <th class="px-3 pb-3">Stock</th>
                                 <th class="w-10 pb-3"></th>
                             </tr>
@@ -85,6 +86,17 @@
                                             class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
                                             required>
                                         @error("colors.{$cIdx}.variations.{$vIdx}.price")
+                                            <span class="text-xs text-red-500">{{ $message }}</span>
+                                        @enderror
+                                    </td>
+
+                                    <td class="px-3 py-3">
+                                        <input type="number" step="0.01"
+                                            wire:model.blur="colors.{{ $cIdx }}.variations.{{ $vIdx }}.sale_price"
+                                            placeholder="Opcional"
+                                            class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
+                                        <p class="mt-1 text-[10px] text-gray-400">Vacío si no hay oferta</p>
+                                        @error("colors.{$cIdx}.variations.{$vIdx}.sale_price")
                                             <span class="text-xs text-red-500">{{ $message }}</span>
                                         @enderror
                                     </td>
@@ -128,7 +140,7 @@
                                 </tr>
 
                                 <tr wire:key="sku-{{ $variation['uuid'] }}">
-                                    <td colspan="4" class="pb-2">
+                                    <td colspan="5" class="pb-2">
                                         <details class="text-xs">
                                             <summary class="cursor-pointer select-none text-gray-400 hover:text-gray-600">
                                                 Opciones avanzadas
@@ -187,6 +199,17 @@
                                     class="h-10 w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
                                     required>
                                 @error("colors.{$cIdx}.variations.{$vIdx}.price")
+                                    <span class="text-xs text-red-500">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="flex-1">
+                                <label class="mb-1 block text-xs text-gray-400">Oferta</label>
+                                <input type="number" step="0.01"
+                                    wire:model.blur="colors.{{ $cIdx }}.variations.{{ $vIdx }}.sale_price"
+                                    placeholder="Opcional"
+                                    class="h-10 w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
+                                @error("colors.{$cIdx}.variations.{$vIdx}.sale_price")
                                     <span class="text-xs text-red-500">{{ $message }}</span>
                                 @enderror
                             </div>
@@ -254,6 +277,7 @@
         <input type="hidden" name="variations[{{ $idx }}][color]" value="{{ $flat['color'] }}">
         <input type="hidden" name="variations[{{ $idx }}][size]" value="{{ $flat['size'] }}">
         <input type="hidden" name="variations[{{ $idx }}][price]" value="{{ $flat['price'] }}">
+        <input type="hidden" name="variations[{{ $idx }}][sale_price]" value="{{ $flat['sale_price'] }}">
         <input type="hidden" name="variations[{{ $idx }}][stock]" value="{{ $flat['stock'] }}">
         <input type="hidden" name="variations[{{ $idx }}][sku]" value="{{ $flat['sku'] }}">
     @endforeach

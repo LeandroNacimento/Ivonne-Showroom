@@ -41,6 +41,7 @@ class VariationsForm extends Component
                         'id' => $variation->id,
                         'size' => Product::normalizeSize($variation->size) ?? '',
                         'price' => $variation->price,
+                        'sale_price' => $variation->sale_price,
                         'stock' => (int) $variation->stock,
                         'sku' => $variation->sku ?? '',
                     ];
@@ -169,6 +170,19 @@ class VariationsForm extends Component
                     $this->addError($propertyName, 'El stock debe ser mayor o igual a 0.');
                 }
             }
+
+            if ($field === 'sale_price') {
+                $value = $this->colors[$colorIdx]['variations'][$varIdx]['sale_price'] ?? '';
+                $price = $this->colors[$colorIdx]['variations'][$varIdx]['price'] ?? null;
+
+                if ($value !== '' && (! is_numeric($value) || $value <= 0)) {
+                    $this->addError($propertyName, 'El precio de oferta debe ser mayor a 0.');
+                }
+
+                if ($value !== '' && $price !== '' && is_numeric($value) && is_numeric($price) && (float) $value >= (float) $price) {
+                    $this->addError($propertyName, 'El precio de oferta debe ser menor al precio base.');
+                }
+            }
         }
 
         if (count($parts) === 3 && $parts[2] === 'name') {
@@ -194,6 +208,7 @@ class VariationsForm extends Component
                         ? $this->normalizeVariationSize($variation['size'] ?? '')
                         : Product::ONE_SIZE_VALUE,
                     'price' => $variation['price'] ?? '',
+                    'sale_price' => $variation['sale_price'] ?? '',
                     'stock' => $variation['stock'] ?? '',
                     'sku' => $variation['sku'] ?? '',
                 ];
@@ -215,6 +230,7 @@ class VariationsForm extends Component
             'id' => '',
             'size' => $this->supportsSize ? '' : Product::ONE_SIZE_VALUE,
             'price' => '',
+            'sale_price' => '',
             'stock' => '',
             'sku' => '',
         ];

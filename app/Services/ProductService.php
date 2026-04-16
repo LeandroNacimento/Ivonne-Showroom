@@ -87,6 +87,7 @@ class ProductService
                 'product_color_id' => $colorId,
                 'size' => Product::normalizeSize($v['size'] ?? null),
                 'price' => $v['price'],
+                'sale_price' => $v['sale_price'] ?? null,
                 'stock' => $v['stock'],
                 'sku' => $v['sku'] ?? null,
             ];

@@ -21,12 +21,14 @@ class ProductPage extends Component
     public function mount($slug)
     {
         $this->product = Product::where('slug', $slug)
+            ->withStorefrontPricing()
             ->with(['category', 'colors.images', 'variations.productColor'])
             ->firstOrFail();
 
         $this->relatedProducts = Product::where('category_id', $this->product->category_id)
             ->where('id', '!=', $this->product->id)
-            ->with(['colors.images'])
+            ->withStorefrontPricing()
+            ->with(['colors.images', 'variations'])
             ->take(4)
             ->get();
 
@@ -36,7 +38,9 @@ class ProductPage extends Component
                 'id' => $variation->id,
                 'color' => $variation->productColor->name ?? 'Único',
                 'size_label' => Product::presentSize($variation->size),
-                'price' => $variation->price,
+                'effective_price' => (float) $variation->effective_price,
+                'original_price' => (float) $variation->original_price,
+                'has_active_offer' => $variation->has_active_offer,
                 'stock' => $variation->stock,
             ])
             ->values();

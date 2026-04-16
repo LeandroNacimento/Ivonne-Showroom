@@ -15,11 +15,13 @@ class ProductVariation extends Model
         'size',
         'stock',
         'price',
+        'sale_price',
         'sku',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
+        'sale_price' => 'decimal:2',
         'stock' => 'integer',
     ];
 
@@ -80,6 +82,25 @@ class ProductVariation extends Model
     public function productColor()
     {
         return $this->belongsTo(ProductColor::class);
+    }
+
+    public function getOriginalPriceAttribute(): ?string
+    {
+        return $this->price;
+    }
+
+    public function getEffectivePriceAttribute(): ?string
+    {
+        if ($this->sale_price !== null && (float) $this->sale_price < (float) $this->price) {
+            return $this->sale_price;
+        }
+
+        return $this->price;
+    }
+
+    public function getHasActiveOfferAttribute(): bool
+    {
+        return $this->sale_price !== null && (float) $this->sale_price < (float) $this->price;
     }
 
     public function getCartImageAttribute()

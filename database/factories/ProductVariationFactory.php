@@ -16,6 +16,7 @@ class ProductVariationFactory extends Factory
             'size' => fake()->randomElement(['S', 'M', 'L', 'XL']),
             'stock' => fake()->numberBetween(1, 10),
             'price' => fake()->randomFloat(2, 100, 10000),
+            'sale_price' => null,
             'sku' => null,
         ];
     }

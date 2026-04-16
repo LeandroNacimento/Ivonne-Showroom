@@ -159,4 +159,40 @@ class CatalogFilterTest extends TestCase
             ->set('categoryId', $targetCategory->id)
             ->assertSet('paginators.page', 1);
     }
+
+    public function test_catalog_page_can_filter_products_that_have_active_offers(): void
+    {
+        $category = Category::factory()->create();
+
+        $offeredProduct = Product::factory()->create([
+            'category_id' => $category->id,
+            'name' => 'Producto Oferta',
+        ]);
+        $offeredColor = ProductColor::factory()->create(['product_id' => $offeredProduct->id]);
+        ProductVariation::factory()->create([
+            'product_id' => $offeredProduct->id,
+            'product_color_id' => $offeredColor->id,
+            'stock' => 5,
+            'price' => 1000,
+            'sale_price' => 800,
+        ]);
+
+        $regularProduct = Product::factory()->create([
+            'category_id' => $category->id,
+            'name' => 'Producto Regular',
+        ]);
+        $regularColor = ProductColor::factory()->create(['product_id' => $regularProduct->id]);
+        ProductVariation::factory()->create([
+            'product_id' => $regularProduct->id,
+            'product_color_id' => $regularColor->id,
+            'stock' => 5,
+            'price' => 1200,
+            'sale_price' => null,
+        ]);
+
+        Livewire::test(CatalogPage::class)
+            ->set('offerOnly', true)
+            ->assertSee('Producto Oferta')
+            ->assertDontSee('Producto Regular');
+    }
 }

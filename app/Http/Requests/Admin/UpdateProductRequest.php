@@ -28,6 +28,7 @@ class UpdateProductRequest extends FormRequest
             'variations.*.color' => 'required|string',
             'variations.*.size' => 'required|string',
             'variations.*.price' => 'required|numeric|min:0',
+            'variations.*.sale_price' => 'nullable|numeric|gt:0',
             'variations.*.stock' => 'required|integer|min:0',
             'variations.*.sku' => 'nullable|string|max:100',
         ];
@@ -81,6 +82,12 @@ class UpdateProductRequest extends FormRequest
 
                 if ($color === '') {
                     continue;
+                }
+
+                $salePrice = $variation['sale_price'] ?? null;
+
+                if ($salePrice !== null && $salePrice !== '' && (float) $salePrice >= (float) ($variation['price'] ?? 0)) {
+                    $validator->errors()->add("variations.{$index}.sale_price", 'El precio de oferta debe ser menor al precio base.');
                 }
 
                 $key = "{$color}|{$size}";

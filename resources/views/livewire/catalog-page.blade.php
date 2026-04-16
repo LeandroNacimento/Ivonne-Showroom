@@ -39,6 +39,13 @@
                         </svg>
                     </div>
                 </div>
+
+                <label
+                    class="inline-flex items-center gap-2 rounded-md border border-neutral-300 px-4 py-2 text-sm text-neutral-800 shadow-sm transition hover:border-neutral-500">
+                    <input type="checkbox" wire:model.live="offerOnly"
+                        class="rounded border-neutral-300 text-brand-pink focus:ring-brand-pink">
+                    <span>En oferta</span>
+                </label>
             </div>
         </div>
 
