@@ -9,11 +9,13 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
+        $email = (string) config('admin-user.email');
+
         User::updateOrCreate(
-            ['email' => env('ADMIN_EMAIL', 'admin@ivonneshowroom.com')],
+            ['email' => $email],
             [
-                'name' => 'Admin Ivonne',
-                'password' => env('ADMIN_PASSWORD', 'password'),
+                'name' => (string) config('admin-user.name'),
+                'password' => (string) config('admin-user.password'),
                 'role' => 'admin',
             ]
         );

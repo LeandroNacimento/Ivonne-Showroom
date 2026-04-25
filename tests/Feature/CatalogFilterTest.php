@@ -47,7 +47,7 @@ class CatalogFilterTest extends TestCase
         ]);
 
         Livewire::test(CatalogPage::class)
-            ->set('categoryId', $category->id)
+            ->set('category', $category->slug)
             ->assertSee('Vestido Test')
             ->assertSee('Rojo')
             ->assertSee('M')
@@ -115,7 +115,7 @@ class CatalogFilterTest extends TestCase
         ]);
 
         Livewire::test(CatalogPage::class)
-            ->set('categoryId', $category->id)
+            ->set('category', $category->slug)
             ->assertSee('Vestido Test')
             ->assertDontSee('Cartera Test');
     }
@@ -156,8 +156,114 @@ class CatalogFilterTest extends TestCase
         Livewire::withQueryParams(['page' => 2])
             ->test(CatalogPage::class)
             ->assertSet('paginators.page', 2)
-            ->set('categoryId', $targetCategory->id)
+            ->set('category', $targetCategory->slug)
             ->assertSet('paginators.page', 1);
+    }
+
+    public function test_catalog_page_reads_category_slug_from_query_string(): void
+    {
+        $category = Category::create([
+            'name' => 'Vestidos',
+            'slug' => 'vestidos',
+            'supports_size' => true,
+            'supports_color' => true,
+        ]);
+
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Vestido Query String',
+            'slug' => 'vestido-query-string',
+            'description' => 'Test',
+            'is_featured' => true,
+        ]);
+
+        $color = ProductColor::create([
+            'product_id' => $product->id,
+            'name' => 'Negro',
+            'position' => 1,
+        ]);
+
+        ProductVariation::create([
+            'product_id' => $product->id,
+            'product_color_id' => $color->id,
+            'size' => 'M',
+            'stock' => 10,
+            'price' => 1000,
+        ]);
+
+        Livewire::withQueryParams(['category' => $category->slug])
+            ->test(CatalogPage::class)
+            ->assertSet('category', $category->slug)
+            ->assertSee('Vestido Query String');
+    }
+
+    public function test_catalog_page_clears_category_filter_when_all_products_is_selected(): void
+    {
+        $category = Category::create([
+            'name' => 'Vestidos',
+            'slug' => 'vestidos',
+            'supports_size' => true,
+            'supports_color' => true,
+        ]);
+
+        $otherCategory = Category::create([
+            'name' => 'Carteras',
+            'slug' => 'carteras',
+            'supports_size' => false,
+            'supports_color' => true,
+        ]);
+
+        $dress = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Vestido Limpieza',
+            'slug' => 'vestido-limpieza',
+            'description' => 'Test',
+            'is_featured' => true,
+        ]);
+
+        $bag = Product::create([
+            'category_id' => $otherCategory->id,
+            'name' => 'Cartera Limpieza',
+            'slug' => 'cartera-limpieza',
+            'description' => 'Test',
+            'is_featured' => true,
+        ]);
+
+        $dressColor = ProductColor::create([
+            'product_id' => $dress->id,
+            'name' => 'Rojo',
+            'position' => 1,
+        ]);
+
+        $bagColor = ProductColor::create([
+            'product_id' => $bag->id,
+            'name' => 'Negro',
+            'position' => 1,
+        ]);
+
+        ProductVariation::create([
+            'product_id' => $dress->id,
+            'product_color_id' => $dressColor->id,
+            'size' => 'M',
+            'stock' => 10,
+            'price' => 1000,
+        ]);
+
+        ProductVariation::create([
+            'product_id' => $bag->id,
+            'product_color_id' => $bagColor->id,
+            'size' => 'UNICO',
+            'stock' => 10,
+            'price' => 1000,
+        ]);
+
+        Livewire::test(CatalogPage::class)
+            ->set('category', $category->slug)
+            ->assertDontSee('Cartera Limpieza')
+            ->set('category', '')
+            ->assertSet('category', null)
+            ->assertSee('Vestido Limpieza')
+            ->assertSee('Cartera Limpieza');
     }
 
     public function test_catalog_page_can_filter_products_that_have_active_offers(): void

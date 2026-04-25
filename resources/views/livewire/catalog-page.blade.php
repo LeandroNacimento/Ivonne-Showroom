@@ -5,11 +5,11 @@
                 <div class="inline-flex min-w-full items-center justify-center gap-3 sm:gap-4">
                     <div class="relative min-w-[220px]">
                         <label for="catalog-category" class="sr-only">Categoria</label>
-                        <select id="catalog-category" wire:model.live="categoryId"
+                        <select id="catalog-category" wire:model.live="category"
                             class="block h-12 w-full appearance-none rounded-xl border border-neutral-200 bg-white/95 px-4 pr-11 text-sm font-medium text-neutral-700 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.35)] transition duration-200 hover:border-neutral-300 hover:shadow-[0_14px_30px_-20px_rgba(15,23,42,0.42)] focus:border-brand-pink focus:outline-none focus:ring-2 focus:ring-brand-pink/20 cursor-pointer">
                             <option value="">Todas las prendas</option>
                             @foreach ($categories as $category)
-                                <option value="{{ $category->id }}">
+                                <option value="{{ $category->slug }}">
                                     {{ $category->name }}
                                 </option>
                             @endforeach

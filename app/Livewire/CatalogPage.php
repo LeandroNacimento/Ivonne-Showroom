@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\CartService;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -14,7 +15,8 @@ class CatalogPage extends Component
 
     protected $paginationTheme = 'tailwind';
 
-    public ?int $categoryId = null;
+    #[Url(as: 'category', except: '')]
+    public ?string $category = null;
 
     public string $sort = 'latest';
 
@@ -27,13 +29,20 @@ class CatalogPage extends Component
     public function mount()
     {
         $this->categories = \Illuminate\Support\Facades\Cache::remember('categories', 3600, function () {
-            return Category::select('id', 'name')->orderBy('name')->get();
+            return Category::select('id', 'name', 'slug')->orderBy('name')->get();
         });
+
+        $this->category = $this->normalizeCategorySlug($this->category);
     }
 
-    public function updatingCategoryId()
+    public function updatingCategory()
     {
         $this->resetPage();
+    }
+
+    public function updatedCategory($value)
+    {
+        $this->category = $this->normalizeCategorySlug($value);
     }
 
     public function updatingSort()
@@ -48,10 +57,12 @@ class CatalogPage extends Component
 
     protected function queryBuilder()
     {
+        $categoryId = $this->resolveCategoryId();
+
         $query = Product::query()
             ->withStorefrontPricing()
-            ->when($this->categoryId, function ($q) {
-                $q->where('category_id', $this->categoryId);
+            ->when($categoryId, function ($q) use ($categoryId) {
+                $q->where('category_id', $categoryId);
             })
             ->when($this->offerOnly, function ($q) {
                 $q->whereHas('variations', function ($variationQuery) {
@@ -114,5 +125,31 @@ class CatalogPage extends Component
         } else {
             $this->dispatch('product-add-error');
         }
+    }
+
+    protected function normalizeCategorySlug(?string $slug): ?string
+    {
+        if ($slug === null) {
+            return null;
+        }
+
+        $slug = trim($slug);
+
+        if ($slug === '') {
+            return null;
+        }
+
+        return $this->categories->contains('slug', $slug) ? $slug : null;
+    }
+
+    protected function resolveCategoryId(): ?int
+    {
+        $slug = $this->normalizeCategorySlug($this->category);
+
+        if ($slug !== $this->category) {
+            $this->category = $slug;
+        }
+
+        return $this->categories->firstWhere('slug', $slug)?->id;
     }
 }

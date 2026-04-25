@@ -40,6 +40,8 @@ Apply these rules:
 - Treat `storage/*`, `bootstrap/cache/*`, logs, sessions, compiled views, and temporary caches as runtime artifacts.
 - Do not use runtime artifacts as persistent configuration.
 - Keep config and route changes compatible with `config:cache` and `route:cache`.
+- For code changes, preserve repository formatting conventions so CI style checks keep passing.
+- When PHP files change, expect Laravel Pint or equivalent style validation to be part of the acceptance path.
 - Reject route-file `env()` usage.
 
 ## Defaults
@@ -81,3 +83,9 @@ For route/config-sensitive changes:
 - keep `route:cache` compatibility
 - avoid `env()` in route files
 - warn if deploy assumptions change
+
+For code-quality-sensitive changes:
+
+- identify whether formatter or linter checks are affected
+- keep imports, spacing, and file structure aligned with project conventions
+- do not leave style-only CI failures for later cleanup
