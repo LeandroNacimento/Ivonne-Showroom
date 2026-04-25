@@ -54,6 +54,8 @@ Apply these rules globally:
 - Keep checkout ending in WhatsApp.
 - Keep a strong separation between storefront and admin.
 - Keep route and config changes compatible with `config:cache` and `route:cache`.
+- Leave every code change consistent with the repository formatter and linter expectations.
+- Treat GitHub Actions validation as a delivery constraint, not as optional cleanup.
 - Use `config('admin.path')` for admin routes. Do not hardcode `/admin`.
 - Do not perform irreversible Git actions without explicit user instruction.
 - Treat the repository as the source of truth. Treat the VM only as runtime.
@@ -86,11 +88,11 @@ Consult the smallest relevant file instead of rereading the whole system:
 
 Use skills only after the task is already scoped:
 
-- `.agents/skills/checkout_security/`
-- `.agents/skills/database_integrity/`
-- `.agents/skills/frontend_ux/`
-- `.agents/skills/laravel_backend/`
-- `.agents/skills/livewire_interactivity/`
+- `.agents/skills/checkout-security/`
+- `.agents/skills/database-integrity/`
+- `.agents/skills/frontend-ux/`
+- `.agents/skills/laravel-backend/`
+- `.agents/skills/livewire-interactivity/`
 
 ## Protocol Before Changing Code
 
@@ -117,6 +119,7 @@ Be more explicit when the task affects:
 - Docker or deploy
 - security
 - runtime or cache compatibility
+- formatter, linter, or CI-sensitive files
 
 ## Global Prohibitions
 
