@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -24,15 +25,19 @@ class CategoryController extends Controller
 
     public function store(Request $request)
     {
+        $slug = Str::slug($request->name);
+
         $request->validate([
             'name' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'supports_size' => 'boolean',
             'supports_color' => 'boolean',
         ]);
-
-        $slug = Str::slug($request->name);
         $imagePath = null;
+
+        validator(['slug' => $slug], [
+            'slug' => ['required', 'string', 'max:255', Rule::unique('categories', 'slug')],
+        ])->validate();
 
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('categories', 'public');
@@ -63,8 +68,11 @@ class CategoryController extends Controller
             'supports_color' => 'boolean',
         ]);
 
+        validator(['slug' => $category->slug], [
+            'slug' => ['required', 'string', 'max:255', Rule::unique('categories', 'slug')->ignore($category->id)],
+        ])->validate();
+
         $category->name = $request->name;
-        $category->slug = Str::slug($request->name);
         $category->supports_size = $request->has('supports_size');
         $category->supports_color = $request->has('supports_color');
 
