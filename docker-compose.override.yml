@@ -1,0 +1,12 @@
+services:
+    app:
+        volumes:
+            - ./:/var/www
+
+    vite:
+        volumes:
+            - ./:/var/www
+
+    web:
+        volumes:
+            - ./:/var/www
