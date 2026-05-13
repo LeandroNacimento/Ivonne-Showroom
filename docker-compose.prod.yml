@@ -1,6 +1,8 @@
 services:
   app:
     ports: []
+    volumes:
+      - ./.env:/var/www/.env:ro
 
   web:
     volumes:
