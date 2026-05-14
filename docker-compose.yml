@@ -19,19 +19,6 @@ services:
             db:
                 condition: service_healthy
 
-    vite:
-        image: node:20-alpine
-        restart: unless-stopped
-        working_dir: /var/www
-        command: sh -lc "npm run dev -- --host 0.0.0.0 --port 5173"
-        ports:
-            - "5173:5173"
-        networks:
-            - laravel
-        depends_on:
-            app:
-                condition: service_started
-
     web:
         image: nginx:alpine
         restart: unless-stopped
