@@ -3,7 +3,11 @@ services:
     ports: []
     volumes:
       - ./.env:/var/www/.env:ro
+      - public_storage:/var/www/storage/app/public
 
   web:
     volumes:
-      - ./:/var/www:ro
+      - public_storage:/var/www/public/storage:ro
+
+volumes:
+  public_storage:
