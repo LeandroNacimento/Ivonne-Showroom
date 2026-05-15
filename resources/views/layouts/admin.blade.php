@@ -140,6 +140,24 @@
                     </div>
                 @endif
 
+                @if (session('error'))
+                    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 7000)"
+                        class="mb-6 rounded-md border border-red-200 bg-red-50 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-10.5a.75.75 0 011.5 0v3.75a.75.75 0 01-1.5 0V7.5zm0 6a.75.75 0 011.5 0v.25a.75.75 0 01-1.5 0v-.25z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 @yield('content')
                 {{ $slot ?? '' }}
             </div>

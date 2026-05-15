@@ -35,8 +35,7 @@ class ImagesForm extends Component
     }
 
     /**
-     * Called from parent Blade via Alpine dispatch when colors change.
-     * Receives color names from VariationsForm hidden inputs.
+     * Called from the variations component whenever visible color names change.
      */
     #[\Livewire\Attributes\On('sync-image-colors')]
     public function syncColors(array $colors): void

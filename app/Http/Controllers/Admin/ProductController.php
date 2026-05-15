@@ -11,8 +11,10 @@ use App\Services\ProductImageService;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ProductController extends Controller
 {
@@ -41,34 +43,48 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request)
     {
-        $validated = $request->validated();
+        try {
+            $validated = $request->validated();
 
-        $baseSlug = Str::slug($validated['name']);
-        $slug = $baseSlug;
-        $i = 1;
-        while (Product::withTrashed()->where('slug', $slug)->exists()) {
-            $slug = $baseSlug.'-'.$i++;
-        }
+            $baseSlug = Str::slug($validated['name']);
+            $slug = $baseSlug;
+            $i = 1;
+            while (Product::withTrashed()->where('slug', $slug)->exists()) {
+                $slug = $baseSlug.'-'.$i++;
+            }
 
-        DB::transaction(function () use ($request, $validated, $slug) {
-            $product = Product::create([
-                'name' => $validated['name'],
-                'slug' => $slug,
-                'category_id' => $validated['category_id'],
-                'description' => $validated['description'] ?? null,
-                'size_type' => $validated['size_type'],
-                'is_featured' => $request->has('is_featured'),
+            DB::transaction(function () use ($request, $validated, $slug) {
+                $product = Product::create([
+                    'name' => $validated['name'],
+                    'slug' => $slug,
+                    'category_id' => $validated['category_id'],
+                    'description' => $validated['description'] ?? null,
+                    'size_type' => $validated['size_type'],
+                    'is_featured' => $request->has('is_featured'),
+                ]);
+
+                $this->productService->syncVariations($product, $request->variations);
+
+                $imagesData = $request->file('images');
+                if (! empty($imagesData) && is_array($imagesData)) {
+                    $this->imageService->storeImages($product, $imagesData);
+                }
+            });
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (\Throwable $exception) {
+            Log::error('Product create failed.', [
+                'product_name' => $request->input('name'),
+                'admin_user_id' => $request->user()?->id,
+                'exception' => $exception,
             ]);
 
-            $this->productService->syncVariations($product, $request->variations);
+            return back()
+                ->withInput()
+                ->with('error', 'No se pudo guardar el producto. Revisa las variaciones y las imagenes asociadas antes de volver a intentar.');
+        }
 
-            $imagesData = $request->file('images');
-            if (! empty($imagesData) && is_array($imagesData)) {
-                $this->imageService->storeImages($product, $imagesData);
-            }
-        });
-
-        return redirect()->route('admin.products.index')->with('success', 'Producto creado con éxito.');
+        return redirect()->route('admin.products.index')->with('success', 'Producto creado con exito.');
     }
 
     public function edit(Product $product)
@@ -82,38 +98,52 @@ class ProductController extends Controller
 
     public function update(UpdateProductRequest $request, Product $product)
     {
-        $validated = $request->validated();
+        try {
+            $validated = $request->validated();
 
-        $baseSlug = Str::slug($validated['name']);
-        $slug = $baseSlug;
-        $i = 1;
-        while (Product::withTrashed()->where('slug', $slug)->where('id', '!=', $product->id)->exists()) {
-            $slug = $baseSlug.'-'.$i++;
-        }
+            $baseSlug = Str::slug($validated['name']);
+            $slug = $baseSlug;
+            $i = 1;
+            while (Product::withTrashed()->where('slug', $slug)->where('id', '!=', $product->id)->exists()) {
+                $slug = $baseSlug.'-'.$i++;
+            }
 
-        DB::transaction(function () use ($request, $product, $validated, $slug) {
-            $product->update([
-                'name' => $validated['name'],
-                'slug' => $slug,
-                'category_id' => $validated['category_id'],
-                'description' => $validated['description'] ?? null,
-                'size_type' => $validated['size_type'],
-                'is_featured' => $request->has('is_featured'),
+            DB::transaction(function () use ($request, $product, $validated, $slug) {
+                $product->update([
+                    'name' => $validated['name'],
+                    'slug' => $slug,
+                    'category_id' => $validated['category_id'],
+                    'description' => $validated['description'] ?? null,
+                    'size_type' => $validated['size_type'],
+                    'is_featured' => $request->has('is_featured'),
+                ]);
+
+                $this->productService->syncVariations($product, $request->variations);
+
+                if ($request->has('delete_images')) {
+                    $this->imageService->deleteImages($product, $request->delete_images);
+                }
+
+                $imagesData = $request->file('images');
+                if (! empty($imagesData) && is_array($imagesData)) {
+                    $this->imageService->storeImages($product, $imagesData);
+                }
+            });
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (\Throwable $exception) {
+            Log::error('Product update failed.', [
+                'product_id' => $product->id,
+                'admin_user_id' => $request->user()?->id,
+                'exception' => $exception,
             ]);
 
-            $this->productService->syncVariations($product, $request->variations);
+            return back()
+                ->withInput()
+                ->with('error', 'No se pudo actualizar el producto. Revisa las variaciones y las imagenes asociadas antes de volver a intentar.');
+        }
 
-            if ($request->has('delete_images')) {
-                $this->imageService->deleteImages($product, $request->delete_images);
-            }
-
-            $imagesData = $request->file('images');
-            if (! empty($imagesData) && is_array($imagesData)) {
-                $this->imageService->storeImages($product, $imagesData);
-            }
-        });
-
-        return redirect()->route('admin.products.index')->with('success', 'Producto actualizado con éxito.');
+        return redirect()->route('admin.products.index')->with('success', 'Producto actualizado con exito.');
     }
 
     public function destroy(Product $product)
@@ -123,7 +153,7 @@ class ProductController extends Controller
         }
         $product->delete();
 
-        return redirect()->route('admin.products.index')->with('success', 'Producto eliminado con éxito.');
+        return redirect()->route('admin.products.index')->with('success', 'Producto eliminado con exito.');
     }
 
     public function search(Request $request)

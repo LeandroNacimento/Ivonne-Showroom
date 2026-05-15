@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class ProductImageService
 {
@@ -24,7 +25,21 @@ class ProductImageService
     public function storeImages(Product $product, array $imagesData): void
     {
         foreach ($imagesData as $colorName => $files) {
+            $normalizedColorName = trim((string) $colorName);
+
+            if ($normalizedColorName === '') {
+                throw ValidationException::withMessages([
+                    'images' => 'Las imagenes deben estar asociadas a un color valido.',
+                ]);
+            }
+
             $colorId = $this->productService->getColorId($product, $colorName);
+
+            if ($colorId === null) {
+                throw ValidationException::withMessages([
+                    'images' => "No se pudo asociar las imagenes al color '{$normalizedColorName}'. Guarda el color visible antes de subir imagenes para ese grupo.",
+                ]);
+            }
 
             // Get starting position for this color
             $maxPos = $product->images()
