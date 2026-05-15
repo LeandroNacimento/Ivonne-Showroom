@@ -22,7 +22,7 @@
         </button>
     </div>
 
-    @php($flatIndex = 0)
+    @php $flatIndex = 0; @endphp
 
     @foreach ($colors as $cIdx => $color)
         <div class="mb-6 rounded-lg border border-gray-100 bg-white p-4 shadow-sm" wire:key="color-{{ $color['uuid'] }}"
@@ -67,7 +67,7 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @foreach ($color['variations'] as $vIdx => $variation)
-                                @php($currentFlatIndex = $flatIndex)
+                                @php $currentFlatIndex = $flatIndex; @endphp
                                 <tr wire:key="var-{{ $variation['uuid'] }}">
                                     <td class="px-3 py-3">
                                         <select wire:model.blur="colors.{{ $cIdx }}.variations.{{ $vIdx }}.size"
@@ -170,7 +170,7 @@
                                 <input type="hidden" name="variations[{{ $currentFlatIndex }}][color]"
                                     x-bind:value="colorName">
 
-                                @php($flatIndex++)
+                                @php $flatIndex++; @endphp
                             @endforeach
                         </tbody>
                     </table>
@@ -188,7 +188,7 @@
 
                 <div class="space-y-1">
                     @foreach ($color['variations'] as $vIdx => $variation)
-                        @php($currentFlatIndex = $flatIndex)
+                        @php $currentFlatIndex = $flatIndex; @endphp
                         @php
                             $stockVal = $variation['stock'] ?? '';
                             $stockClass = 'border-gray-300';
@@ -283,7 +283,7 @@
                         <input type="hidden" name="variations[{{ $currentFlatIndex }}][color]"
                             x-bind:value="colorName">
 
-                        @php($flatIndex++)
+                        @php $flatIndex++; @endphp
                     @endforeach
                 </div>
             @endif
