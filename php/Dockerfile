@@ -1,4 +1,4 @@
-FROM php:8.2-fpm
+FROM php:8.2-fpm AS app-base
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -30,17 +30,15 @@ COPY ./php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Install Node.js (for Vite build)
+# Install Node.js for the shared production asset build
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
 
-# Set working directory
 WORKDIR /var/www
 
-# ── Production: pre-build Vite assets at image build time ─────────────────────
-# This keeps the entrypoint fast and prevents npm from running at container
-# startup. The public/build/ directory (with manifest.json) is baked into
-# the image and served by Nginx from the volume mount.
+FROM app-base AS app-build
+
+# Build frontend assets once and share them with both runtimes.
 COPY package*.json ./
 RUN npm ci
 
@@ -48,15 +46,28 @@ COPY . .
 RUN cp .env.example .env \
     && composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist \
     && npm run build \
+    && mkdir -p /var/www/storage/app/public \
+    && ln -sfn /var/www/storage/app/public /var/www/public/storage \
     && rm .env
 
-# ── Entrypoint ────────────────────────────────────────────────────────────────
+FROM app-base AS app-runtime
+
+COPY --from=app-build /var/www /var/www
+
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# ── Healthcheck ───────────────────────────────────────────────────────────────
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl --fail http://localhost/up || exit 1
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php-fpm"]
+
+FROM nginx:alpine AS web-runtime
+
+COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY --from=app-build /var/www/public /var/www/public
+
+# The shared uploads volume is mounted here at runtime.
+RUN rm -rf /var/www/public/storage \
+    && mkdir -p /var/www/public/storage

@@ -17,6 +17,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 bun.lockb
+public/build
+public/hot
 
 # PHP / Composer
 vendor
