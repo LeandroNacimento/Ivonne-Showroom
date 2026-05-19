@@ -126,6 +126,10 @@
             {{ $product->name }}
         </h3>
 
+        <p class="mt-1 text-xs text-gray-500" x-show="activeColor && activeColor.name" x-text="activeColor ? activeColor.name : '{{ $defaultColor['name'] ?? '' }}'">
+            {{ $defaultColor['name'] ?? '' }}
+        </p>
+
         <div class="mt-auto flex flex-col items-start gap-1 pt-3">
             <div class="flex flex-wrap items-center gap-2" x-show="activeColor && activeColor.price !== null" style="{{ $defaultPrice !== null ? '' : 'display: none;' }}">
                 <p class="text-sm text-gray-400 line-through"
