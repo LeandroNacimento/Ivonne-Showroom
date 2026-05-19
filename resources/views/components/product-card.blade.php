@@ -13,6 +13,11 @@
                 'id' => $color->id,
                 'name' => $color->name,
                 'image' => $color->public_primary_image_url,
+                'price' => $color->display_price,
+                'original_price' => $color->display_original_price,
+                'has_offer' => $color->display_has_active_offer,
+                'formatted_price' => $color->display_price !== null ? '$' . number_format($color->display_price, 0, ',', '.') : null,
+                'formatted_original_price' => $color->display_original_price !== null ? '$' . number_format($color->display_original_price, 0, ',', '.') : null,
             ],
         )
         ->toArray();
@@ -20,13 +25,23 @@
     $uniqueColors = $product->colors->unique('name');
     $visibleColors = $uniqueColors->take(4);
     $extraColorsCount = $uniqueColors->count() - 4;
+
+    $defaultColor = $colorsData[0] ?? null;
+    $defaultPrice = $defaultColor['price'] ?? null;
+    $defaultOriginalPrice = $defaultColor['original_price'] ?? null;
+    $defaultHasOffer = $defaultColor['has_offer'] ?? false;
 @endphp
 
 <div x-data="{
     images: {{ json_encode($images) }},
+    colorsData: {{ json_encode($colorsData) }},
     currentIndex: 0,
     timer: null,
     previewIndex: null,
+    get activeColor() {
+        let idx = this.previewIndex !== null ? this.previewIndex : this.currentIndex;
+        return this.colorsData[idx] || null;
+    },
     startCarousel() {
         if (this.images.length <= 1 || this.previewIndex !== null) return;
         this.timer = setInterval(() => {
@@ -49,12 +64,11 @@
     class="group relative flex h-full flex-col rounded-md bg-white transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
 
     <div class="pointer-events-none absolute left-2 top-2 z-30 flex flex-col gap-1">
-        @if ($product->display_has_active_offer)
-            <span
-                class="rounded bg-brand-pink px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
-                Oferta
-            </span>
-        @endif
+        <span x-show="activeColor ? activeColor.has_offer : {{ $defaultHasOffer ? 'true' : 'false' }}"
+              style="{{ $defaultHasOffer ? '' : 'display: none;' }}"
+              class="rounded bg-brand-pink px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+            Oferta
+        </span>
 
         @if ($product->is_low_stock)
             <span
@@ -113,18 +127,23 @@
         </h3>
 
         <div class="mt-auto flex flex-col items-start gap-1 pt-3">
-            @if ($product->display_price !== null)
-                <div class="flex flex-wrap items-center gap-2">
-                    @if ($product->display_original_price !== null && $product->display_original_price > $product->display_price)
-                        <p class="text-sm text-gray-400 line-through">
-                            ${{ number_format($product->display_original_price, 0, ',', '.') }}
-                        </p>
+            <div class="flex flex-wrap items-center gap-2" x-show="activeColor && activeColor.price !== null" style="{{ $defaultPrice !== null ? '' : 'display: none;' }}">
+                <p class="text-sm text-gray-400 line-through"
+                   x-show="activeColor && activeColor.original_price !== null && activeColor.original_price > activeColor.price"
+                   x-text="activeColor ? activeColor.formatted_original_price : '{{ $defaultOriginalPrice !== null ? '$' . number_format($defaultOriginalPrice, 0, ',', '.') : '' }}'"
+                   style="{{ $defaultOriginalPrice !== null && $defaultOriginalPrice > $defaultPrice ? '' : 'display: none;' }}">
+                    @if ($defaultOriginalPrice !== null && $defaultOriginalPrice > $defaultPrice)
+                        ${{ number_format($defaultOriginalPrice, 0, ',', '.') }}
                     @endif
-                    <p class="text-base font-semibold text-text-dark">
-                        ${{ number_format($product->display_price, 0, ',', '.') }}
-                    </p>
-                </div>
-            @endif
+                </p>
+                <p class="text-base font-semibold text-text-dark"
+                   x-text="activeColor ? activeColor.formatted_price : '{{ $defaultPrice !== null ? '$' . number_format($defaultPrice, 0, ',', '.') : '' }}'">
+                    @if ($defaultPrice !== null)
+                        ${{ number_format($defaultPrice, 0, ',', '.') }}
+                    @endif
+                </p>
+            </div>
+            
             <p class="text-[10px] font-medium uppercase tracking-wider text-gray-500">
                 {{ $product->availability_label }}
             </p>

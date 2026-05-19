@@ -64,6 +64,52 @@ class ProductColor extends Model
         return [$this->placeholderImageUrl()];
     }
 
+    public function resolvePrimaryVariation(): ?ProductVariation
+    {
+        $variations = $this->relationLoaded('variations')
+            ? $this->variations
+            : $this->variations()->get();
+
+        if ($variations->isEmpty()) {
+            return null;
+        }
+
+        if ($this->relationLoaded('product') && $this->product) {
+            $sorted = $this->product->sortVariationCollectionBySize($variations);
+        } else {
+            $sorted = $variations->sortBy('id');
+        }
+
+        $available = $sorted->firstWhere('stock', '>', 0);
+
+        if ($available) {
+            return $available;
+        }
+
+        return $sorted->first();
+    }
+
+    public function getDisplayPriceAttribute(): ?float
+    {
+        $variation = $this->resolvePrimaryVariation();
+
+        return $variation ? (float) $variation->effective_price : null;
+    }
+
+    public function getDisplayOriginalPriceAttribute(): ?float
+    {
+        $variation = $this->resolvePrimaryVariation();
+
+        return $variation ? (float) $variation->original_price : null;
+    }
+
+    public function getDisplayHasActiveOfferAttribute(): bool
+    {
+        $variation = $this->resolvePrimaryVariation();
+
+        return $variation ? $variation->has_active_offer : false;
+    }
+
     /**
      * Resolve image to a full URL (handles external URLs and storage paths).
      */
