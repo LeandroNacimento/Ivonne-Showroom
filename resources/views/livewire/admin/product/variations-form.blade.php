@@ -3,24 +3,18 @@
         <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             <p class="font-medium">Revisa las variaciones antes de guardar.</p>
             @foreach ($errors->all() as $message)
-                @if (str_starts_with($message, 'El talle') || str_contains($message, 'variaci') || str_contains($message, 'precio') || str_contains($message, 'stock') || str_contains($message, 'color'))
+                @if (str_starts_with($message, 'El talle') ||
+                        str_contains($message, 'variaci') ||
+                        str_contains($message, 'precio') ||
+                        str_contains($message, 'stock') ||
+                        str_contains($message, 'color'))
                     <p>{{ $message }}</p>
                 @endif
             @endforeach
         </div>
     @endif
 
-    <div class="mb-6 flex flex-col items-start gap-3 rounded-lg bg-gray-50 p-4 sm:flex-row sm:items-end">
-        <div class="flex-1">
-            <label class="mb-1 block text-sm font-medium text-gray-600">Precio base sugerido</label>
-            <input type="number" wire:model="basePrice" step="0.01" placeholder="Ej: 27850"
-                class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
-        </div>
-        <button type="button" wire:click="applyBasePrice"
-            class="whitespace-nowrap rounded-md bg-brand-pink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-heart">
-            Aplicar a todas las variaciones
-        </button>
-    </div>
+
 
     @php $flatIndex = 0; @endphp
 
@@ -70,7 +64,8 @@
                                 @php $currentFlatIndex = $flatIndex; @endphp
                                 <tr wire:key="var-{{ $variation['uuid'] }}">
                                     <td class="px-3 py-3">
-                                        <select wire:model.blur="colors.{{ $cIdx }}.variations.{{ $vIdx }}.size"
+                                        <select
+                                            wire:model.blur="colors.{{ $cIdx }}.variations.{{ $vIdx }}.size"
                                             name="variations[{{ $currentFlatIndex }}][size]"
                                             class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50"
                                             required>
@@ -148,7 +143,8 @@
                                 <tr wire:key="sku-{{ $variation['uuid'] }}">
                                     <td colspan="5" class="pb-2">
                                         <details class="text-xs">
-                                            <summary class="cursor-pointer select-none text-gray-400 hover:text-gray-600">
+                                            <summary
+                                                class="cursor-pointer select-none text-gray-400 hover:text-gray-600">
                                                 Opciones avanzadas
                                             </summary>
                                             <div class="mt-1.5">
@@ -203,7 +199,7 @@
                         @endphp
 
                         <div wire:key="var-{{ $variation['uuid'] }}"
-                            class="flex items-center gap-3 py-3 {{ ! $loop->last ? 'border-b border-gray-200' : '' }}">
+                            class="flex items-center gap-3 py-3 {{ !$loop->last ? 'border-b border-gray-200' : '' }}">
                             <div class="min-w-[5.5rem]">
                                 <label class="mb-1 block text-xs text-gray-400">Talle</label>
                                 <input type="text" name="variations[{{ $currentFlatIndex }}][size]"
@@ -227,8 +223,7 @@
                                 <label class="mb-1 block text-xs text-gray-400">Oferta</label>
                                 <input type="number" step="0.01"
                                     wire:model.blur="colors.{{ $cIdx }}.variations.{{ $vIdx }}.sale_price"
-                                    name="variations[{{ $currentFlatIndex }}][sale_price]"
-                                    placeholder="Opcional"
+                                    name="variations[{{ $currentFlatIndex }}][sale_price]" placeholder="Opcional"
                                     class="h-10 w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
                                 @error("colors.{$cIdx}.variations.{$vIdx}.sale_price")
                                     <span class="text-xs text-red-500">{{ $message }}</span>
@@ -254,14 +249,13 @@
                                     </summary>
                                     <input type="text"
                                         wire:model.blur="colors.{{ $cIdx }}.variations.{{ $vIdx }}.sku"
-                                        name="variations[{{ $currentFlatIndex }}][sku]"
-                                        placeholder="SKU-001"
+                                        name="variations[{{ $currentFlatIndex }}][sku]" placeholder="SKU-001"
                                         class="mt-0.5 w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
                                 </details>
                             </div>
 
                             <div class="flex w-9 shrink-0 justify-center">
-                                @if (! $isSingle)
+                                @if (!$isSingle)
                                     <button type="button"
                                         wire:click="removeVariation({{ $cIdx }}, {{ $vIdx }})"
                                         class="flex h-9 w-9 items-center justify-center rounded-md text-red-400 transition-colors hover:bg-red-50 hover:text-red-600"
