@@ -33,6 +33,31 @@ class StoreProductRequest extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'images.array' => 'Las imagenes deben enviarse agrupadas por color.',
+            'images.*.*.image' => 'Cada archivo debe ser una imagen valida.',
+            'images.*.*.mimes' => 'Las imagenes deben ser JPG, JPEG, PNG o GIF.',
+            'images.*.*.max' => 'Cada imagen puede pesar hasta 2 MB.',
+            'variations.required' => 'Debes agregar al menos una variacion antes de guardar.',
+            'variations.array' => 'Las variaciones enviadas no tienen un formato valido.',
+            'variations.min' => 'Debes agregar al menos una variacion antes de guardar.',
+            'variations.*.color.required' => 'Cada variacion debe tener un color.',
+            'variations.*.color.string' => 'El color de la variacion no es valido.',
+            'variations.*.size.required' => 'Cada variacion debe tener un talle.',
+            'variations.*.price.required' => 'Cada variacion debe tener un precio.',
+            'variations.*.price.numeric' => 'El precio de cada variacion debe ser numerico.',
+            'variations.*.price.min' => 'El precio de cada variacion debe ser mayor o igual a 0.',
+            'variations.*.sale_price.numeric' => 'El precio de oferta debe ser numerico.',
+            'variations.*.sale_price.gt' => 'El precio de oferta debe ser mayor a 0.',
+            'variations.*.stock.required' => 'Cada variacion debe tener stock.',
+            'variations.*.stock.integer' => 'El stock debe ser un numero entero.',
+            'variations.*.stock.min' => 'El stock debe ser mayor o igual a 0.',
+            'variations.*.sku.max' => 'El SKU no puede superar los 100 caracteres.',
+        ];
+    }
+
     protected function prepareForValidation(): void
     {
         $variations = collect($this->input('variations', []))
@@ -41,6 +66,9 @@ class StoreProductRequest extends FormRequest
                     return $variation;
                 }
 
+                $variation['color'] = is_string($variation['color'] ?? null)
+                    ? trim($variation['color'])
+                    : ($variation['color'] ?? null);
                 $variation['size'] = Product::normalizeSize($variation['size'] ?? null);
 
                 return $variation;
