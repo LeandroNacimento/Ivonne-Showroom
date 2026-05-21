@@ -124,7 +124,10 @@ class VariationsForm extends Component
         );
     }
 
-
+    public function forceSyncColors(): void
+    {
+        $this->dispatchColorSync();
+    }
 
     public function updated($propertyName): void
     {
