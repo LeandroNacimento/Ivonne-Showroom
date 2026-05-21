@@ -89,6 +89,41 @@ class ProductColor extends Model
         return $sorted->first();
     }
 
+    public function hasActiveOffer(): bool
+    {
+        return $this->variations
+            ->where('stock', '>', 0)
+            ->contains(function ($variation) {
+                return $variation->sale_price !== null
+                    && (float) $variation->sale_price > 0
+                    && (float) $variation->sale_price < (float) $variation->price;
+            });
+    }
+
+    public function resolvePrimaryOfferVariation(): ?ProductVariation
+    {
+        $variations = $this->relationLoaded('variations')
+            ? $this->variations
+            : $this->variations()->get();
+
+        if ($variations->isEmpty()) {
+            return null;
+        }
+
+        if ($this->relationLoaded('product') && $this->product) {
+            $sorted = $this->product->sortVariationCollectionBySize($variations);
+        } else {
+            $sorted = $variations->sortBy('id');
+        }
+
+        return $sorted->first(function ($v) {
+            return $v->stock > 0 
+                && $v->sale_price !== null 
+                && (float) $v->sale_price > 0 
+                && (float) $v->sale_price < (float) $v->price;
+        });
+    }
+
     public function getDisplayPriceAttribute(): ?float
     {
         $variation = $this->resolvePrimaryVariation();

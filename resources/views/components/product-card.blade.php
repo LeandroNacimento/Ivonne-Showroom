@@ -1,32 +1,69 @@
-@props(['product'])
+@props(['product', 'offerOnly' => false])
 
 @php
-    $images = $product->colors->map(fn ($color) => $color->public_primary_image_url)->values()->toArray();
+    // Aseguramos reindexación limpia desde el inicio
+    $colorsToProcess = $product->colors->values();
+
+    if ($offerOnly) {
+        $colorsToProcess = $colorsToProcess
+            ->filter(fn ($color) => $color->hasActiveOffer())
+            ->values();
+    }
+
+    $images = $colorsToProcess->map(fn ($color) => $color->public_primary_image_url)->values()->toArray();
 
     if ($images === []) {
         $images = [asset('img/placeholder-product.jpg')];
     }
 
-    $colorsData = $product->colors
-        ->map(
-            fn ($color) => [
+    $colorsData = $colorsToProcess
+        ->map(function ($color) use ($offerOnly) {
+            $variation = null;
+            
+            if ($offerOnly) {
+                $variation = $color->resolvePrimaryOfferVariation();
+            }
+            
+            if (!$variation) {
+                $variation = $color->resolvePrimaryVariation();
+            }
+
+            $price = $variation ? (float) $variation->effective_price : null;
+            $originalPrice = $variation && $variation->sale_price !== null ? (float) $variation->price : null;
+            $hasOffer = $variation && $variation->sale_price !== null && (float) $variation->sale_price > 0 && (float) $variation->sale_price < (float) $variation->price;
+
+            return [
                 'id' => $color->id,
                 'name' => $color->name,
                 'image' => $color->public_primary_image_url,
-                'price' => $color->display_price,
-                'original_price' => $color->display_original_price,
-                'has_offer' => $color->display_has_active_offer,
-                'formatted_price' => $color->display_price !== null ? '$' . number_format($color->display_price, 0, ',', '.') : null,
-                'formatted_original_price' => $color->display_original_price !== null ? '$' . number_format($color->display_original_price, 0, ',', '.') : null,
-            ],
-        )
+                'price' => $price,
+                'original_price' => $originalPrice,
+                'has_offer' => $hasOffer,
+                'formatted_price' => $price !== null ? '$' . number_format($price, 0, ',', '.') : null,
+                'formatted_original_price' => $originalPrice !== null ? '$' . number_format($originalPrice, 0, ',', '.') : null,
+            ];
+        })
+        ->values() // Doble seguridad de reindexado
         ->toArray();
 
-    $uniqueColors = $product->colors->unique('name');
+    $uniqueColors = $colorsToProcess->unique('name')->values();
     $visibleColors = $uniqueColors->take(4);
     $extraColorsCount = $uniqueColors->count() - 4;
 
-    $defaultColor = $colorsData[0] ?? null;
+    $defaultIndex = 0;
+    if ($offerOnly) {
+        $foundIndex = collect($colorsData)->search(fn($c) => $c['has_offer'] === true);
+        if ($foundIndex !== false) {
+            $defaultIndex = $foundIndex;
+        }
+    }
+
+    // Fallback seguro si la colección se vació por completo
+    if (!isset($colorsData[$defaultIndex]) && count($colorsData) > 0) {
+        $defaultIndex = 0;
+    }
+
+    $defaultColor = $colorsData[$defaultIndex] ?? null;
     $defaultPrice = $defaultColor['price'] ?? null;
     $defaultOriginalPrice = $defaultColor['original_price'] ?? null;
     $defaultHasOffer = $defaultColor['has_offer'] ?? false;
@@ -35,25 +72,39 @@
 <div x-data="{
     images: {{ json_encode($images) }},
     colorsData: {{ json_encode($colorsData) }},
-    currentIndex: 0,
+    currentIndex: {{ $defaultIndex }},
     timer: null,
     previewIndex: null,
+    destroy() {
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+    },
     get activeColor() {
         let idx = this.previewIndex !== null ? this.previewIndex : this.currentIndex;
         return this.colorsData[idx] || null;
     },
     startCarousel() {
-        if (this.images.length <= 1 || this.previewIndex !== null) return;
-        this.timer = setInterval(() => {
-            this.currentIndex = (this.currentIndex + 1) % this.images.length;
-        }, 2000);
+        if (this.timer) return;
+        if (this.images.length > 1 && this.previewIndex === null) {
+            this.timer = setInterval(() => {
+                this.currentIndex = (this.currentIndex + 1) % this.images.length;
+            }, 2000);
+        }
     },
     stopCarousel() {
-        clearInterval(this.timer);
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
         this.currentIndex = 0;
     },
     setPreview(index) {
-        clearInterval(this.timer);
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
         this.previewIndex = index;
     },
     clearPreview() {
@@ -61,7 +112,7 @@
         this.startCarousel();
     }
 }" @mouseenter="startCarousel()" @mouseleave="stopCarousel()"
-    class="group relative flex h-full flex-col rounded-md bg-white transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
+    {{ $attributes->merge(['class' => 'group relative flex h-full flex-col rounded-md bg-white transition-all duration-300 hover:scale-[1.02] hover:shadow-xl']) }}>
 
     <div class="pointer-events-none absolute left-2 top-2 z-30 flex flex-col gap-1">
         <span x-show="activeColor ? activeColor.has_offer : {{ $defaultHasOffer ? 'true' : 'false' }}"

@@ -69,6 +69,7 @@ class CatalogPage extends Component
                     $variationQuery
                         ->where('stock', '>', 0)
                         ->whereNotNull('sale_price')
+                        ->where('sale_price', '>', 0)
                         ->whereColumn('sale_price', '<', 'price');
                 });
             })
