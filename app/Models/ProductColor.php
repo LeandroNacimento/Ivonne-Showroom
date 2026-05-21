@@ -117,9 +117,9 @@ class ProductColor extends Model
         }
 
         return $sorted->first(function ($v) {
-            return $v->stock > 0 
-                && $v->sale_price !== null 
-                && (float) $v->sale_price > 0 
+            return $v->stock > 0
+                && $v->sale_price !== null
+                && (float) $v->sale_price > 0
                 && (float) $v->sale_price < (float) $v->price;
         });
     }

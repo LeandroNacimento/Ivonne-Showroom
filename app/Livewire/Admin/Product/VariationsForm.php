@@ -68,7 +68,7 @@ class VariationsForm extends Component
     #[\Livewire\Attributes\On('size-type-changed')]
     public function updateSizeType(string $sizeType): void
     {
-        if (!Product::isValidSizeType($sizeType)) {
+        if (! Product::isValidSizeType($sizeType)) {
             return;
         }
 
@@ -105,7 +105,7 @@ class VariationsForm extends Component
 
     public function addVariation(int $colorIndex): void
     {
-        if (!$this->supportsSize) {
+        if (! $this->supportsSize) {
             return;
         }
 
@@ -131,7 +131,7 @@ class VariationsForm extends Component
 
     public function updated($propertyName): void
     {
-        if (!str_starts_with($propertyName, 'colors.')) {
+        if (! str_starts_with($propertyName, 'colors.')) {
             return;
         }
 
@@ -151,14 +151,14 @@ class VariationsForm extends Component
 
             if ($field === 'price') {
                 $value = $this->colors[$colorIdx]['variations'][$varIdx]['price'] ?? '';
-                if ($value !== '' && (!is_numeric($value) || $value < 0)) {
+                if ($value !== '' && (! is_numeric($value) || $value < 0)) {
                     $this->addError($propertyName, 'El precio debe ser mayor o igual a 0.');
                 }
             }
 
             if ($field === 'stock') {
                 $value = $this->colors[$colorIdx]['variations'][$varIdx]['stock'] ?? '';
-                if ($value !== '' && (!is_numeric($value) || $value < 0)) {
+                if ($value !== '' && (! is_numeric($value) || $value < 0)) {
                     $this->addError($propertyName, 'El stock debe ser mayor o igual a 0.');
                 }
             }
@@ -167,7 +167,7 @@ class VariationsForm extends Component
                 $value = $this->colors[$colorIdx]['variations'][$varIdx]['sale_price'] ?? '';
                 $price = $this->colors[$colorIdx]['variations'][$varIdx]['price'] ?? null;
 
-                if ($value !== '' && (!is_numeric($value) || $value <= 0)) {
+                if ($value !== '' && (! is_numeric($value) || $value <= 0)) {
                     $this->addError($propertyName, 'El precio de oferta debe ser mayor a 0.');
                 }
 
@@ -233,7 +233,7 @@ class VariationsForm extends Component
     {
         $names = collect($this->colors)
             ->pluck('name')
-            ->filter(fn($name) => trim($name) !== '')
+            ->filter(fn ($name) => trim($name) !== '')
             ->values()
             ->toArray();
 
@@ -273,21 +273,21 @@ class VariationsForm extends Component
         /** @var array<int, array<string, mixed>> $oldVariations */
         $oldVariations = old('variations', []);
 
-        if (!is_array($oldVariations) || $oldVariations === []) {
+        if (! is_array($oldVariations) || $oldVariations === []) {
             return false;
         }
 
         $grouped = [];
 
         foreach ($oldVariations as $variation) {
-            if (!is_array($variation)) {
+            if (! is_array($variation)) {
                 continue;
             }
 
             $colorName = trim((string) ($variation['color'] ?? ''));
             $colorKey = mb_strtolower($colorName, 'UTF-8');
 
-            if (!isset($grouped[$colorKey])) {
+            if (! isset($grouped[$colorKey])) {
                 $grouped[$colorKey] = [
                     'uuid' => Str::uuid()->toString(),
                     'id' => $variation['color_id'] ?? '',
