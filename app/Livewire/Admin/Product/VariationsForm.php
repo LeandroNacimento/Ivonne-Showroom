@@ -10,8 +10,6 @@ class VariationsForm extends Component
 {
     public array $colors = [];
 
-    public string $basePrice = '';
-
     public string $sizeType = Product::DEFAULT_SIZE_TYPE;
 
     public array $sizeOptions = [];
@@ -20,7 +18,11 @@ class VariationsForm extends Component
 
     public function mount(?Product $product = null, ?string $sizeType = null): void
     {
-        if ($product && $product->exists) {
+        if ($this->hydrateFromOldInput()) {
+            $this->sizeType = Product::isValidSizeType($sizeType)
+                ? $sizeType
+                : $this->sizeType;
+        } elseif ($product && $product->exists) {
             $this->sizeType = Product::isValidSizeType($sizeType)
                 ? $sizeType
                 : $product->resolved_size_type;
@@ -122,19 +124,9 @@ class VariationsForm extends Component
         );
     }
 
-    public function applyBasePrice(): void
+    public function forceSyncColors(): void
     {
-        if (! is_numeric($this->basePrice) || $this->basePrice <= 0) {
-            return;
-        }
-
-        foreach ($this->colors as &$color) {
-            foreach ($color['variations'] as &$variation) {
-                $variation['price'] = $this->basePrice;
-            }
-            unset($variation);
-        }
-        unset($color);
+        $this->dispatchColorSync();
     }
 
     public function updated($propertyName): void
@@ -189,33 +181,6 @@ class VariationsForm extends Component
             $this->validateDuplicates();
             $this->dispatchColorSync();
         }
-    }
-
-    public function getFlatVariationsProperty(): array
-    {
-        $flat = [];
-
-        foreach ($this->colors as $color) {
-            $colorName = $color['name'];
-            $colorId = $color['id'] ?? null;
-
-            foreach ($color['variations'] as $variation) {
-                $flat[] = [
-                    'id' => $variation['id'] ?? '',
-                    'color_id' => $colorId,
-                    'color' => $colorName,
-                    'size' => $this->supportsSize
-                        ? $this->normalizeVariationSize($variation['size'] ?? '')
-                        : Product::ONE_SIZE_VALUE,
-                    'price' => $variation['price'] ?? '',
-                    'sale_price' => $variation['sale_price'] ?? '',
-                    'stock' => $variation['stock'] ?? '',
-                    'sku' => $variation['sku'] ?? '',
-                ];
-            }
-        }
-
-        return $flat;
     }
 
     public function render()
@@ -301,5 +266,53 @@ class VariationsForm extends Component
                 }
             }
         }
+    }
+
+    private function hydrateFromOldInput(): bool
+    {
+        /** @var array<int, array<string, mixed>> $oldVariations */
+        $oldVariations = old('variations', []);
+
+        if (! is_array($oldVariations) || $oldVariations === []) {
+            return false;
+        }
+
+        $grouped = [];
+
+        foreach ($oldVariations as $variation) {
+            if (! is_array($variation)) {
+                continue;
+            }
+
+            $colorName = trim((string) ($variation['color'] ?? ''));
+            $colorKey = mb_strtolower($colorName, 'UTF-8');
+
+            if (! isset($grouped[$colorKey])) {
+                $grouped[$colorKey] = [
+                    'uuid' => Str::uuid()->toString(),
+                    'id' => $variation['color_id'] ?? '',
+                    'name' => $colorName,
+                    'variations' => [],
+                ];
+            }
+
+            $grouped[$colorKey]['variations'][] = [
+                'uuid' => Str::uuid()->toString(),
+                'id' => $variation['id'] ?? '',
+                'size' => Product::normalizeSize($variation['size'] ?? null) ?? '',
+                'price' => $variation['price'] ?? '',
+                'sale_price' => $variation['sale_price'] ?? '',
+                'stock' => $variation['stock'] ?? '',
+                'sku' => $variation['sku'] ?? '',
+            ];
+        }
+
+        if ($grouped === []) {
+            return false;
+        }
+
+        $this->colors = array_values($grouped);
+
+        return true;
     }
 }

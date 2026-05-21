@@ -1,44 +1,110 @@
-@props(['product'])
+@props(['product', 'offerOnly' => false])
 
 @php
-    $images = $product->colors->map(fn ($color) => $color->public_primary_image_url)->values()->toArray();
+    // Aseguramos reindexación limpia desde el inicio
+    $colorsToProcess = $product->colors->values();
+
+    if ($offerOnly) {
+        $colorsToProcess = $colorsToProcess
+            ->filter(fn ($color) => $color->hasActiveOffer())
+            ->values();
+    }
+
+    $images = $colorsToProcess->map(fn ($color) => $color->public_primary_image_url)->values()->toArray();
 
     if ($images === []) {
         $images = [asset('img/placeholder-product.jpg')];
     }
 
-    $colorsData = $product->colors
-        ->map(
-            fn ($color) => [
+    $colorsData = $colorsToProcess
+        ->map(function ($color) use ($offerOnly) {
+            $variation = null;
+            
+            if ($offerOnly) {
+                $variation = $color->resolvePrimaryOfferVariation();
+            }
+            
+            if (!$variation) {
+                $variation = $color->resolvePrimaryVariation();
+            }
+
+            $price = $variation ? (float) $variation->effective_price : null;
+            $originalPrice = $variation && $variation->sale_price !== null ? (float) $variation->price : null;
+            $hasOffer = $variation && $variation->sale_price !== null && (float) $variation->sale_price > 0 && (float) $variation->sale_price < (float) $variation->price;
+
+            return [
                 'id' => $color->id,
                 'name' => $color->name,
                 'image' => $color->public_primary_image_url,
-            ],
-        )
+                'price' => $price,
+                'original_price' => $originalPrice,
+                'has_offer' => $hasOffer,
+                'formatted_price' => $price !== null ? '$' . number_format($price, 0, ',', '.') : null,
+                'formatted_original_price' => $originalPrice !== null ? '$' . number_format($originalPrice, 0, ',', '.') : null,
+            ];
+        })
+        ->values() // Doble seguridad de reindexado
         ->toArray();
 
-    $uniqueColors = $product->colors->unique('name');
+    $uniqueColors = $colorsToProcess->unique('name')->values();
     $visibleColors = $uniqueColors->take(4);
     $extraColorsCount = $uniqueColors->count() - 4;
+
+    $defaultIndex = 0;
+    if ($offerOnly) {
+        $foundIndex = collect($colorsData)->search(fn($c) => $c['has_offer'] === true);
+        if ($foundIndex !== false) {
+            $defaultIndex = $foundIndex;
+        }
+    }
+
+    // Fallback seguro si la colección se vació por completo
+    if (!isset($colorsData[$defaultIndex]) && count($colorsData) > 0) {
+        $defaultIndex = 0;
+    }
+
+    $defaultColor = $colorsData[$defaultIndex] ?? null;
+    $defaultPrice = $defaultColor['price'] ?? null;
+    $defaultOriginalPrice = $defaultColor['original_price'] ?? null;
+    $defaultHasOffer = $defaultColor['has_offer'] ?? false;
 @endphp
 
 <div x-data="{
     images: {{ json_encode($images) }},
-    currentIndex: 0,
+    colorsData: {{ json_encode($colorsData) }},
+    currentIndex: {{ $defaultIndex }},
     timer: null,
     previewIndex: null,
+    destroy() {
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+    },
+    get activeColor() {
+        let idx = this.previewIndex !== null ? this.previewIndex : this.currentIndex;
+        return this.colorsData[idx] || null;
+    },
     startCarousel() {
-        if (this.images.length <= 1 || this.previewIndex !== null) return;
-        this.timer = setInterval(() => {
-            this.currentIndex = (this.currentIndex + 1) % this.images.length;
-        }, 2000);
+        if (this.timer) return;
+        if (this.images.length > 1 && this.previewIndex === null) {
+            this.timer = setInterval(() => {
+                this.currentIndex = (this.currentIndex + 1) % this.images.length;
+            }, 2000);
+        }
     },
     stopCarousel() {
-        clearInterval(this.timer);
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
         this.currentIndex = 0;
     },
     setPreview(index) {
-        clearInterval(this.timer);
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
         this.previewIndex = index;
     },
     clearPreview() {
@@ -46,15 +112,14 @@
         this.startCarousel();
     }
 }" @mouseenter="startCarousel()" @mouseleave="stopCarousel()"
-    class="group relative flex h-full flex-col rounded-md bg-white transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
+    {{ $attributes->merge(['class' => 'group relative flex h-full flex-col rounded-md bg-white transition-all duration-300 hover:scale-[1.02] hover:shadow-xl']) }}>
 
     <div class="pointer-events-none absolute left-2 top-2 z-30 flex flex-col gap-1">
-        @if ($product->display_has_active_offer)
-            <span
-                class="rounded bg-brand-pink px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
-                Oferta
-            </span>
-        @endif
+        <span x-show="activeColor ? activeColor.has_offer : {{ $defaultHasOffer ? 'true' : 'false' }}"
+              style="{{ $defaultHasOffer ? '' : 'display: none;' }}"
+              class="rounded bg-brand-pink px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+            Oferta
+        </span>
 
         @if ($product->is_low_stock)
             <span
@@ -112,19 +177,28 @@
             {{ $product->name }}
         </h3>
 
+        <p class="mt-1 text-xs text-gray-500" x-show="activeColor && activeColor.name" x-text="activeColor ? activeColor.name : '{{ $defaultColor['name'] ?? '' }}'">
+            {{ $defaultColor['name'] ?? '' }}
+        </p>
+
         <div class="mt-auto flex flex-col items-start gap-1 pt-3">
-            @if ($product->display_price !== null)
-                <div class="flex flex-wrap items-center gap-2">
-                    @if ($product->display_original_price !== null && $product->display_original_price > $product->display_price)
-                        <p class="text-sm text-gray-400 line-through">
-                            ${{ number_format($product->display_original_price, 0, ',', '.') }}
-                        </p>
+            <div class="flex flex-wrap items-center gap-2" x-show="activeColor && activeColor.price !== null" style="{{ $defaultPrice !== null ? '' : 'display: none;' }}">
+                <p class="text-sm text-gray-400 line-through"
+                   x-show="activeColor && activeColor.original_price !== null && activeColor.original_price > activeColor.price"
+                   x-text="activeColor ? activeColor.formatted_original_price : '{{ $defaultOriginalPrice !== null ? '$' . number_format($defaultOriginalPrice, 0, ',', '.') : '' }}'"
+                   style="{{ $defaultOriginalPrice !== null && $defaultOriginalPrice > $defaultPrice ? '' : 'display: none;' }}">
+                    @if ($defaultOriginalPrice !== null && $defaultOriginalPrice > $defaultPrice)
+                        ${{ number_format($defaultOriginalPrice, 0, ',', '.') }}
                     @endif
-                    <p class="text-base font-semibold text-text-dark">
-                        ${{ number_format($product->display_price, 0, ',', '.') }}
-                    </p>
-                </div>
-            @endif
+                </p>
+                <p class="text-base font-semibold text-text-dark"
+                   x-text="activeColor ? activeColor.formatted_price : '{{ $defaultPrice !== null ? '$' . number_format($defaultPrice, 0, ',', '.') : '' }}'">
+                    @if ($defaultPrice !== null)
+                        ${{ number_format($defaultPrice, 0, ',', '.') }}
+                    @endif
+                </p>
+            </div>
+            
             <p class="text-[10px] font-medium uppercase tracking-wider text-gray-500">
                 {{ $product->availability_label }}
             </p>

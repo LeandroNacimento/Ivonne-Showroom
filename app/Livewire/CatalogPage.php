@@ -69,6 +69,7 @@ class CatalogPage extends Component
                     $variationQuery
                         ->where('stock', '>', 0)
                         ->whereNotNull('sale_price')
+                        ->where('sale_price', '>', 0)
                         ->whereColumn('sale_price', '<', 'price');
                 });
             })
@@ -87,7 +88,7 @@ class CatalogPage extends Component
                             'images:id,product_color_id,path,position',
                             'variations' => function ($v) {
                                 $v->where('stock', '>', 0)
-                                    ->select('product_variations.id', 'product_variations.product_color_id', 'product_variations.size');
+                                    ->select('product_variations.id', 'product_variations.product_color_id', 'product_variations.size', 'product_variations.price', 'product_variations.sale_price', 'product_variations.stock');
                             },
                         ]);
                 },
