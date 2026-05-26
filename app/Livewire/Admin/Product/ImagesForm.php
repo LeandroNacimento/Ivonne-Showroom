@@ -12,7 +12,7 @@ class ImagesForm extends Component
     public array $colors = [];
 
     public array $existingImages = []; // [color => [{id, url, path}]]
-    
+
     public array $persistedColorIds = []; // [color => id]
 
     public ?int $productId = null;
@@ -28,7 +28,9 @@ class ImagesForm extends Component
     protected function loadImages(): void
     {
         $product = Product::with('images.productColor', 'colors')->find($this->productId);
-        if (!$product) return;
+        if (! $product) {
+            return;
+        }
 
         // Group existing images by color name from the relation
         $this->existingImages = $product->images
@@ -64,7 +66,9 @@ class ImagesForm extends Component
     {
         DB::transaction(function () use ($imageId, $direction) {
             $image = ProductImage::find($imageId);
-            if (!$image) return;
+            if (! $image) {
+                return;
+            }
 
             // 1. Get ordered collection
             $images = ProductImage::where('product_color_id', $image->product_color_id)
@@ -72,12 +76,16 @@ class ImagesForm extends Component
                 ->orderBy('id')
                 ->get();
 
-            $currentIndex = $images->search(fn($img) => $img->id === $image->id);
-            if ($currentIndex === false) return;
+            $currentIndex = $images->search(fn ($img) => $img->id === $image->id);
+            if ($currentIndex === false) {
+                return;
+            }
 
             $targetIndex = $direction === 'left' ? $currentIndex - 1 : $currentIndex + 1;
 
-            if ($targetIndex < 0 || $targetIndex >= $images->count()) return;
+            if ($targetIndex < 0 || $targetIndex >= $images->count()) {
+                return;
+            }
 
             // 2. Reorder in memory
             $imagesArray = $images->values()->all();
