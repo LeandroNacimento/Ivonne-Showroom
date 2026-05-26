@@ -42,7 +42,7 @@
                     </div>
 
                     <div x-show="activeImages.length > 1"
-                        class="pointer-events-none absolute bottom-4 right-4 rounded-md bg-black/50 px-2 py-1 text-xs text-white backdrop-blur-sm">
+                        class="pointer-events-none absolute bottom-4 right-4 md:hidden rounded-md bg-black/50 px-2 py-1 text-xs text-white backdrop-blur-sm">
                         Desliza para ver más
                     </div>
                 </div>
