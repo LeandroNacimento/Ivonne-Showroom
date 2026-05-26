@@ -14,9 +14,9 @@
 
             <div class="relative flex flex-col-reverse">
                 <div class="relative aspect-[4/5] w-full overflow-hidden rounded-lg bg-gray-200">
-                    <div class="hide-scroll absolute inset-0 flex h-full w-full snap-x snap-mandatory overflow-x-auto scroll-smooth"
+                    <div x-ref="galleryScroll" @scroll.passive="updateIndexFromScroll" class="hide-scroll absolute inset-0 flex h-full w-full snap-x snap-mandatory overflow-x-auto scroll-smooth"
                         style="scrollbar-width: none; -ms-overflow-style: none;">
-                        <template x-for="(imgUrl, idx) in activeImages" :key="imgUrl">
+                        <template x-for="(imgUrl, idx) in activeImages" :key="imgUrl + '-' + idx">
                             <div class="flex h-full w-full flex-shrink-0 snap-center items-center justify-center">
                                 <img :src="imgUrl" :alt="'{{ $product->name }}'" x-data="{ shown: false }"
                                     x-init="setTimeout(() => shown = true, 10)" x-show="shown"
@@ -26,6 +26,19 @@
                                     class="h-full w-full origin-center object-cover object-center" loading="lazy">
                             </div>
                         </template>
+                    </div>
+
+                    <div class="pointer-events-none absolute inset-0 flex items-center justify-between p-2 hidden md:flex" x-show="activeImages.length > 1">
+                        <button type="button" @click="prev()"
+                            class="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-gray-800 shadow-sm opacity-40 hover:opacity-100 disabled:opacity-0 disabled:cursor-not-allowed transition-all duration-200"
+                            :disabled="currentImageIndex === 0" aria-label="Anterior">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <button type="button" @click="next()"
+                            class="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-gray-800 shadow-sm opacity-40 hover:opacity-100 disabled:opacity-0 disabled:cursor-not-allowed transition-all duration-200"
+                            :disabled="currentImageIndex === activeImages.length - 1" aria-label="Siguiente">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
                     </div>
 
                     <div x-show="activeImages.length > 1"
