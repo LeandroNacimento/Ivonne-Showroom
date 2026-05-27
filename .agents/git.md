@@ -118,6 +118,17 @@ Escalate when the task may involve:
 * push, merge, rebase, reset, or force operations
 * a request phrased as full Gitflow execution
 
+## Manual Release and Tag Flow
+
+When closing a stable release (PR merged to `main`), apply this conservative manual flow:
+
+1. **Update and switch to main:** `git fetch origin`, `git checkout main`, `git pull origin main`.
+2. **Create Annotated Tag:** Always create annotated tags for releases on `main` (e.g., `git tag -a v1.2-stable -m "Release v1.2-stable"`). Do not use lightweight tags. Do not tag on `fix/*` or `feature/*` branches.
+3. **Push Tag:** `git push origin v1.2-stable`.
+4. **Sync Develop:** Switch to `develop` (`git checkout develop`, `git pull origin develop`). Verify differences (`git log develop..main --oneline`). If `main` has new commits, sync them back using a normal merge (`git merge main -m "chore: synchronize develop after v1.2-stable release"`). Do not use destructive rebase here.
+5. **Push Develop:** `git push origin develop`.
+6. **Release Notes:** Draft a GitHub Release detailing the functional improvements, technical fixes, and UX upgrades.
+
 ## Task Checklists
 
 For Gitflow continuation:
