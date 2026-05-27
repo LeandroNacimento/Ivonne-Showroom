@@ -43,11 +43,11 @@
         style="display: none;">
         <div class="flex items-center mb-3">
             <span class="mr-2 text-xl">✨</span>
-            <span class="font-semibold text-brand-pink">¡Producto agregado!</span>
+            <span class="font-semibold text-brand-pink">¡Artículo agregado!</span>
         </div>
         <div class="text-sm text-gray-600 mb-4 flex items-center font-medium">
             <x-icon name="bag" class="w-4 h-4 mr-2 text-brand-pink" />
-            <span x-text="count + (count === 1 ? ' producto en tu pedido' : ' productos en tu pedido')"></span>
+            <span x-text="count + (count === 1 ? ' artículo en tu pedido' : ' artículos en tu pedido')"></span>
         </div>
         <a href="{{ route('cart') }}"
             class="block w-full text-center bg-brand-pink hover:bg-brand-heart text-white border-none rounded-lg py-2 text-sm font-semibold transition-colors shadow-sm">

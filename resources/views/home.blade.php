@@ -22,9 +22,13 @@
                 Categorías
                 Destacadas</h2>
 
+            <!-- Fade Overlays (Cinematic Feel) -->
+            <div class="pointer-events-none absolute left-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-r from-white to-transparent z-40"></div>
+            <div class="pointer-events-none absolute right-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-l from-white to-transparent z-40"></div>
+
             <!-- Left Button -->
             <button @click="scrollCategories('left')"
-                class="absolute left-0 top-1/2 -translate-y-1/2 z-50 bg-white/90 hover:bg-white p-2 rounded-full shadow-xl backdrop-blur-sm text-gray-800 transition-all opacity-0 group-hover/carousel:opacity-100 -ml-2 lg:-ml-4 hidden md:flex items-center justify-center border border-gray-100 cursor-pointer">
+                class="absolute left-0 top-1/2 -translate-y-1/2 z-50 bg-white/90 hover:bg-white p-2 rounded-full shadow-xl backdrop-blur-sm text-gray-800 transition-all duration-300 ease-out hover:scale-[1.02] active:scale-95 opacity-0 group-hover/carousel:opacity-100 -ml-2 lg:-ml-4 hidden md:flex items-center justify-center border border-gray-100 cursor-pointer">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
                     stroke="currentColor" class="w-6 h-6">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -37,9 +41,9 @@
                 {{-- ORIGINALS --}}
                 @foreach ($categories as $category)
                     <a href="{{ route('catalog', ['category' => $category->slug]) }}"
-                        class="min-w-[30%] lg:min-w-[24%] group relative flex-shrink-0 block">
+                        class="min-w-[30%] lg:min-w-[24%] group relative flex-shrink-0 block transition-transform transition-opacity duration-300 ease-out">
                         <div
-                            class="w-full h-64 xl:h-80 bg-gray-200 rounded-lg overflow-hidden group-hover:opacity-75 relative">
+                            class="w-full h-64 xl:h-80 bg-gray-200 rounded-lg overflow-hidden transition-opacity duration-300 ease-out group-hover:opacity-85 relative">
                             @if ($category->image)
                                 <img src="{{ \Illuminate\Support\Facades\Storage::url($category->image) }}" alt="{{ $category->name }}"
                                     class="w-full h-full object-center object-cover absolute inset-0" loading="lazy">
@@ -50,7 +54,7 @@
                             @endif
                         </div>
                         <h3
-                            class="mt-4 text-base font-semibold text-gray-900 group-hover:text-brand-gold transition-colors text-center">
+                            class="mt-4 text-base font-semibold text-gray-900 transition-colors duration-300 ease-out group-hover:text-brand-gold text-center">
                             {{ $category->name }}
                         </h3>
                     </a>
@@ -59,7 +63,7 @@
 
             <!-- Right Button -->
             <button @click="scrollCategories('right')"
-                class="absolute right-0 top-1/2 -translate-y-1/2 z-50 bg-white/90 hover:bg-white p-2 rounded-full shadow-xl backdrop-blur-sm text-gray-800 transition-all opacity-0 group-hover/carousel:opacity-100 -mr-2 lg:-mr-4 hidden md:flex items-center justify-center border border-gray-100 cursor-pointer">
+                class="absolute right-0 top-1/2 -translate-y-1/2 z-50 bg-white/90 hover:bg-white p-2 rounded-full shadow-xl backdrop-blur-sm text-gray-800 transition-all duration-300 ease-out hover:scale-[1.02] active:scale-95 opacity-0 group-hover/carousel:opacity-100 -mr-2 lg:-mr-4 hidden md:flex items-center justify-center border border-gray-100 cursor-pointer">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
                     stroke="currentColor" class="w-6 h-6">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />

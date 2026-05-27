@@ -52,7 +52,7 @@
                 <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">{{ $product->name }}</h1>
 
                 <div class="mt-3 space-y-2">
-                    <h2 class="sr-only">Información del producto</h2>
+                    <h2 class="sr-only">Información del artículo</h2>
                     <span x-show="displayPricing?.hasActiveOffer"
                         class="inline-flex rounded bg-brand-pink px-2 py-1 text-xs font-bold uppercase tracking-wide text-white"
                         style="display:none;">
