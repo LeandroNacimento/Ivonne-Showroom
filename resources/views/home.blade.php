@@ -1,4 +1,6 @@
 <x-layouts.app>
+    @section('title', 'Inicio - Ivonne Showroom')
+
     @include('partials.home.hero', [
         'homeHero' => $homeHero,
         'homeHeroSlides' => $homeHeroSlides,
@@ -36,7 +38,7 @@
             </button>
 
             <!-- Carousel Track -->
-            <div x-ref="container" class="flex overflow-x-auto gap-4 pb-4 hide-scrollbar">
+            <div x-ref="container" class="flex overflow-x-auto gap-4 pb-4 hide-scrollbar snap-x snap-proximity">
 
                 {{-- ORIGINALS --}}
                 @foreach ($categories as $category)

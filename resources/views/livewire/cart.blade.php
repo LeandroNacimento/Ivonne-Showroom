@@ -64,7 +64,7 @@
                                     <div class="flex items-center rounded-md border border-gray-300">
                                         <button type="button" wire:click="decrement('{{ $key }}')"
                                             wire:loading.attr="disabled"
-                                            class="border-r border-gray-300 px-3 py-1 text-gray-600 transition-colors hover:bg-gray-100 focus:outline-none
+                                            class="border-r border-gray-300 px-4 py-2.5 text-gray-600 transition-colors hover:bg-gray-100 focus:outline-none
                                                 {{ $item['quantity'] <= 1 ? 'opacity-30 cursor-not-allowed' : '' }}">
                                             -
                                         </button>
@@ -72,7 +72,7 @@
                                             class="h-8 w-12 border-0 bg-transparent p-0 text-center font-medium text-gray-900 focus:ring-0">
                                         <button type="button" wire:click="increment('{{ $key }}')"
                                             wire:loading.attr="disabled"
-                                            class="border-l border-gray-300 px-3 py-1 text-gray-600 transition-colors hover:bg-gray-100 focus:outline-none
+                                            class="border-l border-gray-300 px-4 py-2.5 text-gray-600 transition-colors hover:bg-gray-100 focus:outline-none
                                                 {{ $item['quantity'] >= ($item['stock'] ?? 99) ? 'opacity-30 cursor-not-allowed' : '' }}">
                                             +
                                         </button>

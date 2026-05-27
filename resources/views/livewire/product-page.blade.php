@@ -68,10 +68,19 @@
                     </div>
                 </div>
 
-                <div class="mt-4">
+                <div class="mt-4" x-data="{ expanded: false }">
                     <h3 class="sr-only">Descripción</h3>
-                    <div class="space-y-6 text-base text-gray-700">
-                        <p>{{ $product->description }}</p>
+                    <div class="space-y-2 text-base text-gray-700">
+                        <p :class="expanded ? '' : 'line-clamp-4'">{{ $product->description }}</p>
+                        @if(strlen($product->description) > 200)
+                            <button
+                                type="button"
+                                class="mt-1 text-sm font-medium text-brand-pink hover:text-brand-heart transition-colors"
+                                @click="expanded = !expanded"
+                            >
+                                <span x-text="expanded ? 'Ver menos' : 'Ver más'">Ver más</span>
+                            </button>
+                        @endif
                     </div>
                 </div>
 
@@ -121,19 +130,19 @@
                                 <label for="quantity" class="mb-2 text-sm font-medium text-gray-700">Cantidad:</label>
                                 <div class="flex w-fit items-center gap-3 rounded-lg border border-gray-300 px-3 py-2">
                                     <button type="button" @click="qty > 1 ? qty-- : null"
-                                        class="flex h-6 w-6 items-center justify-center text-gray-600 transition-colors hover:text-black focus:outline-none"
+                                        class="flex h-10 w-10 items-center justify-center text-gray-600 transition-colors hover:text-black focus:outline-none"
                                         :class="qty <= 1 && 'opacity-30 cursor-not-allowed'">
-                                        <span class="mb-1 text-lg font-medium leading-none">-</span>
+                                        <span class="text-lg font-medium leading-none">-</span>
                                     </button>
                                     <input type="number" name="quantity" id="quantity" x-model="qty" min="1"
                                         :max="selectedStock || 99" readonly
                                         class="w-8 border-0 bg-transparent p-0 text-center text-base font-semibold text-gray-900 focus:ring-0">
                                     <button type="button"
                                         @click="(selectedStock === null || qty < selectedStock) ? qty++ : null"
-                                        class="flex h-6 w-6 items-center justify-center text-gray-600 transition-colors hover:text-black focus:outline-none"
+                                        class="flex h-10 w-10 items-center justify-center text-gray-600 transition-colors hover:text-black focus:outline-none"
                                         :class="selectedStock !== null && qty >= selectedStock &&
                                             'opacity-30 cursor-not-allowed'">
-                                        <span class="mb-1 text-lg font-medium leading-none">+</span>
+                                        <span class="text-lg font-medium leading-none">+</span>
                                     </button>
                                 </div>
                                 <span x-show="selectedStock !== null && qty >= selectedStock"

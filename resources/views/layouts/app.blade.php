@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Ivonne Showroom - Formosa</title>
+    <title>@yield('title', 'Ivonne Showroom - Formosa')</title>
     <link rel="icon" href="{{ asset('img/showroom-logo.png') }}" type="image/png">
 
     <!-- Fonts -->
@@ -39,7 +39,7 @@
             setTimeout(() => show = false, 2500)
         "
         x-show="show" x-transition
-        class="fixed bottom-6 right-6 bg-white border border-brand-pink/20 text-gray-800 px-5 py-4 rounded-xl shadow-luxury z-50 min-w-[300px]"
+        class="fixed bottom-20 sm:bottom-6 right-6 bg-white border border-brand-pink/20 text-gray-800 px-5 py-4 rounded-xl shadow-luxury z-50 min-w-[300px]"
         style="display: none;">
         <div class="flex items-center mb-3">
             <span class="mr-2 text-xl">✨</span>

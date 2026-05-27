@@ -152,7 +152,7 @@
             <div class="mb-3 flex items-center space-x-1.5" @click.stop.prevent>
                 @foreach ($visibleColors as $color)
                     <div @click.stop.prevent="window.location.assign('{{ route('product.show', $product->slug) }}?color={{ Str::slug($color->name) }}')"
-                        class="relative block h-4 w-4 cursor-pointer overflow-hidden rounded-full border shadow-sm transition-transform hover:scale-110"
+                        class="relative block h-5 w-5 cursor-pointer overflow-hidden rounded-full border shadow-sm transition-transform hover:scale-110 before:absolute before:-inset-2 before:content-['']"
                         :class="previewIndex === {{ collect($colorsData)->search(fn($c) => $c['id'] == $color->id) }} ?
                             'border-brand-pink ring-1 ring-brand-pink' : 'border-gray-200'"
                         title="{{ $color->name }}"
