@@ -1,4 +1,4 @@
-@props(['product', 'offerOnly' => false])
+@props(['product', 'offerOnly' => false, 'eager' => false])
 
 @php
     // Aseguramos reindexación limpia desde el inicio
@@ -85,6 +85,9 @@
         let idx = this.previewIndex !== null ? this.previewIndex : this.currentIndex;
         return this.colorsData[idx] || null;
     },
+    get currentVisibleIndex() {
+        return this.previewIndex !== null ? this.previewIndex : this.currentIndex;
+    },
     startCarousel() {
         if (this.timer) return;
         if (this.images.length > 1 && this.previewIndex === null) {
@@ -136,16 +139,19 @@
     <div class="relative aspect-[4/5] w-full cursor-pointer overflow-hidden rounded-t-md bg-brand-blush/30"
         @click="window.location.href = '{{ route('product.show', $product->slug) }}'">
 
-        @foreach ($images as $index => $image)
-            <img src="{{ $image }}" alt="{{ $product->name }} - Vista {{ $index + 1 }}"
-                loading="lazy" decoding="async"
-                x-show="previewIndex !== null ? previewIndex === {{ $index }} : currentIndex === {{ $index }}"
-                x-transition:enter="transition opacity duration-500 ease-in-out" x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100" x-transition:leave="transition opacity duration-500 ease-in-out"
-                x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                class="absolute inset-0 h-full w-full object-cover object-center {{ $index === 0 ? '' : 'hidden' }}"
-                :class="{ 'hidden': false }">
-        @endforeach
+        <template x-for="imgUrl in [images[currentVisibleIndex]]" :key="currentVisibleIndex">
+            <img :src="imgUrl"
+                 :alt="`{{ $product->name }} - Vista ` + (currentVisibleIndex + 1)"
+                 x-transition:enter="transition-opacity duration-300 ease-in-out"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition-opacity duration-300 ease-in-out"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="absolute inset-0 h-full w-full object-cover object-center"
+                 loading="{{ $eager ? 'eager' : 'lazy' }}"
+                 decoding="async">
+        </template>
     </div>
 
     <a href="{{ route('product.show', $product->slug) }}" class="flex flex-grow flex-col p-3 sm:p-4 focus:outline-none">
