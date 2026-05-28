@@ -15,7 +15,7 @@
         x-init="init()"
         @mouseenter="pause()"
         @mouseleave="resume()"
-        class="spy-section relative w-full h-[70vh] sm:h-[85vh] min-h-[600px] overflow-hidden">
+        class="spy-section relative w-full h-[70vh] sm:h-[85vh] min-h-[600px] overflow-hidden bg-brand-blush">
         @foreach ($homeHeroSlides as $slide)
             <div x-show="active === {{ $loop->index }}"
                 x-transition:enter="transition ease-out duration-700"
@@ -91,7 +91,7 @@
     </div>
 @elseif ($hasAdminHero && $homeHeroMode === 'static')
     <div id="inicio" data-home-hero-mode="static"
-        class="spy-section relative w-full h-[70vh] sm:h-[85vh] min-h-[600px] bg-cover bg-center bg-no-repeat lg:bg-right-top"
+        class="spy-section relative w-full h-[70vh] sm:h-[85vh] min-h-[600px] bg-cover bg-center bg-no-repeat lg:bg-right-top bg-brand-blush"
         style="background-image: url('{{ $primarySlide->public_image_url }}');">
         <div class="absolute inset-0 bg-black/60"></div>
 
@@ -128,7 +128,7 @@
     </div>
 @else
     <div id="inicio" data-home-hero-mode="fallback"
-        class="spy-section relative w-full h-[70vh] sm:h-[85vh] min-h-[600px] bg-cover bg-center bg-no-repeat lg:bg-right-top"
+        class="spy-section relative w-full h-[70vh] sm:h-[85vh] min-h-[600px] bg-cover bg-center bg-no-repeat lg:bg-right-top bg-brand-blush"
         style="background-image: url('{{ asset('img/imgHero.png') }}');">
         <div class="absolute inset-0 bg-black/60"></div>
 

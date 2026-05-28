@@ -112,7 +112,7 @@
         this.startCarousel();
     }
 }" @mouseenter="startCarousel()" @mouseleave="stopCarousel()"
-    {{ $attributes->merge(['class' => 'group relative flex h-full flex-col rounded-md bg-white transition-all duration-300 hover:scale-[1.02] hover:shadow-xl']) }}>
+    {{ $attributes->merge(['class' => 'group relative flex h-full flex-col rounded-md bg-white product-card-hover']) }}>
 
     <div class="pointer-events-none absolute left-2 top-2 z-30 flex flex-col gap-1">
         <span x-show="activeColor ? activeColor.has_offer : {{ $defaultHasOffer ? 'true' : 'false' }}"
@@ -133,11 +133,12 @@
         @endif
     </div>
 
-    <div class="relative aspect-[4/5] w-full cursor-pointer overflow-hidden rounded-t-md bg-stone-50"
+    <div class="relative aspect-[4/5] w-full cursor-pointer overflow-hidden rounded-t-md bg-brand-blush/30"
         @click="window.location.href = '{{ route('product.show', $product->slug) }}'">
 
         @foreach ($images as $index => $image)
-            <img src="{{ $image }}" alt="{{ $product->name }} - Vista {{ $index + 1 }}" loading="lazy"
+            <img src="{{ $image }}" alt="{{ $product->name }} - Vista {{ $index + 1 }}"
+                loading="lazy" decoding="async"
                 x-show="previewIndex !== null ? previewIndex === {{ $index }} : currentIndex === {{ $index }}"
                 x-transition:enter="transition opacity duration-500 ease-in-out" x-transition:enter-start="opacity-0"
                 x-transition:enter-end="opacity-100" x-transition:leave="transition opacity duration-500 ease-in-out"
@@ -147,7 +148,7 @@
         @endforeach
     </div>
 
-    <a href="{{ route('product.show', $product->slug) }}" class="flex flex-grow flex-col p-4 focus:outline-none">
+    <a href="{{ route('product.show', $product->slug) }}" class="flex flex-grow flex-col p-3 sm:p-4 focus:outline-none">
         @if ($uniqueColors->count() > 0)
             <div class="mb-3 flex items-center space-x-1.5" @click.stop.prevent>
                 @foreach ($visibleColors as $color)
@@ -177,13 +178,13 @@
             {{ $product->name }}
         </h3>
 
-        <p class="mt-1 text-xs text-gray-500" x-show="activeColor && activeColor.name" x-text="activeColor ? activeColor.name : '{{ $defaultColor['name'] ?? '' }}'">
+        <p class="mt-1 text-xs text-gray-500 hidden" x-show="activeColor && activeColor.name" x-text="activeColor ? activeColor.name : '{{ $defaultColor['name'] ?? '' }}'">
             {{ $defaultColor['name'] ?? '' }}
         </p>
 
-        <div class="mt-auto flex flex-col items-start gap-1 pt-3">
-            <div class="flex flex-wrap items-center gap-2" x-show="activeColor && activeColor.price !== null" style="{{ $defaultPrice !== null ? '' : 'display: none;' }}">
-                <p class="text-sm text-gray-400 line-through"
+        <div class="mt-auto flex flex-col items-start gap-1 pt-2">
+            <div class="flex flex-wrap items-center gap-1" x-show="activeColor && activeColor.price !== null" style="{{ $defaultPrice !== null ? '' : 'display: none;' }}">
+                <p class="text-xs text-gray-400 line-through"
                    x-show="activeColor && activeColor.original_price !== null && activeColor.original_price > activeColor.price"
                    x-text="activeColor ? activeColor.formatted_original_price : '{{ $defaultOriginalPrice !== null ? '$' . number_format($defaultOriginalPrice, 0, ',', '.') : '' }}'"
                    style="{{ $defaultOriginalPrice !== null && $defaultOriginalPrice > $defaultPrice ? '' : 'display: none;' }}">
@@ -191,7 +192,7 @@
                         ${{ number_format($defaultOriginalPrice, 0, ',', '.') }}
                     @endif
                 </p>
-                <p class="text-base font-semibold text-text-dark"
+                <p class="text-base font-semibold text-brand-pink"
                    x-text="activeColor ? activeColor.formatted_price : '{{ $defaultPrice !== null ? '$' . number_format($defaultPrice, 0, ',', '.') : '' }}'">
                     @if ($defaultPrice !== null)
                         ${{ number_format($defaultPrice, 0, ',', '.') }}
@@ -199,7 +200,7 @@
                 </p>
             </div>
             
-            <p class="text-[10px] font-medium uppercase tracking-wider text-gray-500">
+            <p class="text-xs font-medium tracking-wide text-gray-500">
                 {{ $product->availability_label }}
             </p>
         </div>
