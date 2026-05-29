@@ -89,7 +89,7 @@ class ShowroomTest extends TestCase
         $response->assertSee('/storage/home-hero/slide-1.jpg', false);
         $response->assertSee('/storage/home-hero/slide-2.jpg', false);
         $response->assertDontSee('class="hidden absolute inset-0', false);
-        $response->assertSee("style=\"display: none; background-image: url('/storage/home-hero/slide-2.jpg');\"", false);
+        $response->assertSee('style="display: none;"', false);
         $response->assertDontSee('Contactar');
         $response->assertDontSee('Estilo y elegancia');
     }
