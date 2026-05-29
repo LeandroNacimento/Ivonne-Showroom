@@ -85,7 +85,7 @@
         <div wire:loading.remove
             class="grid grid-cols-2 gap-x-4 gap-y-12 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-10 lg:gap-y-16">
             @forelse($products as $product)
-                <x-product-card :product="$product" :offer-only="$offerOnly" wire:key="product-{{ $product->id }}-{{ $offerOnly ? 'offer' : 'all' }}" />
+                <x-product-card :product="$product" :offer-only="$offerOnly" :eager="$loop->index < 4" wire:key="product-{{ $product->id }}-{{ $offerOnly ? 'offer' : 'all' }}" />
             @empty
                 <div class="col-span-full py-32 text-center">
                     <p class="text-lg font-light text-gray-400 tracking-wide">

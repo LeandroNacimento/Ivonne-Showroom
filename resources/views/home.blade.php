@@ -1,4 +1,6 @@
 <x-layouts.app>
+    @section('title', 'Inicio - Ivonne Showroom')
+
     @include('partials.home.hero', [
         'homeHero' => $homeHero,
         'homeHeroSlides' => $homeHeroSlides,
@@ -6,7 +8,7 @@
     ])
 
     <!-- Categories Section -->
-    <div id="categorias" class="spy-section bg-white py-12" x-data="categoriesCarousel">
+    <div id="categorias" class="spy-section bg-white py-8 sm:py-12" x-data="categoriesCarousel">
         <style>
             .hide-scrollbar::-webkit-scrollbar {
                 display: none;
@@ -36,7 +38,7 @@
             </button>
 
             <!-- Carousel Track -->
-            <div x-ref="container" class="flex overflow-x-auto gap-4 pb-4 hide-scrollbar">
+            <div x-ref="container" class="flex overflow-x-auto gap-4 pb-4 hide-scrollbar snap-x snap-proximity">
 
                 {{-- ORIGINALS --}}
                 @foreach ($categories as $category)
@@ -73,13 +75,13 @@
     </div>
 
     <!-- Featured Products Section -->
-    <div id="novedades" class="spy-section bg-brand-blush py-12">
+    <div id="novedades" class="spy-section bg-brand-blush py-8 sm:py-12">
         <div class="max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 text-center mb-8 font-script reveal">
                 Novedades
             </h2>
             <div
-                class="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-4 xl:gap-x-8 reveal-stagger-container">
+                class="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8 reveal-stagger-container">
                 @foreach ($featuredProducts as $product)
                     <div class="group relative bg-white rounded-lg shadow-sm overflow-hidden reveal-child">
                         @if ($product->display_has_active_offer)
@@ -88,28 +90,27 @@
                             </div>
                         @endif
                         <div
-                            class="w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-t-lg overflow-hidden group-hover:opacity-75 lg:h-80 lg:aspect-none flex items-center justify-center">
+                            class="relative aspect-[4/5] w-full overflow-hidden rounded-t-lg bg-brand-blush/30">
                             <img src="{{ $product->public_primary_image_url }}" alt="{{ $product->name }}"
-                                class="w-full h-full object-center object-cover" loading="lazy">
+                                class="absolute inset-0 w-full h-full object-center object-cover"
+                                loading="{{ $loop->index < 4 ? 'eager' : 'lazy' }}"
+                                decoding="async">
                         </div>
-                        <div class="mt-4 flex justify-between px-4 pb-4">
-                            <div>
-                                <h3 class="text-sm text-gray-700">
-                                    <a href="{{ route('product.show', $product->slug) }}">
-                                        <span aria-hidden="true" class="absolute inset-0"></span>
-                                        {{ $product->name }}
-                                    </a>
-                                </h3>
-                                <p class="mt-1 text-sm text-gray-500">{{ $product->category->name }}</p>
-                            </div>
+                        <div class="flex justify-between items-start px-3 py-3">
+                            <h3 class="text-sm font-medium text-text-dark leading-snug line-clamp-2 flex-1 pr-2">
+                                <a href="{{ route('product.show', $product->slug) }}">
+                                    <span aria-hidden="true" class="absolute inset-0"></span>
+                                    {{ $product->name }}
+                                </a>
+                            </h3>
                             @if ($product->display_price !== null)
-                                <div class="text-right">
+                                <div class="text-right flex-shrink-0">
                                     @if ($product->display_original_price !== null && $product->display_original_price > $product->display_price)
                                         <p class="text-xs text-gray-400 line-through">
                                             ${{ number_format($product->display_original_price, 0, ',', '.') }}
                                         </p>
                                     @endif
-                                    <p class="text-sm font-medium text-gray-900">
+                                    <p class="text-sm font-semibold text-brand-pink">
                                         ${{ number_format($product->display_price, 0, ',', '.') }}
                                     </p>
                                 </div>

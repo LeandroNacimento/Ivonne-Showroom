@@ -15,7 +15,7 @@
         x-init="init()"
         @mouseenter="pause()"
         @mouseleave="resume()"
-        class="spy-section relative w-full h-[85vh] min-h-[600px] overflow-hidden">
+        class="spy-section relative w-full h-[70vh] sm:h-[85vh] min-h-[600px] overflow-hidden bg-brand-blush">
         @foreach ($homeHeroSlides as $slide)
             <div x-show="active === {{ $loop->index }}"
                 x-transition:enter="transition ease-out duration-700"
@@ -24,8 +24,14 @@
                 x-transition:leave="transition ease-in duration-500"
                 x-transition:leave-start="opacity-100"
                 x-transition:leave-end="opacity-0"
-                class="absolute inset-0 bg-cover bg-center bg-no-repeat lg:bg-right-top"
-                style="{{ $loop->first ? '' : 'display: none; ' }}background-image: url('{{ $slide->public_image_url }}');">
+                class="absolute inset-0"
+                style="{{ $loop->first ? '' : 'display: none;' }}">
+                <img src="{{ $slide->public_image_url }}"
+                     alt="Ivonne Showroom — slide {{ $loop->iteration }}"
+                     class="absolute inset-0 h-full w-full object-cover lg:object-right-top"
+                     loading="{{ $loop->first ? 'eager' : 'lazy' }}"
+                     fetchpriority="{{ $loop->first ? 'high' : 'auto' }}"
+                     decoding="async">
                 <div class="absolute inset-0 bg-black/60"></div>
             </div>
         @endforeach
@@ -91,8 +97,13 @@
     </div>
 @elseif ($hasAdminHero && $homeHeroMode === 'static')
     <div id="inicio" data-home-hero-mode="static"
-        class="spy-section relative w-full h-[85vh] min-h-[600px] bg-cover bg-center bg-no-repeat lg:bg-right-top"
-        style="background-image: url('{{ $primarySlide->public_image_url }}');">
+        class="spy-section relative w-full h-[70vh] sm:h-[85vh] min-h-[600px] bg-brand-blush">
+        <img src="{{ $primarySlide->public_image_url }}"
+             alt="Ivonne Showroom hero"
+             class="absolute inset-0 h-full w-full object-cover object-right-top"
+             loading="eager"
+             fetchpriority="high"
+             decoding="async">
         <div class="absolute inset-0 bg-black/60"></div>
 
         <div
@@ -128,8 +139,13 @@
     </div>
 @else
     <div id="inicio" data-home-hero-mode="fallback"
-        class="spy-section relative w-full h-[85vh] min-h-[600px] bg-cover bg-center bg-no-repeat lg:bg-right-top"
-        style="background-image: url('{{ asset('img/imgHero.png') }}');">
+        class="spy-section relative w-full h-[70vh] sm:h-[85vh] min-h-[600px] bg-brand-blush">
+        <img src="{{ asset('img/imgHero.png') }}"
+             alt="Ivonne Showroom — Estilo y elegancia"
+             class="absolute inset-0 h-full w-full object-cover object-right-top"
+             loading="eager"
+             fetchpriority="high"
+             decoding="async">
         <div class="absolute inset-0 bg-black/60"></div>
 
         <div

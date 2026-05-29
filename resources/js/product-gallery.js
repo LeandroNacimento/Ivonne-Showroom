@@ -5,6 +5,7 @@ export default (allImages, allVariations, initialColor, initialPricing) => ({
     selectedVariation: null,
     currentSlide: 0,
     initialPricing,
+    qty: 1,
 
     get colorNames() {
         return [...new Set(this.allVariations.map((variation) => variation.color))];
