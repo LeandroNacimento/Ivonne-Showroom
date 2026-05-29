@@ -1,4 +1,4 @@
-@props(['product', 'offerOnly' => false, 'eager' => false])
+@props(['product', 'offerOnly' => false, 'eager' => false, 'compact' => false])
 
 @php
     // Aseguramos reindexación limpia desde el inicio
@@ -115,7 +115,7 @@
         this.startCarousel();
     }
 }" @mouseenter="startCarousel()" @mouseleave="stopCarousel()"
-    {{ $attributes->merge(['class' => 'group relative flex h-full flex-col rounded-md bg-white product-card-hover']) }}>
+    {{ $attributes->merge(['class' => 'group relative flex h-full flex-col rounded-md bg-white product-card-hover ' . ($compact ? 'shadow-sm' : '')]) }}>
 
     <div class="pointer-events-none absolute left-2 top-2 z-30 flex flex-col gap-1">
         <span x-show="activeColor ? activeColor.has_offer : {{ $defaultHasOffer ? 'true' : 'false' }}"
@@ -154,12 +154,12 @@
         </template>
     </div>
 
-    <a href="{{ route('product.show', $product->slug) }}" class="flex flex-grow flex-col p-3 sm:p-4 focus:outline-none">
+    <a href="{{ route('product.show', $product->slug) }}" class="flex flex-grow flex-col {{ $compact ? 'p-2 sm:p-3' : 'p-3 sm:p-4' }} focus:outline-none">
         @if ($uniqueColors->count() > 0)
-            <div class="mb-3 flex items-center space-x-1.5" @click.stop.prevent>
+            <div class="{{ $compact ? 'mb-2' : 'mb-3' }} flex items-center space-x-1.5" @click.stop.prevent>
                 @foreach ($visibleColors as $color)
                     <div @click.stop.prevent="window.location.assign('{{ route('product.show', $product->slug) }}?color={{ Str::slug($color->name) }}')"
-                        class="relative block h-5 w-5 cursor-pointer overflow-hidden rounded-full border shadow-sm transition-transform hover:scale-110 before:absolute before:-inset-2 before:content-['']"
+                        class="relative block {{ $compact ? 'h-4 w-4' : 'h-5 w-5' }} cursor-pointer overflow-hidden rounded-full border shadow-sm transition-transform hover:scale-110 before:absolute before:-inset-2 before:content-['']"
                         :class="previewIndex === {{ collect($colorsData)->search(fn($c) => $c['id'] == $color->id) }} ?
                             'border-brand-pink ring-1 ring-brand-pink' : 'border-gray-200'"
                         title="{{ $color->name }}"
@@ -180,7 +180,7 @@
         @endif
 
         <h3
-            class="line-clamp-2 text-sm font-medium leading-relaxed text-text-dark transition-colors duration-300 group-hover:text-brand-pink md:text-base">
+            class="line-clamp-2 {{ $compact ? 'text-xs md:text-sm' : 'text-sm md:text-base' }} font-medium leading-relaxed text-text-dark transition-colors duration-300 group-hover:text-brand-pink">
             {{ $product->name }}
         </h3>
 
@@ -190,7 +190,7 @@
 
         <div class="mt-auto flex flex-col items-start gap-1 pt-2">
             <div class="flex flex-wrap items-center gap-1" x-show="activeColor && activeColor.price !== null" style="{{ $defaultPrice !== null ? '' : 'display: none;' }}">
-                <p class="text-xs text-gray-400 line-through"
+                <p class="{{ $compact ? 'text-[10px]' : 'text-xs' }} text-gray-400 line-through"
                    x-show="activeColor && activeColor.original_price !== null && activeColor.original_price > activeColor.price"
                    x-text="activeColor ? activeColor.formatted_original_price : '{{ $defaultOriginalPrice !== null ? '$' . number_format($defaultOriginalPrice, 0, ',', '.') : '' }}'"
                    style="{{ $defaultOriginalPrice !== null && $defaultOriginalPrice > $defaultPrice ? '' : 'display: none;' }}">
@@ -198,7 +198,7 @@
                         ${{ number_format($defaultOriginalPrice, 0, ',', '.') }}
                     @endif
                 </p>
-                <p class="text-base font-semibold text-brand-pink"
+                <p class="{{ $compact ? 'text-sm' : 'text-base' }} font-semibold text-brand-pink"
                    x-text="activeColor ? activeColor.formatted_price : '{{ $defaultPrice !== null ? '$' . number_format($defaultPrice, 0, ',', '.') : '' }}'">
                     @if ($defaultPrice !== null)
                         ${{ number_format($defaultPrice, 0, ',', '.') }}
@@ -206,7 +206,7 @@
                 </p>
             </div>
             
-            <p class="text-xs font-medium tracking-wide text-gray-500">
+            <p class="text-[10px] font-medium tracking-wide text-gray-500">
                 {{ $product->availability_label }}
             </p>
         </div>

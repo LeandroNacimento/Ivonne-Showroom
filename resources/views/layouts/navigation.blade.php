@@ -53,7 +53,7 @@
         x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
         x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0"
         x-transition:leave-end="opacity-0 -translate-y-2"
-        class="md:hidden absolute top-20 left-0 w-full bg-white shadow-lg border-b border-gray-100 z-40"
+        class="md:hidden fixed top-20 inset-x-0 bg-white shadow-lg border-b border-gray-100 z-40"
         id="mobile-menu" style="display: none;">
         <div class="pt-4 pb-6 px-6 space-y-4">
             <a href="{{ route('home') }}"

@@ -1,5 +1,6 @@
 <div x-data="{ expanded: false }" @mouseenter="expanded = true" @mouseleave="expanded = false"
-    class="fixed bottom-6 right-6 z-50 flex flex-col items-end transition-all duration-300">
+    class="fixed right-6 z-50 flex flex-col items-end transition-all duration-300"
+    style="bottom: calc(1.5rem + env(safe-area-inset-bottom));">
 
     @if ($itemCount > 0)
         <!-- Detalles hover -->

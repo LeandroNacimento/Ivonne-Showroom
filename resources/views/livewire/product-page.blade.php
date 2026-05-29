@@ -41,11 +41,19 @@
                         </button>
                     </div>
 
-                    <div x-show="activeImages.length > 1"
-                        class="pointer-events-none absolute bottom-4 right-4 md:hidden rounded-md bg-black/50 px-2 py-1 text-xs text-white backdrop-blur-sm">
-                        Desliza para ver más
-                    </div>
                 </div>
+            </div>
+
+            <!-- Gallery position dots — mobile only -->
+            <div x-show="activeImages.length > 1" class="mt-3 flex justify-center gap-1.5 lg:hidden">
+                <template x-for="(_, dotIdx) in activeImages" :key="dotIdx">
+                    <button type="button"
+                        @click="goTo(dotIdx)"
+                        class="h-1.5 rounded-full transition-all duration-300"
+                        :class="currentImageIndex === dotIdx ? 'w-5 bg-brand-pink' : 'w-1.5 bg-gray-300'"
+                        :aria-label="'Imagen ' + (dotIdx + 1)">
+                    </button>
+                </template>
             </div>
 
             <div class="mt-10 px-4 sm:mt-16 sm:px-0 lg:mt-0">
@@ -101,7 +109,7 @@
 
                 <div class="mt-6">
                     <template x-if="activeVariations.length > 0">
-                        <form x-data="{ qty: 1 }" @submit.prevent="$wire.addToCart(selectedVariation, qty)">
+                        <form @submit.prevent="$wire.addToCart(selectedVariation, qty)">
                             @if ($product->has_sizes)
                                 <div class="mb-5">
                                     <h3 class="mb-2 text-sm font-medium text-gray-900">Seleccioná tu talle:</h3>
@@ -181,18 +189,20 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        @if ($relatedProducts->count() > 0)
-            <div class="mt-16 border-t border-gray-200 pt-10">
-                <h2 class="mb-6 font-script text-2xl font-bold tracking-tight text-brand-pink text-gray-900">
+    @if ($relatedProducts->count() > 0)
+        <div class="bg-brand-blush/30 py-12 mt-4 sm:mt-8">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <h2 class="mb-6 font-script text-2xl font-bold tracking-tight text-brand-pink text-center">
                     También te puede interesar
                 </h2>
-                <div class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
+                <div class="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 lg:grid-cols-4 xl:gap-x-6">
                     @foreach ($relatedProducts as $related)
-                        <x-product-card :product="$related" />
+                        <x-product-card :product="$related" :compact="true" />
                     @endforeach
                 </div>
             </div>
-        @endif
-    </div>
+        </div>
+    @endif
 </div>
