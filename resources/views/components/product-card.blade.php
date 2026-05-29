@@ -75,7 +75,10 @@
     currentIndex: {{ $defaultIndex }},
     timer: null,
     previewIndex: null,
+    previewTimeout: null,
+    isTouchDevice: window.matchMedia('(hover: none)').matches,
     destroy() {
+        clearTimeout(this.previewTimeout);
         if (this.timer) {
             clearInterval(this.timer);
             this.timer = null;
@@ -90,13 +93,14 @@
     },
     startCarousel() {
         if (this.timer) return;
-        if (this.images.length > 1 && this.previewIndex === null) {
+        if (this.images.length > 1 && this.previewIndex === null && !this.isTouchDevice) {
             this.timer = setInterval(() => {
                 this.currentIndex = (this.currentIndex + 1) % this.images.length;
             }, 2000);
         }
     },
     stopCarousel() {
+        if (this.isTouchDevice) return;
         if (this.timer) {
             clearInterval(this.timer);
             this.timer = null;
@@ -104,13 +108,24 @@
         this.currentIndex = 0;
     },
     setPreview(index) {
+        clearTimeout(this.previewTimeout);
         if (this.timer) {
             clearInterval(this.timer);
             this.timer = null;
         }
         this.previewIndex = index;
     },
+    clearPreviewDelay() {
+        clearTimeout(this.previewTimeout);
+        this.previewTimeout = setTimeout(() => {
+            this.previewIndex = null;
+            if (!this.isTouchDevice) {
+                this.startCarousel();
+            }
+        }, 2500);
+    },
     clearPreview() {
+        if (this.isTouchDevice) return;
         this.previewIndex = null;
         this.startCarousel();
     }
@@ -158,7 +173,9 @@
         @if ($uniqueColors->count() > 0)
             <div class="{{ $compact ? 'mb-2' : 'mb-3' }} flex items-center space-x-1.5" @click.stop.prevent>
                 @foreach ($visibleColors as $color)
-                    <div @click.stop.prevent="window.location.assign('{{ route('product.show', $product->slug) }}?color={{ Str::slug($color->name) }}')"
+                    <div @click.stop.prevent="isTouchDevice ? null : window.location.assign('{{ route('product.show', $product->slug) }}?color={{ Str::slug($color->name) }}')"
+                        @touchstart.stop.prevent="setPreview({{ collect($colorsData)->search(fn($c) => $c['id'] == $color->id) }})"
+                        @touchend="clearPreviewDelay()"
                         class="relative block {{ $compact ? 'h-4 w-4' : 'h-5 w-5' }} cursor-pointer overflow-hidden rounded-full border shadow-sm transition-transform hover:scale-110 before:absolute before:-inset-2 before:content-['']"
                         :class="previewIndex === {{ collect($colorsData)->search(fn($c) => $c['id'] == $color->id) }} ?
                             'border-brand-pink ring-1 ring-brand-pink' : 'border-gray-200'"
