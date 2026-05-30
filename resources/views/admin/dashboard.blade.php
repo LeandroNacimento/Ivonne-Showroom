@@ -1,13 +1,13 @@
 @extends('layouts.admin')
 
-@section('page_title', 'Dashboard')
+@section('page_title', 'Resumen')
 
 @section('content')
 <div class="space-y-8">
     <!-- Header -->
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <h1 class="text-2xl font-bold text-gray-900">Resumen</h1>
             <p class="mt-1 text-sm text-gray-500">Resumen y métricas clave de {{ now()->locale('es')->isoFormat('MMMM YYYY') }}</p>
         </div>
         <div class="mt-4 sm:mt-0 flex items-center gap-3">

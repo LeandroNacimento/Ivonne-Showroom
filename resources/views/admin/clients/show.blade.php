@@ -2,7 +2,7 @@
 
 @section('page_title', 'Detalle de Cliente')
 @section('breadcrumbs')
-    <a href="{{ route('admin.dashboard') }}" class="hover:text-gray-900 transition-colors">Dashboard</a>
+    <a href="{{ route('admin.dashboard') }}" class="hover:text-gray-900 transition-colors">Resumen</a>
     <span class="mx-2 text-gray-400">/</span>
     <a href="{{ route('admin.clients.index') }}" class="hover:text-gray-900 transition-colors">Clientes</a>
     <span class="mx-2 text-gray-400">/</span>

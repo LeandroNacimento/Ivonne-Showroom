@@ -2,7 +2,7 @@
 
 @section('page_title', 'Nuevo Producto')
 @section('breadcrumbs')
-    <a href="{{ route('admin.dashboard') }}" class="hover:text-gray-900 transition-colors">Dashboard</a>
+    <a href="{{ route('admin.dashboard') }}" class="hover:text-gray-900 transition-colors">Resumen</a>
     <span class="mx-2 text-gray-400">/</span>
     <a href="{{ route('admin.products.index') }}" class="hover:text-gray-900 transition-colors">Productos</a>
     <span class="mx-2 text-gray-400">/</span>
