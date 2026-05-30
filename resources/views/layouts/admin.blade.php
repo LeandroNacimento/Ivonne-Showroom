@@ -103,8 +103,15 @@
                 </svg>
             </button>
             <div class="flex flex-1 justify-between px-4 sm:px-6 lg:px-8">
-                <div class="flex flex-1 items-center">
-                    <h2 class="text-lg font-semibold text-gray-800">Panel de Administración</h2>
+                <div class="flex flex-1 items-center py-2">
+                    <div class="flex flex-col justify-center">
+                        <h2 class="text-lg font-semibold text-gray-800">@yield('page_title', 'Panel de Administración')</h2>
+                        @hasSection('breadcrumbs')
+                            <nav class="hidden md:flex text-sm text-gray-500 mt-0.5 items-center space-x-2" aria-label="Breadcrumb">
+                                @yield('breadcrumbs')
+                            </nav>
+                        @endif
+                    </div>
                 </div>
                 <div class="ml-4 flex items-center md:ml-6">
                     <div class="flex items-center gap-3">

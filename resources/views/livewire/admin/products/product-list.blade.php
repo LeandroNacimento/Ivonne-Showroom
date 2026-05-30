@@ -7,7 +7,10 @@
         </a>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden" wire:loading.class="opacity-50 pointer-events-none">
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden relative" wire:loading.class="opacity-50 pointer-events-none">
+        <div wire:loading.flex class="absolute inset-0 z-10 items-center justify-center bg-white/50 backdrop-blur-sm">
+            <span class="text-sm font-medium text-gray-600">Actualizando...</span>
+        </div>
         <!-- Search Bar -->
         <div class="p-4 border-b border-gray-200">
             <div class="flex flex-col sm:flex-row gap-4">
@@ -95,7 +98,7 @@
                 @empty
                     <tr>
                         <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                            No se encontraron productos para esta búsqueda.
+                            No se encontraron productos.
                         </td>
                     </tr>
                 @endforelse
