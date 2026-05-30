@@ -1,5 +1,7 @@
 @extends('layouts.admin')
 
+@section('page_title', 'Dashboard')
+
 @section('content')
 <div class="space-y-8">
     <!-- Header -->
@@ -97,25 +99,7 @@
                                 <a href="{{ route('admin.orders.show', $order) }}" class="hover:underline">{{ $order->client->name }}</a>
                             </td>
                             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                @php
-                                $statusClasses = match($order->status) {
-                                    \App\Models\Order::STATUS_PENDING => 'text-gray-600',
-                                    \App\Models\Order::STATUS_RESERVED => 'text-yellow-600',
-                                    \App\Models\Order::STATUS_DELIVERED => 'text-green-600',
-                                    \App\Models\Order::STATUS_CANCELLED => 'text-red-600',
-                                    default => 'text-gray-600',
-                                };
-                                $statusLabel = match($order->status) {
-                                    \App\Models\Order::STATUS_PENDING => 'Pendiente',
-                                    \App\Models\Order::STATUS_RESERVED => 'Reservado',
-                                    \App\Models\Order::STATUS_DELIVERED => 'Entregado',
-                                    \App\Models\Order::STATUS_CANCELLED => 'Cancelado',
-                                    default => ucfirst($order->status),
-                                };
-                            @endphp
-                            <span class="inline-flex items-center font-semibold {{ $statusClasses }}">
-                                {{ $statusLabel }}
-                            </span>
+                                <x-admin.status-badge :status="$order->status" />
                             </td>
                             <td class="whitespace-nowrap px-3 py-4 text-sm font-semibold text-gray-900">${{ number_format($order->total, 0, ',', '.') }}</td>
                             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ $order->date->format('d/m/Y') }}</td>

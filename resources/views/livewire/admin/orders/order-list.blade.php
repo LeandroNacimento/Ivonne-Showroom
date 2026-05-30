@@ -59,7 +59,10 @@
         </div>
     </div>
 
-    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl" wire:loading.class="opacity-50 pointer-events-none">
+    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl relative" wire:loading.class="opacity-50 pointer-events-none">
+        <div wire:loading.flex class="absolute inset-0 z-10 items-center justify-center bg-white/50 backdrop-blur-sm rounded-xl">
+            <span class="text-sm font-medium text-gray-600">Actualizando...</span>
+        </div>
         @if ($feedbackMessage)
             <div
                 class="border-b px-4 py-4 sm:px-6 {{ $feedbackType === 'error' ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50' }}">
@@ -125,13 +128,6 @@
                 <tbody class="divide-y divide-gray-200 bg-white">
                     @forelse($orders as $order)
                         @php
-                            $statusClasses = match ($order->status) {
-                                \App\Models\Order::STATUS_PENDING => 'text-gray-600',
-                                \App\Models\Order::STATUS_RESERVED => 'text-yellow-600',
-                                \App\Models\Order::STATUS_DELIVERED => 'text-green-600',
-                                \App\Models\Order::STATUS_CANCELLED => 'text-red-600',
-                                default => 'text-gray-600',
-                            };
                             $statusOptions = $this->statusOptionsFor($order);
                         @endphp
                         <tr class="hover:bg-gray-50 transition-colors group"
@@ -223,9 +219,7 @@
                             </td>
                             <td class="px-3 py-4 text-sm">
                                 @if ($order->isTerminal())
-                                    <span class="inline-flex items-center font-semibold {{ $statusClasses }}">
-                                        {{ \App\Models\Order::statusLabel($order->status) }}
-                                    </span>
+                                    <x-admin.status-badge :status="$order->status" />
                                 @else
                                     <div class="flex flex-col items-start gap-2">
                                         <select x-model="selectedStatus" @change="submitStatusChange()"
@@ -288,7 +282,7 @@
                     @empty
                         <tr>
                             <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                                No se encontraron pedidos con estos filtros.
+                                No hay pedidos todavía.
                             </td>
                         </tr>
                     @endforelse

@@ -1,5 +1,12 @@
 @extends('layouts.admin')
 
+@section('page_title', 'Categorías')
+@section('breadcrumbs')
+    <a href="{{ route('admin.dashboard') }}" class="hover:text-gray-900 transition-colors">Dashboard</a>
+    <span class="mx-2 text-gray-400">/</span>
+    <span class="text-gray-900">Categorías</span>
+@endsection
+
 @section('content')
 <div class="space-y-6">
     <!-- Page Header -->
