@@ -36,7 +36,7 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($clients as $client)
-                <tr wire:key="client-{{ $client->id }}">
+                <tr wire:key="client-{{ $client->id }}" class="hover:bg-gray-50 transition-colors group">
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-medium text-gray-900">{{ $client->name }}</div>
                         @if($client->instagram)
@@ -50,13 +50,15 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $client->orders_count }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ number_format($client->orders_sum_total ?? 0, 0, ',', '.') }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <a href="{{ route('admin.clients.show', $client) }}" class="text-blue-600 hover:text-blue-900 mr-4">Ver</a>
-                        <a href="{{ route('admin.clients.edit', $client) }}" class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</a>
-                        <form action="{{ route('admin.clients.destroy', $client) }}" method="POST" class="inline-block" onsubmit="return confirm('¿Estás seguro?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-900">Eliminar</button>
-                        </form>
+                        <div class="flex items-center justify-end gap-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                            <a href="{{ route('admin.clients.show', $client) }}" class="text-blue-600 hover:text-blue-900">Ver</a>
+                            <a href="{{ route('admin.clients.edit', $client) }}" class="text-indigo-600 hover:text-indigo-900">Editar</a>
+                            <form action="{{ route('admin.clients.destroy', $client) }}" method="POST" class="inline-block" x-data @submit.prevent="$dispatch('open-confirm', { form: $el, title: 'Eliminar cliente', message: '¿Estás seguro de eliminar este cliente?' })">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:text-red-900">Eliminar</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @empty

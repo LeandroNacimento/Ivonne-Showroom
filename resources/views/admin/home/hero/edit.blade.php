@@ -259,8 +259,7 @@
                                     </form>
 
                                     <div class="border-t border-gray-200 pt-4">
-                                        <form action="{{ route('admin.home.hero.slides.destroy', $slide) }}" method="POST"
-                                            onsubmit="return confirm('¿Eliminar esta imagen de la portada?');">
+                                        <form action="{{ route('admin.home.hero.slides.destroy', $slide) }}" method="POST" x-data @submit.prevent="$dispatch('open-confirm', { form: $el, title: 'Eliminar imagen', message: '¿Eliminar esta imagen de la portada?' })">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"

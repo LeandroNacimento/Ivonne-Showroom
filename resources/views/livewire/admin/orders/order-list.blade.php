@@ -270,7 +270,7 @@
                                     </a>
                                     <form action="{{ route('admin.orders.destroy', $order) }}" method="POST"
                                         class="inline-block"
-                                        onsubmit="return confirm('¿Estás seguro de eliminar este pedido?')">
+                                        @submit.prevent="$dispatch('open-confirm', { form: $el, title: 'Eliminar pedido', message: '¿Estás seguro de eliminar este pedido?' })">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="text-gray-500 hover:text-red-600 p-1"
