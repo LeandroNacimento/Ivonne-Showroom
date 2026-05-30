@@ -69,7 +69,7 @@ class ProductController extends Controller
                 if (! empty($imagesData) && is_array($imagesData)) {
                     $colorMap = [];
                     foreach ($request->input('variations', []) as $var) {
-                        if (!empty($var['uuid']) && !empty($var['color'])) {
+                        if (! empty($var['uuid']) && ! empty($var['color'])) {
                             $colorMap[$var['uuid']] = $var['color'];
                         }
                     }
@@ -140,7 +140,7 @@ class ProductController extends Controller
                 if (! empty($imagesData) && is_array($imagesData)) {
                     $colorMap = [];
                     foreach ($request->input('variations', []) as $var) {
-                        if (!empty($var['uuid']) && !empty($var['color'])) {
+                        if (! empty($var['uuid']) && ! empty($var['color'])) {
                             $colorMap[$var['uuid']] = $var['color'];
                         }
                     }

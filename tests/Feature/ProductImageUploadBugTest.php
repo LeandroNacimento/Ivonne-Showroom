@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\ProductColor;
 use App\Models\ProductImage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -51,11 +50,11 @@ class ProductImageUploadBugTest extends TestCase
                     'price' => 1000,
                     'stock' => 10,
                     'uuid' => $uuid,
-                ]
+                ],
             ],
             'images' => [
                 $uuid => [$file1, $file2],
-            ]
+            ],
         ]);
 
         $response->assertRedirect(route('admin.products.index'));
@@ -65,7 +64,7 @@ class ProductImageUploadBugTest extends TestCase
         $this->assertNotNull($product);
         $this->assertCount(1, $product->colors);
         $this->assertEquals('Negro', $product->colors->first()->name);
-        
+
         $images = ProductImage::where('product_color_id', $product->colors->first()->id)->get();
         $this->assertCount(2, $images);
     }
@@ -94,11 +93,11 @@ class ProductImageUploadBugTest extends TestCase
                     'price' => 1000,
                     'stock' => 10,
                     'uuid' => $uuid, // The same UUID that matches the image file input
-                ]
+                ],
             ],
             'images' => [
                 $uuid => [$file1],
-            ]
+            ],
         ]);
 
         $response->assertSessionHasNoErrors();
@@ -113,7 +112,7 @@ class ProductImageUploadBugTest extends TestCase
         $admin = $this->getAdminUser();
 
         $uuidNegro = Str::uuid()->toString();
-        
+
         $response = $this->actingAs($admin)->post(route('admin.products.store'), [
             'name' => 'Producto 3',
             'category_id' => $category->id,
@@ -127,11 +126,11 @@ class ProductImageUploadBugTest extends TestCase
                     'price' => 1000,
                     'stock' => 10,
                     'uuid' => $uuidNegro,
-                ]
+                ],
             ],
             'images' => [
                 $uuidNegro => [UploadedFile::fake()->image('negro.jpg')],
-            ]
+            ],
         ]);
 
         $response->assertSessionHasNoErrors();
@@ -139,6 +138,7 @@ class ProductImageUploadBugTest extends TestCase
         $this->assertCount(1, $product->colors);
         $this->assertCount(1, ProductImage::all());
     }
+
     public function test_caso_4_renombrar_todos_los_colores_inmediatamente()
     {
         $category = Category::factory()->create();
@@ -161,7 +161,7 @@ class ProductImageUploadBugTest extends TestCase
                 $uuid1 => [UploadedFile::fake()->image('1.jpg')],
                 $uuid2 => [UploadedFile::fake()->image('2.jpg')],
                 $uuid3 => [UploadedFile::fake()->image('3.jpg')],
-            ]
+            ],
         ]);
 
         $response->assertSessionHasNoErrors();
@@ -186,19 +186,19 @@ class ProductImageUploadBugTest extends TestCase
             ],
             'images' => [
                 $uuidOriginal => [UploadedFile::fake()->image('original.jpg')],
-            ]
+            ],
         ]);
 
         $product = Product::where('name', 'Producto 5')->first();
         $this->assertCount(1, $product->colors);
-        
+
         $originalColor = $product->colors->first();
         $originalVariation = $originalColor->variations->first();
 
         // 2. Editar producto, agregar color "Nuevo" y renombrar el original
         $uuidNuevo = Str::uuid()->toString();
         // Durante edicion el uuid se inyecta desde la vista en el mismo form submission
-        
+
         $response = $this->actingAs($admin)->put(route('admin.products.update', $product), [
             'name' => 'Producto 5',
             'category_id' => $category->id,
@@ -211,7 +211,7 @@ class ProductImageUploadBugTest extends TestCase
             ],
             'images' => [
                 $uuidNuevo => [UploadedFile::fake()->image('nuevo.jpg')],
-            ]
+            ],
         ]);
 
         $response->assertSessionHasNoErrors();

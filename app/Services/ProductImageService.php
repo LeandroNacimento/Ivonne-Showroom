@@ -40,7 +40,7 @@ class ProductImageService
                     'color_name_received' => $colorName,
                     'imagesData_keys' => array_keys($imagesData),
                     'image_color_map' => request()->input('image_color_map'),
-                    'persisted_colors' => $product->colors->pluck('name', 'id')->toArray()
+                    'persisted_colors' => $product->colors->pluck('name', 'id')->toArray(),
                 ]);
 
                 throw ValidationException::withMessages([

@@ -49,7 +49,7 @@ class ImagesForm extends Component
 
         // Initialize colors from existing images if not already populated by sync
         if (empty($this->colors)) {
-            $this->colors = collect($this->existingImages)->keys()->map(function ($name) use ($product) {
+            $this->colors = collect($this->existingImages)->keys()->map(function ($name) {
                 return [
                     'uuid' => (string) \Illuminate\Support\Str::uuid(),
                     'name' => $name,
