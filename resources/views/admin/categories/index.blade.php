@@ -18,6 +18,8 @@
 
     <!-- Table Container -->
     <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl overflow-hidden">
+        <div class="relative">
+            <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50/50">
                 <tr>
@@ -30,7 +32,7 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 bg-white">
-                @foreach($categories as $category)
+                @forelse($categories as $category)
                 <tr class="hover:bg-gray-50 transition-colors group">
                     <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
                         @if($category->image)
@@ -44,7 +46,7 @@
                     <td class="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-900">{{ $category->name }}</td>
                     <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ $category->slug }}</td>
                      <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                        <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="flex items-center justify-end gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                             <a href="{{ route('admin.categories.edit', $category) }}" class="text-gray-500 hover:text-indigo-600 p-1" title="Editar">
                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
                             </a>
@@ -58,9 +60,27 @@
                         </div>
                     </td>
                 </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center">
+                            <svg class="mx-auto h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a22.53 22.53 0 005.246-5.246c.54-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                            </svg>
+                            <p class="mt-3 text-sm font-medium text-gray-900">No hay categorías creadas todavía.</p>
+                            <p class="mt-1 text-sm text-gray-500">Las categorías agrupan los productos en el catálogo.</p>
+                            <div class="mt-4">
+                                <a href="{{ route('admin.categories.create') }}" class="inline-flex items-center rounded-md bg-brand-pink px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-heart transition-colors">
+                                    + Crear primera categoría
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
+            </div><!-- /overflow-x-auto -->
+            <div class="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-white to-transparent"></div>
+        </div><!-- /relative -->
     </div>
 </div>
 @endsection

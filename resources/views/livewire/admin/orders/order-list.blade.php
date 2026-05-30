@@ -59,7 +59,7 @@
         </div>
     </div>
 
-    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
+    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl" wire:loading.class="opacity-50 pointer-events-none">
         @if ($feedbackMessage)
             <div
                 class="border-b px-4 py-4 sm:px-6 {{ $feedbackType === 'error' ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50' }}">
@@ -106,7 +106,8 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="relative">
+            <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead>
                     <tr class="bg-gray-50/50">
@@ -248,7 +249,7 @@
                             <td
                                 class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                 <div
-                                    class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    class="flex items-center justify-end gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                                     <a href="{{ route('admin.orders.show', $order) }}"
                                         class="text-gray-500 hover:text-brand-pink p-1" title="Ver">
                                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -293,7 +294,9 @@
                     @endforelse
                 </tbody>
             </table>
-        </div>
+            </div><!-- /overflow-x-auto -->
+            <div class="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-white to-transparent"></div>
+        </div><!-- /relative -->
         <div class="border-t border-gray-200 px-4 py-3 sm:px-6">
             {{ $orders->links() }}
         </div>

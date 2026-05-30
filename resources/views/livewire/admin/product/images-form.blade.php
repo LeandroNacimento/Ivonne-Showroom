@@ -5,12 +5,16 @@
         </div>
     @endif
 
-    @foreach ($colors as $color)
+    @foreach ($colors as $colorData)
         @php
+            $color = $colorData['name'];
+            $uuid = $colorData['uuid'] ?? \Illuminate\Support\Str::uuid()->toString();
             $normColor = mb_strtolower(trim($color), 'UTF-8');
             $isPersisted = isset($persistedColorIds[$normColor]);
+            $canUpload = is_null($productId) || $isPersisted;
         @endphp
-        <div class="mb-6 bg-gray-50 rounded-lg p-4 border border-gray-100" wire:key="img-color-{{ $loop->index }}">
+        <div class="mb-6 bg-gray-50 rounded-lg p-4 border border-gray-100" wire:key="img-color-{{ $uuid }}">
+
             <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                 <span class="text-lg">🖼</span>
                 Imágenes para: <span class="text-brand-pink">{{ $color }}</span>
@@ -30,11 +34,11 @@
                                     class="sr-only" x-model="markedForDelete">
                                 <span class="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full"
                                     :class="markedForDelete ? 'bg-red-700' :
-                                        'bg-red-500 opacity-0 group-hover:opacity-100'"
+                                        'bg-red-500 md:opacity-0 md:group-hover:opacity-100'"
                                     x-text="markedForDelete ? '✓' : '✕'"></span>
                             </label>
 
-                            <div class="absolute bottom-1 left-1 right-1 flex justify-between pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                             <div class="absolute bottom-1 left-1 right-1 flex justify-between pointer-events-auto opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                 <button type="button" wire:click="moveImage({{ $img['id'] }}, 'left')"
                                     class="bg-white/90 rounded text-gray-700 px-1 text-xs hover:bg-brand-blush hover:text-brand-pink disabled:opacity-30 disabled:cursor-not-allowed"
                                     @disabled($index === 0) title="Mover a la izquierda">
@@ -52,8 +56,8 @@
             @endif
 
             {{-- Upload new images for this color --}}
-            @if ($isPersisted)
-                <input type="file" name="images[{{ $color }}][]" multiple accept="image/*"
+            @if ($canUpload)
+                <input type="file" name="images[{{ $uuid }}][]" multiple accept="image/*"
                     class="w-full text-sm text-gray-500
                         file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0
                         file:text-sm file:font-semibold file:bg-brand-blush file:text-brand-pink

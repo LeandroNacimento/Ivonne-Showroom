@@ -54,7 +54,7 @@
                     </div>
                 </div>
 
-                <div class="space-y-6">
+                <div class="space-y-6 lg:sticky lg:top-6 lg:self-start">
                     <div class="rounded-lg bg-white p-6 shadow-sm">
                         <h2 class="mb-4 text-lg font-semibold text-gray-900">Detalles</h2>
 

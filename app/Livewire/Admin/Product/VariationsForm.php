@@ -231,13 +231,13 @@ class VariationsForm extends Component
 
     private function dispatchColorSync(): void
     {
-        $names = collect($this->colors)
-            ->pluck('name')
-            ->filter(fn ($name) => trim($name) !== '')
+        $colorData = collect($this->colors)
+            ->filter(fn ($c) => trim($c['name']) !== '')
+            ->map(fn ($c) => ['uuid' => $c['uuid'], 'name' => $c['name']])
             ->values()
             ->toArray();
 
-        $this->dispatch('sync-image-colors', colors: $names);
+        $this->dispatch('sync-image-colors', colors: $colorData);
     }
 
     private function validateDuplicates(): void

@@ -165,6 +165,8 @@
                                     value="{{ $color['id'] ?? '' }}">
                                 <input type="hidden" name="variations[{{ $currentFlatIndex }}][color]"
                                     x-bind:value="colorName">
+                                <input type="hidden" name="variations[{{ $currentFlatIndex }}][uuid]"
+                                    value="{{ $color['uuid'] }}">
 
                                 @php $flatIndex++; @endphp
                             @endforeach
@@ -276,6 +278,8 @@
                             value="{{ $color['id'] ?? '' }}">
                         <input type="hidden" name="variations[{{ $currentFlatIndex }}][color]"
                             x-bind:value="colorName">
+                        <input type="hidden" name="variations[{{ $currentFlatIndex }}][uuid]"
+                            value="{{ $color['uuid'] }}">
 
                         @php $flatIndex++; @endphp
                     @endforeach

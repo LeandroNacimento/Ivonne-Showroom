@@ -67,7 +67,19 @@ class ProductController extends Controller
 
                 $imagesData = $request->file('images');
                 if (! empty($imagesData) && is_array($imagesData)) {
-                    $this->imageService->storeImages($product, $imagesData);
+                    $colorMap = [];
+                    foreach ($request->input('variations', []) as $var) {
+                        if (! empty($var['uuid']) && ! empty($var['color'])) {
+                            $colorMap[$var['uuid']] = $var['color'];
+                        }
+                    }
+
+                    $mappedImagesData = [];
+                    foreach ($imagesData as $uuid => $files) {
+                        $colorName = $colorMap[$uuid] ?? $uuid;
+                        $mappedImagesData[$colorName] = $files;
+                    }
+                    $this->imageService->storeImages($product, $mappedImagesData);
                 }
             });
         } catch (ValidationException $exception) {
@@ -126,7 +138,19 @@ class ProductController extends Controller
 
                 $imagesData = $request->file('images');
                 if (! empty($imagesData) && is_array($imagesData)) {
-                    $this->imageService->storeImages($product, $imagesData);
+                    $colorMap = [];
+                    foreach ($request->input('variations', []) as $var) {
+                        if (! empty($var['uuid']) && ! empty($var['color'])) {
+                            $colorMap[$var['uuid']] = $var['color'];
+                        }
+                    }
+
+                    $mappedImagesData = [];
+                    foreach ($imagesData as $uuid => $files) {
+                        $colorName = $colorMap[$uuid] ?? $uuid;
+                        $mappedImagesData[$colorName] = $files;
+                    }
+                    $this->imageService->storeImages($product, $mappedImagesData);
                 }
             });
         } catch (ValidationException $exception) {
