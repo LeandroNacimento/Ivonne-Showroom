@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Admin\Products;
 
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -12,7 +12,9 @@ class ProductList extends Component
     use WithPagination;
 
     public $search = '';
+
     public $categoryFilter = '';
+
     public $stockFilter = '';
 
     public function updatingSearch()
@@ -42,11 +44,11 @@ class ProductList extends Component
             })
             ->when($this->stockFilter, function ($query) {
                 if ($this->stockFilter === 'in_stock') {
-                    $query->whereHas('variations', fn($q) => $q->where('stock', '>', 0));
+                    $query->whereHas('variations', fn ($q) => $q->where('stock', '>', 0));
                 } elseif ($this->stockFilter === 'out_of_stock') {
-                    $query->whereDoesntHave('variations', fn($q) => $q->where('stock', '>', 0));
+                    $query->whereDoesntHave('variations', fn ($q) => $q->where('stock', '>', 0));
                 } elseif ($this->stockFilter === 'low_stock') {
-                    $query->whereHas('variations', fn($q) => $q->where('stock', '>', 0)->where('stock', '<=', 5));
+                    $query->whereHas('variations', fn ($q) => $q->where('stock', '>', 0)->where('stock', '<=', 5));
                 }
             })
             ->orderBy('id', 'desc')
