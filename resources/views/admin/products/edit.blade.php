@@ -97,10 +97,31 @@
                         </div>
                     </div>
 
-                    <button type="submit"
-                        class="w-full rounded-md bg-brand-pink px-6 py-3 font-bold text-white shadow-md transition-colors hover:bg-brand-heart">
-                        Guardar Cambios
-                    </button>
+                    <div x-data="{ showSticky: true }"
+                         x-init="
+                            let observer = new IntersectionObserver((entries) => {
+                                showSticky = !entries[0].isIntersecting;
+                            }, { rootMargin: '0px' });
+                            $nextTick(() => observer.observe($refs.mainSubmit));
+                         ">
+                        
+                        <!-- Botón Mobile Sticky -->
+                        <div x-cloak x-show="showSticky" x-transition.opacity.duration.300ms
+                             class="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white/95 p-3 backdrop-blur pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
+                            <button type="submit"
+                                class="w-full rounded-md bg-brand-pink px-6 py-2.5 font-bold text-white shadow-md transition-colors hover:bg-brand-heart">
+                                Guardar Cambios
+                            </button>
+                        </div>
+    
+                        <!-- Botón Principal (Desktop + Destino Scroll Mobile) -->
+                        <div class="mt-6 lg:sticky lg:top-6" x-ref="mainSubmit">
+                            <button type="submit"
+                                class="w-full rounded-md bg-brand-pink px-6 py-3 font-bold text-white shadow-md transition-colors hover:bg-brand-heart">
+                                Guardar Cambios
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </form>
