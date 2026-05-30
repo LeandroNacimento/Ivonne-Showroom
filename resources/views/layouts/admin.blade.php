@@ -123,8 +123,10 @@
             <div class="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
                 <!-- Flash Messages -->
                 @if (session('success'))
-                    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
-                        class="mb-6 rounded-md bg-green-50 p-4 border border-green-200">
+                    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 10000)"
+                        x-transition:leave="transition ease-in duration-300"
+                        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                        class="mb-6 rounded-md bg-green-50 p-4 border border-green-200 relative">
                         <div class="flex">
                             <div class="flex-shrink-0">
                                 <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
@@ -133,16 +135,24 @@
                                         clip-rule="evenodd" />
                                 </svg>
                             </div>
-                            <div class="ml-3">
+                            <div class="ml-3 flex-1 pr-8">
                                 <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
                             </div>
+                            <button @click="show = false" type="button" class="absolute top-4 right-4 text-green-500 hover:text-green-700 focus:outline-none transition-colors">
+                                <span class="sr-only">Cerrar</span>
+                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 @endif
 
                 @if (session('error'))
-                    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 7000)"
-                        class="mb-6 rounded-md border border-red-200 bg-red-50 p-4">
+                    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 10000)"
+                        x-transition:leave="transition ease-in duration-300"
+                        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                        class="mb-6 rounded-md border border-red-200 bg-red-50 p-4 relative">
                         <div class="flex">
                             <div class="flex-shrink-0">
                                 <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -151,9 +161,15 @@
                                         clip-rule="evenodd" />
                                 </svg>
                             </div>
-                            <div class="ml-3">
+                            <div class="ml-3 flex-1 pr-8">
                                 <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
                             </div>
+                            <button @click="show = false" type="button" class="absolute top-4 right-4 text-red-500 hover:text-red-700 focus:outline-none transition-colors">
+                                <span class="sr-only">Cerrar</span>
+                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 @endif

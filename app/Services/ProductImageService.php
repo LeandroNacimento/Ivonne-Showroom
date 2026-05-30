@@ -36,6 +36,13 @@ class ProductImageService
             $colorId = $this->productService->getColorId($product, $colorName);
 
             if ($colorId === null) {
+                \Illuminate\Support\Facades\Log::error('Fallo asociacion de imagenes', [
+                    'color_name_received' => $colorName,
+                    'imagesData_keys' => array_keys($imagesData),
+                    'image_color_map' => request()->input('image_color_map'),
+                    'persisted_colors' => $product->colors->pluck('name', 'id')->toArray()
+                ]);
+
                 throw ValidationException::withMessages([
                     'images' => "No se pudo asociar las imagenes al color '{$normalizedColorName}'. Guarda el color visible antes de subir imagenes para ese grupo.",
                 ]);

@@ -6,7 +6,7 @@
         </a>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden" wire:loading.class="opacity-50 pointer-events-none">
         <!-- Search Bar -->
         <div class="p-4 border-b border-gray-200">
             <div class="relative max-w-md w-full">
@@ -22,6 +22,8 @@
             </div>
         </div>
 
+        <div class="relative">
+            <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
@@ -65,7 +67,10 @@
                 </tr>
                 @endforelse
             </tbody>
-        </table>
+                </table>
+            </div><!-- /overflow-x-auto -->
+            <div class="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-white to-transparent"></div>
+        </div><!-- /relative -->
         <div class="px-6 py-4 border-t border-gray-200">
             {{ $clients->links() }}
         </div>

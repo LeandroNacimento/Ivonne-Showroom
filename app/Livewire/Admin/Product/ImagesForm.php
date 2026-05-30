@@ -49,7 +49,12 @@ class ImagesForm extends Component
 
         // Initialize colors from existing images if not already populated by sync
         if (empty($this->colors)) {
-            $this->colors = array_keys($this->existingImages);
+            $this->colors = collect($this->existingImages)->keys()->map(function ($name) use ($product) {
+                return [
+                    'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                    'name' => $name,
+                ];
+            })->toArray();
         }
     }
 
@@ -59,7 +64,9 @@ class ImagesForm extends Component
     #[\Livewire\Attributes\On('sync-image-colors')]
     public function syncColors(array $colors): void
     {
-        $this->colors = array_filter(array_map('trim', $colors));
+        $this->colors = array_filter($colors, function ($c) {
+            return is_array($c) && trim($c['name'] ?? '') !== '';
+        });
     }
 
     public function moveImage(int $imageId, string $direction): void
