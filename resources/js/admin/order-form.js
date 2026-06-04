@@ -43,10 +43,11 @@ export default function orderForm(initialData = {}) {
                 color: option.color || "N/A",
                 size: option.size || "ÚNICO",
                 stock: option.stock ?? null,
-                effectivePrice: option.effective_price ?? 0,
+                effectivePrice: option.effective_price ?? option.effectivePrice ?? 0,
                 originalPrice:
-                    option.original_price ?? option.effective_price ?? 0,
-                hasActiveOffer: Boolean(option.has_active_offer),
+                    option.original_price ?? option.originalPrice ??
+                    option.effective_price ?? option.effectivePrice ?? 0,
+                hasActiveOffer: Boolean(option.has_active_offer ?? option.hasActiveOffer),
                 label: option.label || null,
                 missing: Boolean(option.missing),
             };
