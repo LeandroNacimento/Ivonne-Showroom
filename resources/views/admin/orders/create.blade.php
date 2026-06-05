@@ -374,7 +374,7 @@
                         </div>
 
                         <!-- Total -->
-                        <div class="bg-white rounded-lg shadow-sm p-6">
+                        <div id="final-total-block" class="bg-white rounded-lg shadow-sm p-6">
                             <div class="flex justify-between items-center text-lg font-bold text-gray-900">
                                 <span>Total:</span>
                                 <span x-text="formatCurrency(total)">$0</span>
@@ -385,6 +385,34 @@
                             </button>
                         </div>
                     </div>
+                </div>
+
+                <!-- Spacer para asegurar que el scroll llegue hasta el final en móvil -->
+                <div class="h-24 w-full lg:hidden"></div>
+                
+                <!-- Sticky Mobile Action Bar -->
+                <div x-data="{ showMobileCta: true }"
+                     x-init="
+                        setTimeout(() => {
+                            const target = document.getElementById('final-total-block');
+                            if(target) {
+                                const observer = new IntersectionObserver(entries => {
+                                    showMobileCta = !entries[0].isIntersecting;
+                                }, { threshold: 0.1 });
+                                observer.observe(target);
+                            }
+                        }, 100);
+                     "
+                     x-show="showMobileCta"
+                     x-cloak
+                     class="fixed bottom-0 left-0 right-0 z-[60] lg:hidden bg-white border-t border-gray-200 p-4 shadow-[0_-8px_20px_-5px_rgba(0,0,0,0.1)]" style="padding-bottom: calc(1rem + env(safe-area-inset-bottom));">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-sm font-medium text-gray-500 uppercase tracking-wide">Total</span>
+                        <span class="text-2xl font-black text-gray-900" x-text="formatCurrency(total)">$0</span>
+                    </div>
+                    <button type="submit" @click="$el.closest('form').reportValidity() ? $el.closest('form').submit() : null" class="w-full bg-brand-pink text-white font-semibold py-3.5 px-4 rounded-lg shadow-sm active:scale-[0.98] transition-transform flex items-center justify-center">
+                        Guardar Pedido
+                    </button>
                 </div>
             </form>
         </div>
