@@ -303,6 +303,31 @@ export default function orderForm(initialData = {}) {
             });
         },
 
+        addSameProduct(index) {
+            const originalItem = this.items[index];
+            if (!originalItem || !originalItem.productId) return;
+
+            const newItem = {
+                productId: originalItem.productId,
+                productName: originalItem.productName,
+                productSearch: originalItem.productSearch,
+                variationId: "",
+                selectedVariation: null,
+                initialVariationOption: null,
+                quantity: 1,
+                unitPrice: 0,
+                maxStock: null,
+                showResults: false,
+                isSearching: false,
+                hasSearched: false,
+                searchResults: [],
+                variations: [...originalItem.variations],
+            };
+
+            // Insertarlo justo después del ítem actual para mantener proximidad visual
+            this.items.splice(index + 1, 0, newItem);
+        },
+
         removeItem(index) {
             this.items.splice(index, 1);
             if (this.items.length === 0) this.addItem();

@@ -45,10 +45,9 @@
 
                             <div class="space-y-4">
                                 <template x-for="(item, index) in items" :key="index">
-                                    <div
-                                        class="grid grid-cols-1 gap-4 border-b border-gray-100 pb-6 md:grid-cols-[repeat(13,minmax(0,1fr))] md:items-start md:gap-x-4 md:gap-y-3 md:pb-4">
+                                    <div class="flex flex-col gap-3 border-b border-gray-100 pb-6 pt-2 md:grid md:grid-cols-[repeat(13,minmax(0,1fr))] md:items-start md:gap-x-4 md:gap-y-3 md:pb-4 md:pt-0">
                                         <div class="md:col-span-4 md:pr-4 relative">
-                                            <label class="block text-xs font-medium text-gray-500 mb-1">Producto</label>
+                                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 md:text-xs md:font-medium md:text-gray-500">Producto</label>
 
                                             <!-- Input oculto para enviar el ID del producto -->
                                             <input type="hidden" :name="`items[${index}][product_id]`"
@@ -97,8 +96,9 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        
                                         <div class="md:col-span-3">
-                                            <label class="block text-xs font-medium text-gray-500 mb-1">Variación</label>
+                                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 md:text-xs md:font-medium md:text-gray-500">Variación</label>
                                             <select :name="`items[${index}][variation_id]`"
                                                 class="h-10 w-full rounded-md shadow-sm text-sm"
                                                 :class="getError(`items.${index}.variation_id`) ? 'border-red-500' :
@@ -117,44 +117,76 @@
                                                     x-text="getError(`items.${index}.variation_id`)"></div>
                                             </template>
                                         </div>
-                                        <div class="md:col-span-1">
-                                            <label class="block text-xs font-medium text-gray-500 mb-1">Cant.</label>
-                                            <input type="number" :name="`items[${index}][quantity]`"
-                                                x-model="item.quantity" min="1" :max="item.maxStock"
-                                                @input="validateQuantity(index); clearError(`items.${index}.quantity`)"
-                                                class="h-10 w-full rounded-md shadow-sm text-sm"
-                                                :class="getError(`items.${index}.quantity`) ? 'border-red-500' :
-                                                    'border-gray-300'">
-                                            <template x-if="getError(`items.${index}.quantity`)">
-                                                <div class="text-[10px] text-red-500 mt-1"
-                                                    x-text="getError(`items.${index}.quantity`)"></div>
-                                            </template>
-                                        </div>
-                                        <div class="md:col-span-2">
-                                            <label class="block text-xs font-medium text-gray-500 mb-1">Precio
-                                                Unit.</label>
-                                            <div
-                                                class="flex h-10 w-full items-center rounded-md border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700">
-                                                <span
-                                                    x-text="item.unitPrice ? formatCurrency(item.unitPrice) : 'Seleccionar variacion'"></span>
+
+                                        <!-- Contenedor mobile para Cantidad y Totales (md:contents deshace el div en desktop para mantener el grid) -->
+                                        <div class="flex items-center justify-between bg-gray-50/80 p-3 rounded-lg border border-gray-100 mt-1 md:contents">
+                                            <div class="w-24 md:w-auto md:col-span-1">
+                                                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 md:text-xs md:font-medium md:text-gray-500">Cant.</label>
+                                                <input type="number" :name="`items[${index}][quantity]`"
+                                                    x-model="item.quantity" min="1" :max="item.maxStock"
+                                                    @input="validateQuantity(index); clearError(`items.${index}.quantity`)"
+                                                    class="h-10 w-full rounded-md shadow-sm text-sm font-semibold text-center md:text-left"
+                                                    :class="getError(`items.${index}.quantity`) ? 'border-red-500' :
+                                                        'border-gray-300'">
+                                                <template x-if="getError(`items.${index}.quantity`)">
+                                                    <div class="text-[10px] text-red-500 mt-1"
+                                                        x-text="getError(`items.${index}.quantity`)"></div>
+                                                </template>
+                                            </div>
+
+                                            <!-- Precios mobile -->
+                                            <div class="text-right md:hidden">
+                                                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Subtotal</div>
+                                                <div class="text-xl font-black text-gray-900 leading-none"
+                                                    x-text="formatCurrency((parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0))">
+                                                </div>
+                                                <div class="text-[11px] font-medium text-gray-500 mt-1"
+                                                    x-text="item.unitPrice ? formatCurrency(item.unitPrice) + ' c/u' : 'Seleccionar variación'">
+                                                </div>
+                                            </div>
+
+                                            <!-- Precios desktop -->
+                                            <div class="hidden md:block md:col-span-2">
+                                                <label class="block text-xs font-medium text-gray-500 mb-1">Precio Unit.</label>
+                                                <div class="flex h-10 w-full items-center rounded-md border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700">
+                                                    <span x-text="item.unitPrice ? formatCurrency(item.unitPrice) : 'Seleccionar variacion'"></span>
+                                                </div>
+                                            </div>
+                                            <div class="hidden md:block md:col-span-2">
+                                                <label class="block text-xs font-medium text-gray-500 mb-1">Subtotal</label>
+                                                <div class="flex h-10 w-full items-center justify-end rounded-md border border-gray-100 bg-gray-50 px-3 text-sm font-semibold text-gray-800 md:justify-start"
+                                                    x-text="formatCurrency((parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0))">
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="md:col-span-2">
-                                            <label class="block text-xs font-medium text-gray-500 mb-1">Subtotal</label>
-                                            <div
-                                                class="flex h-10 w-full items-center justify-end rounded-md border border-gray-100 bg-gray-50 px-3 text-sm font-semibold text-gray-800 md:justify-start"
-                                                x-text="formatCurrency((parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0))">
-                                            </div>
-                                        </div>
-                                        <div class="mt-2 flex md:col-span-1 md:mt-0 md:justify-center md:pt-6">
+
+                                        <!-- Acciones -->
+                                        <div class="flex items-center justify-between mt-1 md:col-span-1 md:mt-0 md:justify-center md:pt-6">
                                             <button type="button" @click="removeItem(index)"
-                                                class="inline-flex h-10 w-10 items-center justify-center rounded-md text-red-500 transition-colors hover:bg-red-50 hover:text-red-700">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                class="inline-flex items-center text-sm font-medium text-red-500 hover:text-red-700 transition-colors md:h-10 md:w-10 md:justify-center md:rounded-md md:hover:bg-red-50">
+                                                <svg class="w-4 h-4 mr-1 md:mr-0 md:w-5 md:h-5" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
                                                     </path>
                                                 </svg>
+                                                <span class="md:hidden">Eliminar</span>
+                                            </button>
+
+                                            <!-- Botón Mismo Producto Mobile -->
+                                            <button type="button" @click="addSameProduct(index)" x-show="item.productId"
+                                                class="inline-flex items-center text-sm font-semibold text-brand-pink hover:text-brand-heart transition-colors md:hidden">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                                Mismo producto
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Botón Mismo Producto Desktop -->
+                                        <div class="hidden md:block md:col-span-[13] text-right -mt-2">
+                                            <button type="button" @click="addSameProduct(index)" x-show="item.productId"
+                                                class="inline-flex items-center text-xs font-semibold text-brand-pink hover:text-brand-heart transition-colors">
+                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                                Agregar mismo producto
                                             </button>
                                         </div>
                                     </div>
