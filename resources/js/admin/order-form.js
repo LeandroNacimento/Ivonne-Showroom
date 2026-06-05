@@ -43,10 +43,11 @@ export default function orderForm(initialData = {}) {
                 color: option.color || "N/A",
                 size: option.size || "ÚNICO",
                 stock: option.stock ?? null,
-                effectivePrice: option.effective_price ?? 0,
+                effectivePrice: option.effective_price ?? option.effectivePrice ?? 0,
                 originalPrice:
-                    option.original_price ?? option.effective_price ?? 0,
-                hasActiveOffer: Boolean(option.has_active_offer),
+                    option.original_price ?? option.originalPrice ??
+                    option.effective_price ?? option.effectivePrice ?? 0,
+                hasActiveOffer: Boolean(option.has_active_offer ?? option.hasActiveOffer),
                 label: option.label || null,
                 missing: Boolean(option.missing),
             };
@@ -281,6 +282,23 @@ export default function orderForm(initialData = {}) {
             } else {
                 this.addItem();
             }
+
+            // Client recovery logic
+            if (this.clientId && !this.clientSearch && this.clientMode === 'existing') {
+                this.clientSearch = `Cliente pre-seleccionado (ID: ${this.clientId})`;
+            }
+
+            // Auto-scroll al primer error
+            this.$nextTick(() => {
+                if (Object.keys(this.errors).length > 0) {
+                    const firstError = document.querySelector('.border-red-500, .text-red-500, .bg-red-50');
+                    if (firstError) {
+                        // Un scroll un poco por encima del elemento para contexto
+                        const y = firstError.getBoundingClientRect().top + window.scrollY - 100;
+                        window.scrollTo({ top: y, behavior: 'smooth' });
+                    }
+                }
+            });
         },
 
         addItem() {
@@ -300,6 +318,31 @@ export default function orderForm(initialData = {}) {
                 searchResults: [],
                 variations: [],
             });
+        },
+
+        addSameProduct(index) {
+            const originalItem = this.items[index];
+            if (!originalItem || !originalItem.productId) return;
+
+            const newItem = {
+                productId: originalItem.productId,
+                productName: originalItem.productName,
+                productSearch: originalItem.productSearch,
+                variationId: "",
+                selectedVariation: null,
+                initialVariationOption: null,
+                quantity: 1,
+                unitPrice: 0,
+                maxStock: null,
+                showResults: false,
+                isSearching: false,
+                hasSearched: false,
+                searchResults: [],
+                variations: [...originalItem.variations],
+            };
+
+            // Insertarlo justo después del ítem actual para mantener proximidad visual
+            this.items.splice(index + 1, 0, newItem);
         },
 
         removeItem(index) {

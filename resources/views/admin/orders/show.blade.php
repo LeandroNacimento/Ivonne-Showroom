@@ -30,42 +30,44 @@
                 <div class="px-6 py-4 border-b border-gray-100">
                     <h2 class="text-lg font-semibold text-gray-800">Ítems</h2>
                 </div>
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Variación</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Cant.</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Precio</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        @foreach($order->items as $item)
-                        <tr>
-                            <td class="px-6 py-4 text-sm text-gray-900">{{ $item->product->name }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-500">{{ $item->color }} / {{ $item->size }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-900 text-right">{{ $item->quantity }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-900 text-right">${{ number_format($item->unit_price, 0, ',', '.') }}</td>
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 text-right">${{ number_format($item->subtotal, 0, ',', '.') }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot class="bg-gray-50">
-                        <tr>
-                            <td colspan="4" class="px-6 py-3 text-right text-sm font-medium text-gray-500">Subtotal</td>
-                            <td class="px-6 py-3 text-right text-sm font-medium text-gray-900">${{ number_format($order->total - $order->shipping_cost, 0, ',', '.') }}</td>
-                        </tr>
-                        <tr>
-                            <td colspan="4" class="px-6 py-3 text-right text-sm font-medium text-gray-500">Envío</td>
-                            <td class="px-6 py-3 text-right text-sm font-medium text-gray-900">${{ number_format($order->shipping_cost, 0, ',', '.') }}</td>
-                        </tr>
-                        <tr>
-                            <td colspan="4" class="px-6 py-3 text-right text-base font-bold text-gray-900">Total</td>
-                            <td class="px-6 py-3 text-right text-base font-bold text-brand-pink">${{ number_format($order->total, 0, ',', '.') }}</td>
-                        </tr>
-                    </tfoot>
-                </table>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Variación</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Cant.</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Precio</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            @foreach($order->items as $item)
+                            <tr>
+                                <td class="px-6 py-4 text-sm text-gray-900">{{ $item->product->name }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-500">{{ $item->color }} / {{ $item->size }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900 text-right">{{ $item->quantity }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900 text-right">${{ number_format($item->unit_price, 0, ',', '.') }}</td>
+                                <td class="px-6 py-4 text-sm font-medium text-gray-900 text-right">${{ number_format($item->subtotal, 0, ',', '.') }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot class="bg-gray-50">
+                            <tr>
+                                <td colspan="4" class="px-6 py-3 text-right text-sm font-medium text-gray-500">Subtotal</td>
+                                <td class="px-6 py-3 text-right text-sm font-medium text-gray-900">${{ number_format($order->total - $order->shipping_cost, 0, ',', '.') }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" class="px-6 py-3 text-right text-sm font-medium text-gray-500">Envío</td>
+                                <td class="px-6 py-3 text-right text-sm font-medium text-gray-900">${{ number_format($order->shipping_cost, 0, ',', '.') }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" class="px-6 py-3 text-right text-base font-bold text-gray-900">Total</td>
+                                <td class="px-6 py-3 text-right text-base font-bold text-brand-pink">${{ number_format($order->total, 0, ',', '.') }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
         </div>
 
