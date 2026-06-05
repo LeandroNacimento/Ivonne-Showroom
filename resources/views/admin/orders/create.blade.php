@@ -28,7 +28,7 @@
                 freeShipping: {{ old('delivery_type') === 'shipping' && (old('shipping_cost') == 0 && old('shipping_cost') !== null) ? 'true' : 'false' }},
                 clientMode: @json(old('new_client_name') ? 'new' : 'existing'),
                 clientId: @json(old('client_id')),
-                clientSearch: '' // Cannot repopulate client name easily on error without another DB query, manual search required
+                clientSearch: @json(old('client_name_display', ''))
             };
         </script>
         <div x-data="orderForm(window.INITIAL_ORDER_DATA)">
@@ -40,8 +40,29 @@
                     <div class="lg:col-span-3 space-y-6">
                         <!-- Items -->
                         <div class="bg-white rounded-lg shadow-sm p-6">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Ítems del Pedido</h2>
+                            <h2 class="mb-4 text-base font-semibold text-gray-900">Productos del Pedido</h2>
 
+                            <!-- Banner global de errores -->
+                            <template x-if="Object.keys(errors).length > 0">
+                                <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md shadow-sm">
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <h3 class="text-sm font-medium text-red-800">No se pudo guardar el pedido</h3>
+                                            <p class="mt-1 text-sm text-red-700">Revisá los errores resaltados más abajo antes de volver a intentar.</p>
+                                            
+                                            <!-- Error global de validación de items (ej. variaciones duplicadas) -->
+                                            <template x-if="getError('items')">
+                                                <div class="mt-2 text-sm font-bold text-red-800" x-text="getError('items')"></div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
 
                             <div class="space-y-4">
                                 <template x-for="(item, index) in items" :key="index">
@@ -126,12 +147,8 @@
                                                     x-model="item.quantity" min="1" :max="item.maxStock"
                                                     @input="validateQuantity(index); clearError(`items.${index}.quantity`)"
                                                     class="h-10 w-full rounded-md shadow-sm text-sm font-semibold text-center md:text-left"
-                                                    :class="getError(`items.${index}.quantity`) ? 'border-red-500' :
+                                                    :class="getError(`items.${index}.quantity`) ? 'border-red-500 bg-red-50' :
                                                         'border-gray-300'">
-                                                <template x-if="getError(`items.${index}.quantity`)">
-                                                    <div class="text-[10px] text-red-500 mt-1"
-                                                        x-text="getError(`items.${index}.quantity`)"></div>
-                                                </template>
                                             </div>
 
                                             <!-- Precios mobile -->
@@ -189,6 +206,21 @@
                                                 Agregar mismo producto
                                             </button>
                                         </div>
+
+                                        <!-- Error local visible para la card (Stock / Cantidad) -->
+                                        <template x-if="getError(`items.${index}.quantity`)">
+                                            <div class="md:col-span-[13] w-full bg-red-50 border border-red-200 rounded-md p-3 mt-1 shadow-sm">
+                                                <div class="flex items-start">
+                                                    <svg class="h-4 w-4 text-red-500 mt-0.5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                    </svg>
+                                                    <div>
+                                                        <h4 class="text-xs font-bold text-red-800">Error en cantidad / Stock</h4>
+                                                        <p class="text-[11px] text-red-700 font-medium mt-0.5" x-text="getError(`items.${index}.quantity`)"></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
                                     </div>
                                 </template>
                             </div>
@@ -227,6 +259,7 @@
                                     
                                     <input
                                         type="text"
+                                        name="client_name_display"
                                         placeholder="Buscar cliente..."
                                         x-model="clientSearch"
                                         @input.debounce.300ms="searchClient"

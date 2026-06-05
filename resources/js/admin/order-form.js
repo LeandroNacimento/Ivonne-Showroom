@@ -282,6 +282,23 @@ export default function orderForm(initialData = {}) {
             } else {
                 this.addItem();
             }
+
+            // Client recovery logic
+            if (this.clientId && !this.clientSearch && this.clientMode === 'existing') {
+                this.clientSearch = `Cliente pre-seleccionado (ID: ${this.clientId})`;
+            }
+
+            // Auto-scroll al primer error
+            this.$nextTick(() => {
+                if (Object.keys(this.errors).length > 0) {
+                    const firstError = document.querySelector('.border-red-500, .text-red-500, .bg-red-50');
+                    if (firstError) {
+                        // Un scroll un poco por encima del elemento para contexto
+                        const y = firstError.getBoundingClientRect().top + window.scrollY - 100;
+                        window.scrollTo({ top: y, behavior: 'smooth' });
+                    }
+                }
+            });
         },
 
         addItem() {
