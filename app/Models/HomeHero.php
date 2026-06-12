@@ -12,12 +12,9 @@ class HomeHero extends Model
     public const SINGLETON_KEY = 'home';
 
     protected $fillable = [
-        'eyebrow',
-        'title',
-        'description',
-        'cta_label',
-        'cta_url',
+        'singleton_key',
     ];
+
 
     protected static function booted(): void
     {
@@ -47,22 +44,10 @@ class HomeHero extends Model
 
     public function getIsRenderableAttribute(): bool
     {
-        if (! $this->hasConsistentCta()) {
-            return false;
-        }
-
         if ($this->relationLoaded('activeSlides')) {
             return $this->activeSlides->isNotEmpty();
         }
 
         return $this->activeSlides()->exists();
-    }
-
-    public function hasConsistentCta(): bool
-    {
-        $labelFilled = filled(trim((string) $this->cta_label));
-        $urlFilled = filled(trim((string) $this->cta_url));
-
-        return ($labelFilled && $urlFilled) || (! $labelFilled && ! $urlFilled);
     }
 }
