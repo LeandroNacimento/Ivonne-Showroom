@@ -1,12 +1,6 @@
 @php
     $primarySlide = $homeHeroSlides->first();
     $hasAdminHero = $homeHero !== null && $primarySlide !== null;
-    $hasHeroText = $hasAdminHero
-        && (
-            filled($homeHero->eyebrow)
-            || filled($homeHero->title)
-            || filled($homeHero->description)
-        );
 @endphp
 
 @if ($hasAdminHero && $homeHeroMode === 'carousel')
@@ -16,7 +10,9 @@
         @mouseenter="pause()"
         @mouseleave="resume()"
         class="spy-section relative w-full h-[70vh] sm:h-[85vh] min-h-[600px] overflow-hidden bg-brand-blush">
+
         @foreach ($homeHeroSlides as $slide)
+            @php $link = $slide->resolved_link_url; @endphp
             <div x-show="active === {{ $loop->index }}"
                 x-transition:enter="transition ease-out duration-700"
                 x-transition:enter-start="opacity-0"
@@ -26,46 +22,29 @@
                 x-transition:leave-end="opacity-0"
                 class="absolute inset-0"
                 style="{{ $loop->first ? '' : 'display: none;' }}">
-                <img src="{{ $slide->public_image_url }}"
-                     alt="Ivonne Showroom — slide {{ $loop->iteration }}"
-                     class="absolute inset-0 h-full w-full object-cover lg:object-right-top"
-                     loading="{{ $loop->first ? 'eager' : 'lazy' }}"
-                     fetchpriority="{{ $loop->first ? 'high' : 'auto' }}"
-                     decoding="async">
-                <div class="absolute inset-0 bg-black/60"></div>
+
+                @if ($link)
+                    <a href="{{ $link }}" class="absolute inset-0 block" tabindex="{{ $loop->first ? '0' : '-1' }}">
+                @endif
+
+                <picture>
+                    <source
+                        media="(max-width: 767px)"
+                        srcset="{{ $slide->public_mobile_image_url }}">
+                    <img
+                        src="{{ $slide->public_desktop_image_url }}"
+                        alt="{{ $slide->alt_text }}"
+                        class="absolute inset-0 h-full w-full object-cover"
+                        loading="{{ $loop->first ? 'eager' : 'lazy' }}"
+                        fetchpriority="{{ $loop->first ? 'high' : 'auto' }}"
+                        decoding="async">
+                </picture>
+
+                @if ($link)
+                    </a>
+                @endif
             </div>
         @endforeach
-
-        <div
-            class="absolute inset-0 bg-gradient-to-r from-white/90 via-white/40 to-transparent sm:from-white/95 sm:via-white/25">
-        </div>
-
-        @if ($hasHeroText)
-            <div class="relative w-full h-full flex items-center max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
-                <main class="lg:w-1/2 xl:w-2/5">
-                    <div class="sm:text-center lg:text-left">
-                        @if (filled($homeHero->eyebrow))
-                            <p class="reveal text-sm font-semibold uppercase tracking-[0.24em] text-brand-pink">
-                                {{ $homeHero->eyebrow }}
-                            </p>
-                        @endif
-
-                        @if (filled($homeHero->title))
-                            <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl reveal">
-                                {{ $homeHero->title }}
-                            </h1>
-                        @endif
-
-                        @if (filled($homeHero->description))
-                            <p class="reveal text-base font-medium text-gray-700 sm:text-lg md:text-xl {{ filled($homeHero->title) ? 'mt-4 sm:mt-5 sm:max-w-xl sm:mx-auto md:mt-5 lg:mx-0' : '' }}"
-                                style="transition-delay: 100ms;">
-                                {{ $homeHero->description }}
-                            </p>
-                        @endif
-                    </div>
-                </main>
-            </div>
-        @endif
 
         <button type="button" @click="prev()"
             class="absolute left-4 top-1/2 z-20 hidden -translate-y-1/2 rounded-full bg-white/85 p-3 text-gray-800 shadow-lg backdrop-blur-sm transition hover:bg-white md:flex">
@@ -95,48 +74,34 @@
             @endforeach
         </div>
     </div>
+
 @elseif ($hasAdminHero && $homeHeroMode === 'static')
+    @php $link = $primarySlide->resolved_link_url; @endphp
     <div id="inicio" data-home-hero-mode="static"
         class="spy-section relative w-full h-[70vh] sm:h-[85vh] min-h-[600px] bg-brand-blush">
-        <img src="{{ $primarySlide->public_image_url }}"
-             alt="Ivonne Showroom hero"
-             class="absolute inset-0 h-full w-full object-cover object-right-top"
-             loading="eager"
-             fetchpriority="high"
-             decoding="async">
-        <div class="absolute inset-0 bg-black/60"></div>
 
-        <div
-            class="absolute inset-0 bg-gradient-to-r from-white/90 via-white/40 to-transparent sm:from-white/95 sm:via-white/25">
-        </div>
+        @if ($link)
+            <a href="{{ $link }}" class="absolute inset-0 block">
+        @endif
 
-        @if ($hasHeroText)
-            <div class="relative w-full h-full flex items-center max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
-                <main class="lg:w-1/2 xl:w-2/5">
-                    <div class="sm:text-center lg:text-left">
-                        @if (filled($homeHero->eyebrow))
-                            <p class="reveal text-sm font-semibold uppercase tracking-[0.24em] text-brand-pink">
-                                {{ $homeHero->eyebrow }}
-                            </p>
-                        @endif
+        <picture>
+            <source
+                media="(max-width: 767px)"
+                srcset="{{ $primarySlide->public_mobile_image_url }}">
+            <img
+                src="{{ $primarySlide->public_desktop_image_url }}"
+                alt="{{ $primarySlide->alt_text }}"
+                class="absolute inset-0 h-full w-full object-cover"
+                loading="eager"
+                fetchpriority="high"
+                decoding="async">
+        </picture>
 
-                        @if (filled($homeHero->title))
-                            <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl reveal">
-                                {{ $homeHero->title }}
-                            </h1>
-                        @endif
-
-                        @if (filled($homeHero->description))
-                            <p class="reveal text-base font-medium text-gray-700 sm:text-lg md:text-xl {{ filled($homeHero->title) ? 'mt-4 sm:mt-5 sm:max-w-xl sm:mx-auto md:mt-5 lg:mx-0' : '' }}"
-                                style="transition-delay: 100ms;">
-                                {{ $homeHero->description }}
-                            </p>
-                        @endif
-                    </div>
-                </main>
-            </div>
+        @if ($link)
+            </a>
         @endif
     </div>
+
 @else
     <div id="inicio" data-home-hero-mode="fallback"
         class="spy-section relative w-full h-[70vh] sm:h-[85vh] min-h-[600px] bg-brand-blush">
@@ -146,6 +111,7 @@
              loading="eager"
              fetchpriority="high"
              decoding="async">
+
         <div class="absolute inset-0 bg-black/60"></div>
 
         <div
