@@ -36,9 +36,9 @@ class ShowroomTest extends TestCase
 
         $hero->slides()->create([
             'desktop_image_path' => 'home-hero/static.jpg',
-            'alt_text'           => 'Hero estatico',
-            'position'           => 0,
-            'is_active'          => true,
+            'alt_text' => 'Hero estatico',
+            'position' => 0,
+            'is_active' => true,
         ]);
 
         $response = $this->get('/');
@@ -56,16 +56,16 @@ class ShowroomTest extends TestCase
 
         $hero->slides()->create([
             'desktop_image_path' => 'home-hero/slide-1.jpg',
-            'alt_text'           => 'Slide uno',
-            'position'           => 0,
-            'is_active'          => true,
+            'alt_text' => 'Slide uno',
+            'position' => 0,
+            'is_active' => true,
         ]);
 
         $hero->slides()->create([
             'desktop_image_path' => 'home-hero/slide-2.jpg',
-            'alt_text'           => 'Slide dos',
-            'position'           => 1,
-            'is_active'          => true,
+            'alt_text' => 'Slide dos',
+            'position' => 1,
+            'is_active' => true,
         ]);
 
         $response = $this->get('/');
@@ -87,9 +87,9 @@ class ShowroomTest extends TestCase
 
         $hero->slides()->create([
             'desktop_image_path' => 'home-hero/image-only.jpg',
-            'alt_text'           => 'Hero solo imagen',
-            'position'           => 0,
-            'is_active'          => true,
+            'alt_text' => 'Hero solo imagen',
+            'position' => 0,
+            'is_active' => true,
         ]);
 
         $response = $this->get('/');
