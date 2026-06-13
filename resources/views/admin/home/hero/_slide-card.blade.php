@@ -108,14 +108,36 @@
         </button>
 
         {{-- Editar --}}
-        <a
-            href="{{ route('admin.home.hero.edit', ['slide' => $slide->id]) }}"
+        <button
+            type="button"
             title="Editar banner"
+            @click="
+                $dispatch('home-hero-open-edit', {
+                    slide: {
+                        id: {{ $slide->id }},
+                        form: {
+                            slideId: {{ $slide->id }},
+                            name: @js($slide->name ?? ''),
+                            altText: @js($slide->alt_text ?? ''),
+                            linkType: @js($slide->link_type),
+                            linkUrl: @js($slide->link_url ?? ''),
+                            isActive: {{ $slide->is_active ? 'true' : 'false' }},
+                            desktopUrl: @js($slide->public_desktop_image_url),
+                            mobileUrl: @js($slide->public_mobile_image_url),
+                            hasMobile: {{ $slide->has_mobile_image ? 'true' : 'false' }},
+                            updateUrl: @js(route('admin.home.hero.slides.update', $slide)),
+                        },
+                        updateUrl: @js(route('admin.home.hero.slides.update', $slide)),
+                        desktopUrl: @js($slide->public_desktop_image_url),
+                        mobileUrl: @js($slide->public_mobile_image_url),
+                    }
+                });
+            "
             class="rounded-md p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="h-4 w-4">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
             </svg>
-        </a>
+        </button>
 
         {{-- Eliminar --}}
         <form

@@ -6,28 +6,11 @@
 --}}
 
 @php
-    $isEditing   = $editingSlide !== null;
-    $title       = $isEditing ? 'Editar banner' : 'Agregar banner';
-    $action      = $isEditing
-        ? route('admin.home.hero.slides.update', $editingSlide)
-        : route('admin.home.hero.slides.store');
-    $method      = $isEditing ? 'PUT' : 'POST';
-    $errorBag    = $isEditing ? 'updateSlide' : 'createSlide';
-    $old         = fn (string $key, $default = null) => old($key, $default);
-
-    // Valores actuales
-    $name       = $isEditing ? ($old('name', $editingSlide->name) ?? '') : ($old('name') ?? '');
-    $altText    = $isEditing ? $old('alt_text', $editingSlide->alt_text) : $old('alt_text', '');
-    $linkType   = $isEditing ? $old('link_type', $editingSlide->link_type) : $old('link_type', 'none');
-    $linkUrl    = $isEditing ? $old('link_url', $editingSlide->link_url ?? '') : $old('link_url', '');
-    $isActive   = $isEditing
-        ? (old('is_active') !== null ? (bool) old('is_active') : $editingSlide->is_active)
-        : (bool) old('is_active', true);
-
-    // URLs de preview
+    $isEditing = $editingSlide !== null;
+    $errorBag = $isEditing ? 'updateSlide' : 'createSlide';
     $desktopUrl = $isEditing ? $editingSlide->public_desktop_image_url : null;
-    $mobileUrl  = $isEditing ? $editingSlide->public_mobile_image_url : null;
-    $hasMobile  = $isEditing && $editingSlide->has_mobile_image;
+    $mobileUrl = $isEditing ? $editingSlide->public_mobile_image_url : null;
+    $hasMobile = $isEditing && $editingSlide->has_mobile_image;
 @endphp
 
 <div
@@ -57,8 +40,8 @@
 
     {{-- Header --}}
     <div class="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-5">
-        <h2 class="text-lg font-semibold text-gray-900">{{ $title }}</h2>
-        <button type="button" @click="drawerOpen = false"
+        <h2 class="text-lg font-semibold text-gray-900" x-text="drawerMode === 'edit' ? 'Editar banner' : 'Agregar banner'"></h2>
+        <button type="button" @click="close()"
             class="rounded-md p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600">
             <span class="sr-only">Cerrar</span>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="h-5 w-5">
@@ -69,15 +52,15 @@
 
     {{-- Formulario scrollable --}}
     <form
-        action="{{ $action }}"
+        :action="action"
         method="POST"
         enctype="multipart/form-data"
         class="flex flex-1 flex-col overflow-y-auto">
         @csrf
-        @method($method)
-        @if ($isEditing)
-            <input type="hidden" name="slide_id" value="{{ $editingSlide->id }}">
-        @endif
+        <template x-if="drawerMode === 'edit'">
+            <input type="hidden" name="_method" value="PUT">
+        </template>
+        <input type="hidden" name="slide_id" :value="form.slideId ?? ''">
 
         <div class="flex-1 space-y-6 px-6 py-6">
 
@@ -96,7 +79,7 @@
                 'hint'      => '1920 × 1080 px · 16:9 · JPG / WebP · máx 3 MB',
                 'currentUrl' => $desktopUrl,
                 'hasFallback' => false,
-                'required'  => ! $isEditing,
+                'required'  => false,
                 'errorBag'  => $errorBag,
                 'errorKey'  => 'desktop_image',
             ])
@@ -109,7 +92,7 @@
                 'hint'       => '1080 × 1350 px · 4:5 · JPG / WebP · máx 2 MB',
                 'currentUrl' => $mobileUrl,
                 'hasFallback' => $isEditing && ! $hasMobile,
-                'required'   => ! $isEditing,
+                'required'   => false,
                 'errorBag'   => $errorBag,
                 'errorKey'   => 'mobile_image',
             ])
@@ -122,7 +105,7 @@
                 <input type="text"
                        name="name"
                        id="drawer_name"
-                       value="{{ $name }}"
+                       x-model="form.name"
                        placeholder="Ej: Invierno 2026, Sale Jeans…"
                        maxlength="100"
                        class="mt-2 w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
@@ -140,7 +123,7 @@
                 <input type="text"
                        name="alt_text"
                        id="drawer_alt_text"
-                       value="{{ $altText }}"
+                       x-model="form.altText"
                        required
                        maxlength="255"
                        placeholder="Ej: Mujer con abrigo beige, colección invierno"
@@ -152,20 +135,20 @@
             </div>
 
             {{-- Destino del banner --}}
-            <div x-data="{ linkType: '{{ $linkType }}' }">
+            <div>
                 <p class="text-sm font-semibold text-gray-700">Destino del banner</p>
                 <div class="mt-3 space-y-2">
 
                     <label class="flex cursor-pointer items-center gap-2.5">
                         <input type="radio" name="link_type" value="none"
-                               x-model="linkType"
+                               x-model="form.linkType"
                                class="text-brand-pink focus:ring-brand-pink">
                         <span class="text-sm text-gray-700">Sin destino</span>
                     </label>
 
                     <label class="flex cursor-pointer items-center gap-2.5">
                         <input type="radio" name="link_type" value="external"
-                               x-model="linkType"
+                               x-model="form.linkType"
                                class="text-brand-pink focus:ring-brand-pink">
                         <span class="text-sm text-gray-700">URL externa</span>
                     </label>
@@ -173,12 +156,12 @@
                 </div>
 
                 {{-- URL externa --}}
-                <div x-show="linkType === 'external'" x-transition class="mt-3">
+                <div x-show="form.linkType === 'external'" x-transition class="mt-3">
                     <label for="drawer_link_url" class="block text-xs font-medium text-gray-600">URL de destino</label>
                     <input type="url"
                            name="link_url"
                            id="drawer_link_url"
-                           value="{{ $linkUrl }}"
+                           x-model="form.linkUrl"
                            placeholder="https://…"
                            maxlength="2048"
                            class="mt-1.5 w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
@@ -197,11 +180,14 @@
                            name="is_active"
                            id="drawer_is_active"
                            value="1"
-                           @if($isActive) checked @endif
+                           x-model="form.isActive"
                            class="rounded border-gray-300 text-brand-pink shadow-sm focus:border-brand-pink focus:ring focus:ring-brand-pink focus:ring-opacity-50">
                     <span class="text-sm font-medium text-gray-700">Mostrar en la web</span>
                 </label>
                 <p class="mt-1.5 pl-7 text-xs text-gray-400">Si lo desactivás, el banner queda guardado pero no aparece en la portada.</p>
+                @if ($errors->{$errorBag}->has('is_active'))
+                    <p class="mt-1.5 pl-7 text-xs text-red-600">{{ $errors->{$errorBag}->first('is_active') }}</p>
+                @endif
             </div>
 
         </div>
@@ -211,10 +197,10 @@
             <div class="flex items-center gap-3">
                 <button type="submit"
                     class="flex-1 rounded-md bg-brand-pink py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-heart">
-                    {{ $isEditing ? 'Guardar cambios' : 'Agregar banner' }}
+                    <span x-text="drawerMode === 'edit' ? 'Guardar cambios' : 'Agregar banner'"></span>
                 </button>
                 <button type="button"
-                    @click="drawerOpen = false"
+                    @click="close()"
                     class="rounded-md border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50">
                     Cancelar
                 </button>

@@ -2,7 +2,7 @@
 
 @php
     // Detectar si venimos de un error de validación de edición para re-abrir el drawer
-    $editingSlideId = old('slide_id', request('slide'));
+    $editingSlideId = old('slide_id');
     $editingSlide = $editingSlideId
         ? $slides->firstWhere('id', (int) $editingSlideId)
         : null;
@@ -23,12 +23,72 @@
 
 @section('content')
     @php
-        $shouldOpenCreateDrawer = request()->boolean('create') || $errors->createSlide->any();
+        $shouldOpenCreateDrawer = $errors->createSlide->any();
+        $createForm = [
+            'slideId'     => null,
+            'name'        => old('name', ''),
+            'altText'     => old('alt_text', ''),
+            'linkType'    => old('link_type', 'none'),
+            'linkUrl'     => old('link_url', ''),
+            'isActive'    => (bool) old('is_active', true),
+            'desktopUrl'  => null,
+            'mobileUrl'   => null,
+            'hasMobile'   => false,
+            'updateUrl'   => null,
+        ];
+
+        $editForm = $editingSlide ? [
+            'slideId'     => $editingSlide->id,
+            'name'        => old('name', $editingSlide->name) ?? '',
+            'altText'     => old('alt_text', $editingSlide->alt_text),
+            'linkType'    => old('link_type', $editingSlide->link_type),
+            'linkUrl'     => old('link_url', $editingSlide->link_url ?? ''),
+            'isActive'    => old('is_active') !== null ? (bool) old('is_active') : $editingSlide->is_active,
+            'desktopUrl'  => $editingSlide->public_desktop_image_url,
+            'mobileUrl'   => $editingSlide->public_mobile_image_url,
+            'hasMobile'   => $editingSlide->has_mobile_image,
+            'updateUrl'   => route('admin.home.hero.slides.update', $editingSlide),
+        ] : null;
     @endphp
 
     <div
         class="space-y-6"
-        x-data="{ drawerOpen: {{ ($editingSlide || $shouldOpenCreateDrawer) ? 'true' : 'false' }} }"
+        x-data="{
+            drawerOpen: {{ ($editingSlide || $shouldOpenCreateDrawer) ? 'true' : 'false' }},
+            drawerMode: {{ $editingSlide ? "'edit'" : "'create'" }},
+            createAction: @js(route('admin.home.hero.slides.store')),
+            createForm: @js($createForm),
+            form: @js($editingSlide ? $editForm : $createForm),
+            editAction: @js($editForm['updateUrl'] ?? null),
+            openCreate() {
+                this.drawerMode = 'create';
+                this.editAction = null;
+                this.form = JSON.parse(JSON.stringify(this.createForm));
+                this.drawerOpen = true;
+                this.dispatchLoad('create');
+            },
+            openEdit(slide) {
+                this.drawerMode = 'edit';
+                this.editAction = slide.updateUrl;
+                this.form = JSON.parse(JSON.stringify(slide.form));
+                this.drawerOpen = true;
+                this.dispatchLoad('edit', slide);
+            },
+            close() {
+                this.drawerOpen = false;
+            },
+            get action() {
+                return this.drawerMode === 'edit' ? this.editAction : this.createAction;
+            },
+            dispatchLoad(mode, slide = null) {
+                this.$nextTick(() => {
+                    window.dispatchEvent(new CustomEvent('home-hero-drawer-load', {
+                        detail: { mode, slide },
+                    }));
+                });
+            },
+        }"
+        @home-hero-open-edit.window="openEdit($event.detail.slide)"
         @keydown.escape.window="drawerOpen = false">
 
         {{-- Header --}}
@@ -42,14 +102,15 @@
                     </p>
                 @endif
             </div>
-            <a
-                href="{{ route('admin.home.hero.edit', ['create' => 1]) }}"
+            <button
+                type="button"
+                @click="openCreate()"
                 class="inline-flex items-center gap-2 rounded-md bg-brand-pink px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-heart">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-4 w-4">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
                 Agregar banner
-            </a>
+            </button>
         </div>
 
         {{-- Barra de estado público --}}
@@ -82,13 +143,13 @@
                 </svg>
                 <p class="mt-4 text-sm font-semibold text-gray-700">Todavía no hay banners</p>
                 <p class="mt-1 text-sm text-gray-400">Agregá el primero para reemplazar la portada por defecto.</p>
-                <a href="{{ route('admin.home.hero.edit', ['create' => 1]) }}"
+                <button type="button" @click="openCreate()"
                     class="mt-6 inline-flex items-center gap-2 rounded-md bg-brand-pink px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-heart">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-4 w-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
                     Agregar banner
-                </a>
+                </button>
             </div>
         @else
             <ul id="slides-sortable"

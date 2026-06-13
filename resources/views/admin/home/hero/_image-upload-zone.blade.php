@@ -21,7 +21,26 @@
         initialUrl: @js($currentUrl),
         previewUrl: @js($currentUrl),
         objectUrl: null,
+        syncFromDrawer(url) {
+            if (this.objectUrl) {
+                URL.revokeObjectURL(this.objectUrl);
+                this.objectUrl = null;
+            }
+
+            this.initialUrl = url;
+            this.previewUrl = url;
+
+            const input = this.$el.querySelector('input[type=file]');
+            if (input) {
+                input.value = '';
+            }
+        },
     }"
+    @if (str_contains($inputName, 'mobile'))
+        x-on:home-hero-drawer-load.window="syncFromDrawer($event.detail.mode === 'edit' ? $event.detail.slide.mobileUrl : null)"
+    @else
+        x-on:home-hero-drawer-load.window="syncFromDrawer($event.detail.mode === 'edit' ? $event.detail.slide.desktopUrl : null)"
+    @endif
 >
     <p class="text-sm font-semibold text-gray-700">{{ $label }}</p>
 
@@ -69,7 +88,7 @@
            name="{{ $inputName }}"
            id="{{ $inputId }}"
            accept="image/jpeg,image/png,image/webp"
-           @if($required) required @endif
+           :required="drawerMode === 'create'"
            @change="
                 const file = $event.target.files && $event.target.files[0];
 
