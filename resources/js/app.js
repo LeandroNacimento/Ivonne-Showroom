@@ -34,7 +34,9 @@ function initHeroSortable() {
     Sortable.create(list, {
         handle: '.drag-handle',
         animation: 150,
-        ghostClass: 'opacity-50',
+        ghostClass:  'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        dragClass:   'sortable-drag',
         onEnd() {
             const newOrder = [...list.querySelectorAll('[data-slide-id]')].map(el => el.dataset.slideId);
 

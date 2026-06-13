@@ -141,4 +141,21 @@
     #filter-drawer.pointer-events-auto .drawer-backdrop {
         opacity: 1;
     }
+
+    /* SortableJS — estados de drag & drop para el reordenamiento de banners */
+    .sortable-ghost {
+        opacity: 0.35;
+        border: 2px dashed rgb(209 213 219); /* border-gray-300 */
+        border-radius: 0.75rem;
+    }
+
+    .sortable-chosen {
+        box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
+    }
+
+    .sortable-drag {
+        opacity: 1 !important;
+        box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+        border-radius: 0.75rem;
+    }
 }

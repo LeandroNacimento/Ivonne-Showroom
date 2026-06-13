@@ -55,7 +55,9 @@
         :action="action"
         method="POST"
         enctype="multipart/form-data"
-        class="flex flex-1 flex-col overflow-y-auto">
+        class="flex flex-1 flex-col overflow-y-auto"
+        x-data="{ submitting: false }"
+        @submit="submitting = true">
         @csrf
         <template x-if="drawerMode === 'edit'">
             <input type="hidden" name="_method" value="PUT">
@@ -196,7 +198,9 @@
         <div class="shrink-0 border-t border-gray-200 bg-white px-6 py-4">
             <div class="flex items-center gap-3">
                 <button type="submit"
-                    class="flex-1 rounded-md bg-brand-pink py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-heart">
+                    :disabled="submitting"
+                    :class="submitting ? 'opacity-60 cursor-not-allowed' : 'hover:bg-brand-heart'"
+                    class="flex-1 rounded-md bg-brand-pink py-2.5 text-sm font-semibold text-white shadow-sm transition">
                     <span x-text="drawerMode === 'edit' ? 'Guardar cambios' : 'Agregar banner'"></span>
                 </button>
                 <button type="button"
