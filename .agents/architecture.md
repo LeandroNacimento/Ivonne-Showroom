@@ -82,7 +82,6 @@ For route changes:
 
 For interactive UI changes:
 
-- prefer Livewire before adding JS complexity
 - keep JS local and removable
 - avoid critical state in the frontend
 - preserve admin/storefront separation
