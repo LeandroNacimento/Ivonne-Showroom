@@ -33,28 +33,19 @@ class ShowroomTest extends TestCase
     public function test_home_renders_static_admin_hero_when_one_active_slide_exists(): void
     {
         $hero = HomeHero::singleton();
-        $hero->update([
-            'eyebrow' => 'Nueva coleccion',
-            'title' => 'Hero administrable',
-            'description' => 'Contenido principal desde admin.',
-            'cta_label' => 'Ver seleccion',
-            'cta_url' => 'https://example.com/seleccion',
-        ]);
 
         $hero->slides()->create([
-            'image_path' => 'home-hero/static.jpg',
-            'alt_text' => 'Hero estatico',
-            'position' => 0,
-            'is_active' => true,
+            'desktop_image_path' => 'home-hero/static.jpg',
+            'alt_text'           => 'Hero estatico',
+            'position'           => 0,
+            'is_active'          => true,
         ]);
 
         $response = $this->get('/');
 
         $response->assertOk();
         $response->assertSee('data-home-hero-mode="static"', false);
-        $response->assertSee('Hero administrable');
         $response->assertSee('/storage/home-hero/static.jpg', false);
-        $response->assertDontSee('Ver seleccion');
         $response->assertDontSee('Contactar');
         $response->assertDontSee('Estilo y elegancia');
     }
@@ -62,23 +53,19 @@ class ShowroomTest extends TestCase
     public function test_home_renders_carousel_admin_hero_when_multiple_active_slides_exist(): void
     {
         $hero = HomeHero::singleton();
-        $hero->update([
-            'title' => 'Hero con carrusel',
-            'description' => 'Contenido principal con multiples slides.',
+
+        $hero->slides()->create([
+            'desktop_image_path' => 'home-hero/slide-1.jpg',
+            'alt_text'           => 'Slide uno',
+            'position'           => 0,
+            'is_active'          => true,
         ]);
 
         $hero->slides()->create([
-            'image_path' => 'home-hero/slide-1.jpg',
-            'alt_text' => 'Slide uno',
-            'position' => 0,
-            'is_active' => true,
-        ]);
-
-        $hero->slides()->create([
-            'image_path' => 'home-hero/slide-2.jpg',
-            'alt_text' => 'Slide dos',
-            'position' => 1,
-            'is_active' => true,
+            'desktop_image_path' => 'home-hero/slide-2.jpg',
+            'alt_text'           => 'Slide dos',
+            'position'           => 1,
+            'is_active'          => true,
         ]);
 
         $response = $this->get('/');
@@ -99,10 +86,10 @@ class ShowroomTest extends TestCase
         $hero = HomeHero::singleton();
 
         $hero->slides()->create([
-            'image_path' => 'home-hero/image-only.jpg',
-            'alt_text' => 'Hero solo imagen',
-            'position' => 0,
-            'is_active' => true,
+            'desktop_image_path' => 'home-hero/image-only.jpg',
+            'alt_text'           => 'Hero solo imagen',
+            'position'           => 0,
+            'is_active'          => true,
         ]);
 
         $response = $this->get('/');
