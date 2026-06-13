@@ -15,7 +15,6 @@ class HomeHero extends Model
         'singleton_key',
     ];
 
-
     protected static function booted(): void
     {
         static::creating(function (self $hero): void {

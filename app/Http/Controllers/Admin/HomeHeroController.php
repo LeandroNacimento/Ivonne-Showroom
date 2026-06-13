@@ -23,8 +23,8 @@ class HomeHeroController extends Controller
         $hero = $this->homeHeroService->singleton()->load('slides');
 
         return view('admin.home.hero.edit', [
-            'hero'             => $hero,
-            'slides'           => $hero->slides,
+            'hero' => $hero,
+            'slides' => $hero->slides,
             'activeSlidesCount' => $hero->slides->where('is_active', true)->count(),
         ]);
     }

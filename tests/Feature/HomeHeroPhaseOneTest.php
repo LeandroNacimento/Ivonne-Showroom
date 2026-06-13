@@ -28,17 +28,17 @@ class HomeHeroPhaseOneTest extends TestCase
 
         $slide = $service->createSlide($hero, [
             'desktop_image' => UploadedFile::fake()->image('hero-desktop.jpg', 1920, 1080),
-            'mobile_image'  => UploadedFile::fake()->image('hero-mobile.jpg', 1080, 1350),
-            'alt_text'      => 'Portada principal',
-            'link_type'     => 'none',
-            'is_active'     => false,
+            'mobile_image' => UploadedFile::fake()->image('hero-mobile.jpg', 1080, 1350),
+            'alt_text' => 'Portada principal',
+            'link_type' => 'none',
+            'is_active' => false,
         ]);
 
         self::assertFalse($service->singleton()->fresh()->is_renderable);
         self::assertNull($service->getRenderableHero());
 
         $service->updateSlide($slide, [
-            'alt_text'  => 'Portada principal',
+            'alt_text' => 'Portada principal',
             'link_type' => 'none',
             'is_active' => true,
         ]);
@@ -55,34 +55,34 @@ class HomeHeroPhaseOneTest extends TestCase
 
         $first = $hero->slides()->create([
             'desktop_image_path' => 'home-hero/desktop/first.jpg',
-            'alt_text'           => 'First',
-            'link_type'          => 'none',
-            'position'           => 2,
-            'is_active'          => true,
+            'alt_text' => 'First',
+            'link_type' => 'none',
+            'position' => 2,
+            'is_active' => true,
         ]);
 
         $second = $hero->slides()->create([
             'desktop_image_path' => 'home-hero/desktop/second.jpg',
-            'alt_text'           => 'Second',
-            'link_type'          => 'none',
-            'position'           => 1,
-            'is_active'          => true,
+            'alt_text' => 'Second',
+            'link_type' => 'none',
+            'position' => 1,
+            'is_active' => true,
         ]);
 
         $third = $hero->slides()->create([
             'desktop_image_path' => 'home-hero/desktop/third.jpg',
-            'alt_text'           => 'Third',
-            'link_type'          => 'none',
-            'position'           => 1,
-            'is_active'          => true,
+            'alt_text' => 'Third',
+            'link_type' => 'none',
+            'position' => 1,
+            'is_active' => true,
         ]);
 
         $hero->slides()->create([
             'desktop_image_path' => 'home-hero/desktop/inactive.jpg',
-            'alt_text'           => 'Inactive',
-            'link_type'          => 'none',
-            'position'           => 0,
-            'is_active'          => false,
+            'alt_text' => 'Inactive',
+            'link_type' => 'none',
+            'position' => 0,
+            'is_active' => false,
         ]);
 
         self::assertSame(
@@ -97,26 +97,26 @@ class HomeHeroPhaseOneTest extends TestCase
 
         $first = $hero->slides()->create([
             'desktop_image_path' => 'home-hero/desktop/ten.jpg',
-            'alt_text'           => 'Ten',
-            'link_type'          => 'none',
-            'position'           => 10,
-            'is_active'          => true,
+            'alt_text' => 'Ten',
+            'link_type' => 'none',
+            'position' => 10,
+            'is_active' => true,
         ]);
 
         $second = $hero->slides()->create([
             'desktop_image_path' => 'home-hero/desktop/three-a.jpg',
-            'alt_text'           => 'Three A',
-            'link_type'          => 'none',
-            'position'           => 3,
-            'is_active'          => true,
+            'alt_text' => 'Three A',
+            'link_type' => 'none',
+            'position' => 3,
+            'is_active' => true,
         ]);
 
         $third = $hero->slides()->create([
             'desktop_image_path' => 'home-hero/desktop/three-b.jpg',
-            'alt_text'           => 'Three B',
-            'link_type'          => 'none',
-            'position'           => 3,
-            'is_active'          => true,
+            'alt_text' => 'Three B',
+            'link_type' => 'none',
+            'position' => 3,
+            'is_active' => true,
         ]);
 
         app(HomeHeroService::class)->normalizePositions($hero);
@@ -137,23 +137,23 @@ class HomeHeroPhaseOneTest extends TestCase
 
         $first = $service->createSlide($hero, [
             'desktop_image' => UploadedFile::fake()->image('first-desktop.jpg'),
-            'mobile_image'  => UploadedFile::fake()->image('first-mobile.jpg'),
-            'alt_text'      => 'First slide',
-            'link_type'     => 'none',
+            'mobile_image' => UploadedFile::fake()->image('first-mobile.jpg'),
+            'alt_text' => 'First slide',
+            'link_type' => 'none',
         ]);
 
         $second = $service->createSlide($hero, [
             'desktop_image' => UploadedFile::fake()->image('second-desktop.jpg'),
-            'mobile_image'  => UploadedFile::fake()->image('second-mobile.jpg'),
-            'alt_text'      => 'Second slide',
-            'link_type'     => 'none',
+            'mobile_image' => UploadedFile::fake()->image('second-mobile.jpg'),
+            'alt_text' => 'Second slide',
+            'link_type' => 'none',
         ]);
 
         $third = $service->createSlide($hero, [
             'desktop_image' => UploadedFile::fake()->image('third-desktop.jpg'),
-            'mobile_image'  => UploadedFile::fake()->image('third-mobile.jpg'),
-            'alt_text'      => 'Third slide',
-            'link_type'     => 'none',
+            'mobile_image' => UploadedFile::fake()->image('third-mobile.jpg'),
+            'alt_text' => 'Third slide',
+            'link_type' => 'none',
         ]);
 
         // El reorder asigna posiciones 0, 1, 2 en el orden dado
@@ -181,21 +181,21 @@ class HomeHeroPhaseOneTest extends TestCase
 
         $slide = $service->createSlide($hero, [
             'desktop_image' => UploadedFile::fake()->image('initial-desktop.jpg'),
-            'mobile_image'  => UploadedFile::fake()->image('initial-mobile.jpg'),
-            'alt_text'      => 'Initial slide',
-            'link_type'     => 'none',
+            'mobile_image' => UploadedFile::fake()->image('initial-mobile.jpg'),
+            'alt_text' => 'Initial slide',
+            'link_type' => 'none',
         ]);
 
         $originalDesktopPath = $slide->desktop_image_path;
-        $originalMobilePath  = $slide->mobile_image_path;
+        $originalMobilePath = $slide->mobile_image_path;
         Storage::disk('public')->assertExists($originalDesktopPath);
         Storage::disk('public')->assertExists($originalMobilePath);
 
         $updatedSlide = $service->updateSlide($slide, [
             'desktop_image' => UploadedFile::fake()->image('replacement-desktop.jpg'),
-            'mobile_image'  => UploadedFile::fake()->image('replacement-mobile.jpg'),
-            'alt_text'      => 'Replaced slide',
-            'link_type'     => 'none',
+            'mobile_image' => UploadedFile::fake()->image('replacement-mobile.jpg'),
+            'alt_text' => 'Replaced slide',
+            'link_type' => 'none',
         ]);
 
         Storage::disk('public')->assertMissing($originalDesktopPath);
@@ -204,7 +204,7 @@ class HomeHeroPhaseOneTest extends TestCase
         Storage::disk('public')->assertExists($updatedSlide->mobile_image_path);
 
         $replacementDesktopPath = $updatedSlide->desktop_image_path;
-        $replacementMobilePath  = $updatedSlide->mobile_image_path;
+        $replacementMobilePath = $updatedSlide->mobile_image_path;
 
         $service->deleteSlide($updatedSlide);
 
@@ -235,10 +235,10 @@ class HomeHeroPhaseOneTest extends TestCase
         try {
             HomeHeroValidator::validateSlideCreate([
                 'desktop_image' => UploadedFile::fake()->image('desktop.jpg'),
-                'mobile_image'  => UploadedFile::fake()->image('mobile.jpg'),
-                'alt_text'      => 'Banner',
-                'link_type'     => 'external',
-                'link_url'      => '',
+                'mobile_image' => UploadedFile::fake()->image('mobile.jpg'),
+                'alt_text' => 'Banner',
+                'link_type' => 'external',
+                'link_url' => '',
             ]);
 
             $this->fail('Expected validation to fail when link_url is empty with link_type=external.');
@@ -255,10 +255,10 @@ class HomeHeroPhaseOneTest extends TestCase
 
         $hero->slides()->create([
             'desktop_image_path' => 'home-hero/desktop/renderable-check.jpg',
-            'alt_text'           => 'Portada principal',
-            'link_type'          => 'none',
-            'position'           => 0,
-            'is_active'          => true,
+            'alt_text' => 'Portada principal',
+            'link_type' => 'none',
+            'position' => 0,
+            'is_active' => true,
         ]);
 
         self::assertTrue($hero->fresh()->is_renderable);
@@ -274,10 +274,10 @@ class HomeHeroPhaseOneTest extends TestCase
 
         $slide = $service->createSlide($hero, [
             'desktop_image' => UploadedFile::fake()->image('desktop.jpg'),
-            'mobile_image'  => UploadedFile::fake()->image('mobile.jpg'),
-            'alt_text'      => 'Toggle test',
-            'link_type'     => 'none',
-            'is_active'     => true,
+            'mobile_image' => UploadedFile::fake()->image('mobile.jpg'),
+            'alt_text' => 'Toggle test',
+            'link_type' => 'none',
+            'is_active' => true,
         ]);
 
         self::assertTrue($slide->is_active);
@@ -295,11 +295,11 @@ class HomeHeroPhaseOneTest extends TestCase
 
         $slide = $hero->slides()->create([
             'desktop_image_path' => 'home-hero/desktop/only-desktop.jpg',
-            'mobile_image_path'  => null,
-            'alt_text'           => 'Solo desktop',
-            'link_type'          => 'none',
-            'position'           => 0,
-            'is_active'          => true,
+            'mobile_image_path' => null,
+            'alt_text' => 'Solo desktop',
+            'link_type' => 'none',
+            'position' => 0,
+            'is_active' => true,
         ]);
 
         self::assertFalse($slide->has_mobile_image);

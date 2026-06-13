@@ -45,14 +45,14 @@ class HomeHeroService
                 $targetPosition = count($orderedIds);
 
                 $slide = $hero->slides()->create([
-                    'name'               => $validated['name'] ?? null,
+                    'name' => $validated['name'] ?? null,
                     'desktop_image_path' => $desktopPath,
-                    'mobile_image_path'  => $mobilePath,
-                    'alt_text'           => $validated['alt_text'],
-                    'link_type'          => $validated['link_type'] ?? 'none',
-                    'link_url'           => $validated['link_url'] ?? null,
-                    'position'           => $targetPosition,
-                    'is_active'          => $validated['is_active'] ?? true,
+                    'mobile_image_path' => $mobilePath,
+                    'alt_text' => $validated['alt_text'],
+                    'link_type' => $validated['link_type'] ?? 'none',
+                    'link_url' => $validated['link_url'] ?? null,
+                    'position' => $targetPosition,
+                    'is_active' => $validated['is_active'] ?? true,
                 ]);
 
                 $orderedIds[] = $slide->id;
@@ -81,7 +81,7 @@ class HomeHeroService
             : null;
 
         $oldDesktopPath = $slide->desktop_image_path;
-        $oldMobilePath  = $slide->mobile_image_path;
+        $oldMobilePath = $slide->mobile_image_path;
 
         try {
             $updatedSlide = DB::transaction(function () use ($slide, $validated, $newDesktopPath, $newMobilePath) {
@@ -143,9 +143,9 @@ class HomeHeroService
 
     public function deleteSlide(HomeHeroSlide $slide): void
     {
-        $hero         = $slide->homeHero()->firstOrFail();
-        $desktopPath  = $slide->desktop_image_path;
-        $mobilePath   = $slide->mobile_image_path;
+        $hero = $slide->homeHero()->firstOrFail();
+        $desktopPath = $slide->desktop_image_path;
+        $mobilePath = $slide->mobile_image_path;
 
         DB::transaction(function () use ($hero, $slide) {
             $orderedIds = $hero->slides()

@@ -11,7 +11,8 @@ class HomeHeroSlide extends Model
     use HasFactory;
 
     public const STORAGE_DIRECTORY_DESKTOP = 'home-hero/desktop';
-    public const STORAGE_DIRECTORY_MOBILE  = 'home-hero/mobile';
+
+    public const STORAGE_DIRECTORY_MOBILE = 'home-hero/mobile';
 
     protected $fillable = [
         'name',
@@ -25,7 +26,7 @@ class HomeHeroSlide extends Model
     ];
 
     protected $casts = [
-        'position'  => 'integer',
+        'position' => 'integer',
         'is_active' => 'boolean',
     ];
 

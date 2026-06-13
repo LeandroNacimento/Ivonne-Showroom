@@ -51,10 +51,10 @@ class HomeHeroAdminTest extends TestCase
 
         $response = $this->actingAs($admin)->post(route('admin.home.hero.slides.store'), [
             'desktop_image' => UploadedFile::fake()->image('hero-desktop.jpg', 1920, 1080),
-            'mobile_image'  => UploadedFile::fake()->image('hero-mobile.jpg', 1080, 1350),
-            'alt_text'      => 'Portada principal',
-            'link_type'     => 'none',
-            'is_active'     => '1',
+            'mobile_image' => UploadedFile::fake()->image('hero-mobile.jpg', 1080, 1350),
+            'alt_text' => 'Portada principal',
+            'link_type' => 'none',
+            'is_active' => '1',
         ]);
 
         $response->assertRedirect(route('admin.home.hero.edit'));
@@ -77,11 +77,11 @@ class HomeHeroAdminTest extends TestCase
 
         $slide = $hero->slides()->create([
             'desktop_image_path' => 'home-hero/desktop/old.jpg',
-            'mobile_image_path'  => 'home-hero/mobile/old.jpg',
-            'alt_text'           => 'Original',
-            'link_type'          => 'none',
-            'position'           => 0,
-            'is_active'          => true,
+            'mobile_image_path' => 'home-hero/mobile/old.jpg',
+            'alt_text' => 'Original',
+            'link_type' => 'none',
+            'position' => 0,
+            'is_active' => true,
         ]);
 
         // Crear los archivos en storage falso para que puedan ser eliminados
@@ -89,12 +89,12 @@ class HomeHeroAdminTest extends TestCase
         Storage::disk('public')->put('home-hero/mobile/old.jpg', 'fake');
 
         $response = $this->actingAs($admin)->put(route('admin.home.hero.slides.update', $slide), [
-            'slide_id'      => $slide->id,
-            'alt_text'      => 'Portada actualizada',
+            'slide_id' => $slide->id,
+            'alt_text' => 'Portada actualizada',
             'desktop_image' => UploadedFile::fake()->image('new-desktop.jpg', 1920, 1080),
-            'mobile_image'  => UploadedFile::fake()->image('new-mobile.jpg', 1080, 1350),
-            'link_type'     => 'none',
-            'is_active'     => '0',
+            'mobile_image' => UploadedFile::fake()->image('new-mobile.jpg', 1080, 1350),
+            'link_type' => 'none',
+            'is_active' => '0',
         ]);
 
         $response->assertRedirect(route('admin.home.hero.edit'));
@@ -121,11 +121,11 @@ class HomeHeroAdminTest extends TestCase
 
         $slide = $hero->slides()->create([
             'desktop_image_path' => 'home-hero/desktop/delete-me.jpg',
-            'mobile_image_path'  => 'home-hero/mobile/delete-me.jpg',
-            'alt_text'           => 'To delete',
-            'link_type'          => 'none',
-            'position'           => 0,
-            'is_active'          => true,
+            'mobile_image_path' => 'home-hero/mobile/delete-me.jpg',
+            'alt_text' => 'To delete',
+            'link_type' => 'none',
+            'position' => 0,
+            'is_active' => true,
         ]);
 
         $response = $this->actingAs($admin)->delete(route('admin.home.hero.slides.destroy', $slide));
@@ -145,18 +145,18 @@ class HomeHeroAdminTest extends TestCase
 
         $hero->slides()->create([
             'desktop_image_path' => 'home-hero/desktop/existing.jpg',
-            'alt_text'           => 'Existing slide',
-            'link_type'          => 'none',
-            'position'           => 0,
-            'is_active'          => true,
+            'alt_text' => 'Existing slide',
+            'link_type' => 'none',
+            'position' => 0,
+            'is_active' => true,
         ]);
 
         $response = $this->actingAs($admin)->post(route('admin.home.hero.slides.store'), [
             'desktop_image' => UploadedFile::fake()->image('new-desktop.jpg', 1920, 1080),
-            'mobile_image'  => UploadedFile::fake()->image('new-mobile.jpg', 1080, 1350),
-            'alt_text'      => 'Nueva slide al final',
-            'link_type'     => 'none',
-            'is_active'     => '1',
+            'mobile_image' => UploadedFile::fake()->image('new-mobile.jpg', 1080, 1350),
+            'alt_text' => 'Nueva slide al final',
+            'link_type' => 'none',
+            'is_active' => '1',
         ]);
 
         $response->assertRedirect(route('admin.home.hero.edit'));
@@ -195,11 +195,11 @@ class HomeHeroAdminTest extends TestCase
             ->actingAs($admin)
             ->post(route('admin.home.hero.slides.store'), [
                 'desktop_image' => UploadedFile::fake()->image('desktop.jpg'),
-                'mobile_image'  => UploadedFile::fake()->image('mobile.jpg'),
-                'alt_text'      => 'Banner con link',
-                'link_type'     => 'external',
-                'link_url'      => '',
-                'is_active'     => '1',
+                'mobile_image' => UploadedFile::fake()->image('mobile.jpg'),
+                'alt_text' => 'Banner con link',
+                'link_type' => 'external',
+                'link_url' => '',
+                'is_active' => '1',
             ]);
 
         $response->assertRedirect(route('admin.home.hero.edit'));
@@ -260,15 +260,15 @@ class HomeHeroAdminTest extends TestCase
 
         $slide = $hero->slides()->create([
             'desktop_image_path' => 'home-hero/desktop/fallback.jpg',
-            'alt_text'           => 'Fallback check',
-            'link_type'          => 'none',
-            'position'           => 0,
-            'is_active'          => true,
+            'alt_text' => 'Fallback check',
+            'link_type' => 'none',
+            'position' => 0,
+            'is_active' => true,
         ]);
 
         $response = $this->actingAs($admin)->put(route('admin.home.hero.slides.update', $slide), [
-            'slide_id'  => $slide->id,
-            'alt_text'  => 'Fallback check',
+            'slide_id' => $slide->id,
+            'alt_text' => 'Fallback check',
             'link_type' => 'none',
             'is_active' => '0',
         ]);
