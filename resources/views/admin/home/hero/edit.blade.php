@@ -2,9 +2,9 @@
 
 @php
     // Detectar si venimos de un error de validación de edición para re-abrir el drawer
-    $erroredSlideId = old('slide_id');
-    $editingSlide = $erroredSlideId
-        ? $slides->firstWhere('id', (int) $erroredSlideId)
+    $editingSlideId = old('slide_id', request('slide'));
+    $editingSlide = $editingSlideId
+        ? $slides->firstWhere('id', (int) $editingSlideId)
         : null;
 
     // Barra de estado
@@ -22,9 +22,13 @@
 @endphp
 
 @section('content')
+    @php
+        $shouldOpenCreateDrawer = request()->boolean('create') || $errors->createSlide->any();
+    @endphp
+
     <div
         class="space-y-6"
-        x-data="{ drawerOpen: {{ $editingSlide ? 'true' : 'false' }} }"
+        x-data="{ drawerOpen: {{ ($editingSlide || $shouldOpenCreateDrawer) ? 'true' : 'false' }} }"
         @keydown.escape.window="drawerOpen = false">
 
         {{-- Header --}}
@@ -38,15 +42,14 @@
                     </p>
                 @endif
             </div>
-            <button
-                type="button"
-                @click="drawerOpen = true"
+            <a
+                href="{{ route('admin.home.hero.edit', ['create' => 1]) }}"
                 class="inline-flex items-center gap-2 rounded-md bg-brand-pink px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-heart">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-4 w-4">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
                 Agregar banner
-            </button>
+            </a>
         </div>
 
         {{-- Barra de estado público --}}
@@ -79,13 +82,13 @@
                 </svg>
                 <p class="mt-4 text-sm font-semibold text-gray-700">Todavía no hay banners</p>
                 <p class="mt-1 text-sm text-gray-400">Agregá el primero para reemplazar la portada por defecto.</p>
-                <button type="button" @click="drawerOpen = true"
+                <a href="{{ route('admin.home.hero.edit', ['create' => 1]) }}"
                     class="mt-6 inline-flex items-center gap-2 rounded-md bg-brand-pink px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-heart">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-4 w-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
                     Agregar banner
-                </button>
+                </a>
             </div>
         @else
             <ul id="slides-sortable"
@@ -114,4 +117,3 @@
 
     </div>
 @endsection
-
