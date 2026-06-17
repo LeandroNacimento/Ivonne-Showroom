@@ -1,9 +1,9 @@
 <div>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
         <div class="mb-8 lg:mb-10">
-            <div class="overflow-x-auto pb-1">
-                <div class="inline-flex min-w-full items-center justify-center gap-3 sm:gap-4">
-                    <div class="relative min-w-[220px]">
+            <div class="overflow-x-visible md:overflow-x-auto pb-1">
+                <div class="flex flex-col md:flex-row md:inline-flex md:min-w-full items-stretch md:items-center justify-center gap-3 sm:gap-4">
+                    <div class="relative w-full md:w-auto md:min-w-[220px]">
                         <label for="catalog-category" class="sr-only">Categoria</label>
                         <select id="catalog-category" wire:model.live="category"
                             class="block h-12 w-full appearance-none rounded-xl border border-neutral-200 bg-white/95 px-4 pr-11 text-sm font-medium text-neutral-700 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.35)] transition duration-200 hover:border-neutral-300 hover:shadow-[0_14px_30px_-20px_rgba(15,23,42,0.42)] focus:border-brand-pink focus:outline-none focus:ring-2 focus:ring-brand-pink/20 cursor-pointer">
@@ -23,7 +23,7 @@
                         </div>
                     </div>
 
-                    <div class="relative min-w-[200px]">
+                    <div class="relative w-full md:w-auto md:min-w-[200px]">
                         <label for="catalog-sort" class="sr-only">Ordenar</label>
                         <select id="catalog-sort" wire:model.live="sort"
                             class="block h-12 w-full appearance-none rounded-xl border border-neutral-200 bg-white/95 px-4 pr-11 text-sm font-medium text-neutral-700 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.35)] transition duration-200 hover:border-neutral-300 hover:shadow-[0_14px_30px_-20px_rgba(15,23,42,0.42)] focus:border-brand-pink focus:outline-none focus:ring-2 focus:ring-brand-pink/20 cursor-pointer">
@@ -44,7 +44,7 @@
                         wire:loading.attr="disabled"
                         wire:target="offerOnly"
                         aria-pressed="{{ $offerOnly ? 'true' : 'false' }}"
-                        class="inline-flex h-12 items-center gap-2 rounded-xl border px-4 text-sm font-semibold shadow-[0_10px_24px_-18px_rgba(15,23,42,0.35)] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-pink/20 focus:ring-offset-2 focus:ring-offset-brand-blush disabled:cursor-not-allowed disabled:opacity-70 {{ $offerOnly ? 'border-brand-pink bg-brand-pink text-white shadow-brand-pink/20 hover:border-brand-heart hover:bg-brand-heart' : 'border-gray-200 bg-white/95 text-gray-600 hover:border-neutral-300 hover:bg-white hover:text-neutral-700 hover:shadow-[0_14px_30px_-20px_rgba(15,23,42,0.42)]' }}">
+                        class="flex md:inline-flex w-full md:w-auto justify-center md:justify-start h-12 items-center gap-2 rounded-xl border px-4 text-sm font-semibold shadow-[0_10px_24px_-18px_rgba(15,23,42,0.35)] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-pink/20 focus:ring-offset-2 focus:ring-offset-brand-blush disabled:cursor-not-allowed disabled:opacity-70 {{ $offerOnly ? 'border-brand-pink bg-brand-pink text-white shadow-brand-pink/20 hover:border-brand-heart hover:bg-brand-heart' : 'border-gray-200 bg-white/95 text-gray-600 hover:border-neutral-300 hover:bg-white hover:text-neutral-700 hover:shadow-[0_14px_30px_-20px_rgba(15,23,42,0.42)]' }}">
                         <svg class="h-4 w-4 {{ $offerOnly ? 'text-white' : 'text-brand-pink' }}" fill="none"
                             stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7"
