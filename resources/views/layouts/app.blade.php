@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Ivonne Showroom - Formosa</title>
+    <title>@yield('title', 'Ivonne Showroom - Formosa')</title>
     <link rel="icon" href="{{ asset('img/showroom-logo.png') }}" type="image/png">
 
     <!-- Fonts -->
@@ -39,15 +39,15 @@
             setTimeout(() => show = false, 2500)
         "
         x-show="show" x-transition
-        class="fixed bottom-6 right-6 bg-white border border-brand-pink/20 text-gray-800 px-5 py-4 rounded-xl shadow-luxury z-50 min-w-[300px]"
+        class="fixed bottom-20 sm:bottom-6 right-6 bg-white border border-brand-pink/20 text-gray-800 px-5 py-4 rounded-xl shadow-luxury z-50 min-w-[300px]"
         style="display: none;">
         <div class="flex items-center mb-3">
             <span class="mr-2 text-xl">✨</span>
-            <span class="font-semibold text-brand-pink">¡Producto agregado!</span>
+            <span class="font-semibold text-brand-pink">¡Artículo agregado!</span>
         </div>
         <div class="text-sm text-gray-600 mb-4 flex items-center font-medium">
             <x-icon name="bag" class="w-4 h-4 mr-2 text-brand-pink" />
-            <span x-text="count + (count === 1 ? ' producto en tu pedido' : ' productos en tu pedido')"></span>
+            <span x-text="count + (count === 1 ? ' artículo en tu pedido' : ' artículos en tu pedido')"></span>
         </div>
         <a href="{{ route('cart') }}"
             class="block w-full text-center bg-brand-pink hover:bg-brand-heart text-white border-none rounded-lg py-2 text-sm font-semibold transition-colors shadow-sm">

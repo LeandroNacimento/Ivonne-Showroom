@@ -1,4 +1,6 @@
 <x-layouts.app>
+    @section('title', 'Catálogo - Ivonne Showroom')
+
     {{-- Editorial Header Section --}}
     <div class="bg-white border-b border-gray-100">
         <div class="max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">

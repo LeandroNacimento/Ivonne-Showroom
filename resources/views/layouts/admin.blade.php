@@ -103,8 +103,15 @@
                 </svg>
             </button>
             <div class="flex flex-1 justify-between px-4 sm:px-6 lg:px-8">
-                <div class="flex flex-1 items-center">
-                    <h2 class="text-lg font-semibold text-gray-800">Panel de Administración</h2>
+                <div class="flex flex-1 items-center py-2">
+                    <div class="flex flex-col justify-center">
+                        <h2 class="text-lg font-semibold text-gray-800">@yield('page_title', 'Panel de Administración')</h2>
+                        @hasSection('breadcrumbs')
+                            <nav class="hidden md:flex text-sm text-gray-500 mt-0.5 items-center space-x-2" aria-label="Breadcrumb">
+                                @yield('breadcrumbs')
+                            </nav>
+                        @endif
+                    </div>
                 </div>
                 <div class="ml-4 flex items-center md:ml-6">
                     <div class="flex items-center gap-3">
@@ -123,8 +130,10 @@
             <div class="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
                 <!-- Flash Messages -->
                 @if (session('success'))
-                    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
-                        class="mb-6 rounded-md bg-green-50 p-4 border border-green-200">
+                    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 10000)"
+                        x-transition:leave="transition ease-in duration-300"
+                        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                        class="mb-6 rounded-md bg-green-50 p-4 border border-green-200 relative">
                         <div class="flex">
                             <div class="flex-shrink-0">
                                 <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
@@ -133,16 +142,24 @@
                                         clip-rule="evenodd" />
                                 </svg>
                             </div>
-                            <div class="ml-3">
+                            <div class="ml-3 flex-1 pr-8">
                                 <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
                             </div>
+                            <button @click="show = false" type="button" class="absolute top-4 right-4 text-green-500 hover:text-green-700 focus:outline-none transition-colors">
+                                <span class="sr-only">Cerrar</span>
+                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 @endif
 
                 @if (session('error'))
-                    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 7000)"
-                        class="mb-6 rounded-md border border-red-200 bg-red-50 p-4">
+                    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 10000)"
+                        x-transition:leave="transition ease-in duration-300"
+                        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                        class="mb-6 rounded-md border border-red-200 bg-red-50 p-4 relative">
                         <div class="flex">
                             <div class="flex-shrink-0">
                                 <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -151,9 +168,15 @@
                                         clip-rule="evenodd" />
                                 </svg>
                             </div>
-                            <div class="ml-3">
+                            <div class="ml-3 flex-1 pr-8">
                                 <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
                             </div>
+                            <button @click="show = false" type="button" class="absolute top-4 right-4 text-red-500 hover:text-red-700 focus:outline-none transition-colors">
+                                <span class="sr-only">Cerrar</span>
+                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 @endif
@@ -162,6 +185,59 @@
                 {{ $slot ?? '' }}
             </div>
         </main>
+    </div>
+
+    <!-- Global Confirm Modal -->
+    <div x-data="{ isOpen: false, title: '', message: '', form: null }" 
+         @open-confirm.window="isOpen = true; title = $event.detail.title; message = $event.detail.message; form = $event.detail.form"
+         x-cloak 
+         x-show="isOpen"
+         class="relative z-50" 
+         aria-labelledby="modal-title" 
+         role="dialog" 
+         aria-modal="true">
+        
+        <div x-show="isOpen" 
+             x-transition:enter="ease-out duration-300" 
+             x-transition:enter-start="opacity-0" 
+             x-transition:enter-end="opacity-100" 
+             x-transition:leave="ease-in duration-200" 
+             x-transition:leave-start="opacity-100" 
+             x-transition:leave-end="opacity-0" 
+             class="fixed inset-0 bg-gray-900/75 backdrop-blur-sm transition-opacity"></div>
+      
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+          <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div x-show="isOpen" @click.away="isOpen = false"
+                 x-transition:enter="ease-out duration-300" 
+                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+                 x-transition:leave="ease-in duration-200" 
+                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                 class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+              <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                  <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                    <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title" x-text="title">Eliminar elemento</h3>
+                    <div class="mt-2">
+                      <p class="text-sm text-gray-500" x-text="message">Esta acción no puede deshacerse.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                <button type="button" @click="form.submit()" class="inline-flex w-full justify-center rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700 sm:ml-3 sm:w-auto transition-colors">Eliminar</button>
+                <button type="button" @click="isOpen = false" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Cancelar</button>
+              </div>
+            </div>
+          </div>
+        </div>
     </div>
 
     @livewireScripts

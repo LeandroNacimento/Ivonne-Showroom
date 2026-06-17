@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Products;
 
+use App\Models\Category;
 use App\Models\Product;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -12,7 +13,21 @@ class ProductList extends Component
 
     public $search = '';
 
+    public $categoryFilter = '';
+
+    public $stockFilter = '';
+
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingCategoryFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingStockFilter()
     {
         $this->resetPage();
     }
@@ -24,11 +39,24 @@ class ProductList extends Component
             ->when($this->search, function ($query) {
                 $query->where('name', 'like', '%'.$this->search.'%');
             })
+            ->when($this->categoryFilter, function ($query) {
+                $query->where('category_id', $this->categoryFilter);
+            })
+            ->when($this->stockFilter, function ($query) {
+                if ($this->stockFilter === 'in_stock') {
+                    $query->whereHas('variations', fn ($q) => $q->where('stock', '>', 0));
+                } elseif ($this->stockFilter === 'out_of_stock') {
+                    $query->whereDoesntHave('variations', fn ($q) => $q->where('stock', '>', 0));
+                } elseif ($this->stockFilter === 'low_stock') {
+                    $query->whereHas('variations', fn ($q) => $q->where('stock', '>', 0)->where('stock', '<=', 5));
+                }
+            })
             ->orderBy('id', 'desc')
             ->paginate(10);
 
         return view('livewire.admin.products.product-list', [
             'products' => $products,
+            'categories' => Category::orderBy('name')->get(),
         ]);
     }
 }

@@ -1,5 +1,14 @@
 @extends('layouts.admin')
 
+@section('page_title', 'Editar Producto')
+@section('breadcrumbs')
+    <a href="{{ route('admin.dashboard') }}" class="hover:text-gray-900 transition-colors">Resumen</a>
+    <span class="mx-2 text-gray-400">/</span>
+    <a href="{{ route('admin.products.index') }}" class="hover:text-gray-900 transition-colors">Productos</a>
+    <span class="mx-2 text-gray-400">/</span>
+    <span class="text-gray-900">Editar Producto</span>
+@endsection
+
 @section('content')
     <div class="mx-auto max-w-4xl">
         <div class="mb-6 flex items-center justify-between">
@@ -54,7 +63,7 @@
                     </div>
                 </div>
 
-                <div class="space-y-6">
+                <div class="space-y-6 lg:sticky lg:top-6 lg:self-start">
                     <div class="rounded-lg bg-white p-6 shadow-sm">
                         <h2 class="mb-4 text-lg font-semibold text-gray-900">Detalles</h2>
 
@@ -97,10 +106,31 @@
                         </div>
                     </div>
 
-                    <button type="submit"
-                        class="w-full rounded-md bg-brand-pink px-6 py-3 font-bold text-white shadow-md transition-colors hover:bg-brand-heart">
-                        Guardar Cambios
-                    </button>
+                    <div x-data="{ showSticky: true }"
+                         x-init="
+                            let observer = new IntersectionObserver((entries) => {
+                                showSticky = !entries[0].isIntersecting;
+                            }, { rootMargin: '0px' });
+                            $nextTick(() => observer.observe($refs.mainSubmit));
+                         ">
+                        
+                        <!-- Botón Mobile Sticky -->
+                        <div x-cloak x-show="showSticky" x-transition.opacity.duration.300ms
+                             class="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white/95 p-3 backdrop-blur pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
+                            <button type="submit"
+                                class="w-full rounded-md bg-brand-pink px-6 py-2.5 font-bold text-white shadow-md transition-colors hover:bg-brand-heart">
+                                Guardar Cambios
+                            </button>
+                        </div>
+    
+                        <!-- Botón Principal (Desktop + Destino Scroll Mobile) -->
+                        <div class="mt-6 lg:sticky lg:top-6" x-ref="mainSubmit">
+                            <button type="submit"
+                                class="w-full rounded-md bg-brand-pink px-6 py-3 font-bold text-white shadow-md transition-colors hover:bg-brand-heart">
+                                Guardar Cambios
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </form>

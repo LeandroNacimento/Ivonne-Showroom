@@ -80,6 +80,7 @@ class ProductPage extends Component
 
     public function render()
     {
-        return view('livewire.product-page');
+        return view('livewire.product-page')
+            ->title($this->product->name.' - Ivonne Showroom');
     }
 }

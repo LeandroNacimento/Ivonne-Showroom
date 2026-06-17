@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\ReorderHomeSlidesRequest;
 use App\Http\Requests\Admin\StoreHomeHeroSlideRequest;
-use App\Http\Requests\Admin\UpdateHomeHeroContentRequest;
 use App\Http\Requests\Admin\UpdateHomeHeroSlideRequest;
 use App\Models\HomeHeroSlide;
 use App\Services\HomeHeroService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -28,15 +29,6 @@ class HomeHeroController extends Controller
         ]);
     }
 
-    public function updateContent(UpdateHomeHeroContentRequest $request): RedirectResponse
-    {
-        $this->homeHeroService->updateContent($request->validated());
-
-        return redirect()
-            ->route('admin.home.hero.edit')
-            ->with('success', 'Texto principal de la portada actualizado con exito.');
-    }
-
     public function storeSlide(StoreHomeHeroSlideRequest $request): RedirectResponse
     {
         $this->homeHeroService->createSlide(
@@ -46,7 +38,7 @@ class HomeHeroController extends Controller
 
         return redirect()
             ->route('admin.home.hero.edit')
-            ->with('success', 'Imagen agregada a la portada con exito.');
+            ->with('success', 'Banner agregado a la portada con éxito.');
     }
 
     public function updateSlide(UpdateHomeHeroSlideRequest $request, HomeHeroSlide $slide): RedirectResponse
@@ -55,7 +47,7 @@ class HomeHeroController extends Controller
 
         return redirect()
             ->route('admin.home.hero.edit')
-            ->with('success', 'Imagen actualizada con exito.');
+            ->with('success', 'Banner actualizado con éxito.');
     }
 
     public function destroySlide(HomeHeroSlide $slide): RedirectResponse
@@ -64,6 +56,29 @@ class HomeHeroController extends Controller
 
         return redirect()
             ->route('admin.home.hero.edit')
-            ->with('success', 'Imagen eliminada de la portada con exito.');
+            ->with('success', 'Banner eliminado de la portada con éxito.');
+    }
+
+    public function reorderSlides(ReorderHomeSlidesRequest $request): JsonResponse
+    {
+        try {
+            $hero = $this->homeHeroService->singleton();
+            $this->homeHeroService->reorderSlides($hero, $request->validated()['ids']);
+
+            return response()->json(['ok' => true]);
+        } catch (\Throwable $e) {
+            return response()->json(['ok' => false, 'message' => 'No se pudo guardar el nuevo orden.'], 500);
+        }
+    }
+
+    public function toggleSlide(HomeHeroSlide $slide): JsonResponse
+    {
+        try {
+            $updated = $this->homeHeroService->toggleSlideActive($slide);
+
+            return response()->json(['ok' => true, 'is_active' => $updated->is_active]);
+        } catch (\Throwable $e) {
+            return response()->json(['ok' => false, 'message' => 'No se pudo cambiar el estado.'], 500);
+        }
     }
 }

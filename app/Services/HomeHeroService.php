@@ -24,42 +24,45 @@ class HomeHeroService
         return $hero->is_renderable ? $hero : null;
     }
 
-    public function updateContent(array $attributes): HomeHero
-    {
-        $hero = $this->singleton();
-        $validated = HomeHeroValidator::validateContent($attributes);
-
-        $hero->fill($validated);
-        $hero->save();
-
-        return $hero->fresh();
-    }
-
     public function createSlide(HomeHero $hero, array $attributes): HomeHeroSlide
     {
         $hero = $hero->exists ? $hero : $this->singleton();
         $validated = HomeHeroValidator::validateSlideCreate($attributes);
-        $path = $this->storeImage($validated['image']);
+
+        $desktopPath = $this->storeImageInDirectory(
+            $validated['desktop_image'],
+            HomeHeroSlide::STORAGE_DIRECTORY_DESKTOP
+        );
+
+        $mobilePath = $this->storeImageInDirectory(
+            $validated['mobile_image'],
+            HomeHeroSlide::STORAGE_DIRECTORY_MOBILE
+        );
 
         try {
-            return DB::transaction(function () use ($hero, $validated, $path) {
+            return DB::transaction(function () use ($hero, $validated, $desktopPath, $mobilePath) {
                 $orderedIds = $hero->slides()->pluck('id')->all();
-                $targetPosition = $this->normalizeTargetPosition($validated['position'] ?? null, count($orderedIds));
+                $targetPosition = count($orderedIds);
 
                 $slide = $hero->slides()->create([
-                    'image_path' => $path,
+                    'name' => $validated['name'] ?? null,
+                    'desktop_image_path' => $desktopPath,
+                    'mobile_image_path' => $mobilePath,
                     'alt_text' => $validated['alt_text'],
+                    'link_type' => $validated['link_type'] ?? 'none',
+                    'link_url' => $validated['link_url'] ?? null,
                     'position' => $targetPosition,
                     'is_active' => $validated['is_active'] ?? true,
                 ]);
 
-                array_splice($orderedIds, $targetPosition, 0, [$slide->id]);
+                $orderedIds[] = $slide->id;
                 $this->reindexSlidesByIds($hero, $orderedIds);
 
                 return $slide->fresh();
             });
         } catch (Throwable $e) {
-            Storage::disk('public')->delete($path);
+            Storage::disk('public')->delete($desktopPath);
+            Storage::disk('public')->delete($mobilePath);
 
             throw $e;
         }
@@ -68,52 +71,71 @@ class HomeHeroService
     public function updateSlide(HomeHeroSlide $slide, array $attributes): HomeHeroSlide
     {
         $validated = HomeHeroValidator::validateSlideUpdate($attributes);
-        $newPath = isset($validated['image']) ? $this->storeImage($validated['image']) : null;
-        $oldPath = $slide->image_path;
+
+        $newDesktopPath = isset($validated['desktop_image'])
+            ? $this->storeImageInDirectory($validated['desktop_image'], HomeHeroSlide::STORAGE_DIRECTORY_DESKTOP)
+            : null;
+
+        $newMobilePath = isset($validated['mobile_image'])
+            ? $this->storeImageInDirectory($validated['mobile_image'], HomeHeroSlide::STORAGE_DIRECTORY_MOBILE)
+            : null;
+
+        $oldDesktopPath = $slide->desktop_image_path;
+        $oldMobilePath = $slide->mobile_image_path;
 
         try {
-            $updatedSlide = DB::transaction(function () use ($slide, $validated, $newPath) {
-                $hero = $slide->homeHero()->firstOrFail();
-                $orderedIds = $hero->slides()
-                    ->whereKeyNot($slide->id)
-                    ->pluck('id')
-                    ->all();
-
-                $currentIndex = $hero->slides()->pluck('id')->search($slide->id);
-                $targetPosition = array_key_exists('position', $validated)
-                    ? $this->normalizeTargetPosition($validated['position'], count($orderedIds))
-                    : max(0, (int) $currentIndex);
+            $updatedSlide = DB::transaction(function () use ($slide, $validated, $newDesktopPath, $newMobilePath) {
+                if (array_key_exists('name', $validated)) {
+                    $slide->name = $validated['name'];
+                }
 
                 if (array_key_exists('alt_text', $validated)) {
                     $slide->alt_text = $validated['alt_text'];
+                }
+
+                if (array_key_exists('link_type', $validated)) {
+                    $slide->link_type = $validated['link_type'];
+                }
+
+                if (array_key_exists('link_url', $validated)) {
+                    $slide->link_url = $validated['link_url'];
                 }
 
                 if (array_key_exists('is_active', $validated)) {
                     $slide->is_active = $validated['is_active'];
                 }
 
-                if ($newPath !== null) {
-                    $slide->image_path = $newPath;
+                if ($newDesktopPath !== null) {
+                    $slide->desktop_image_path = $newDesktopPath;
                 }
 
-                $slide->position = $targetPosition;
-                $slide->save();
+                if ($newMobilePath !== null) {
+                    $slide->mobile_image_path = $newMobilePath;
+                }
 
-                array_splice($orderedIds, $targetPosition, 0, [$slide->id]);
-                $this->reindexSlidesByIds($hero, $orderedIds);
+                $slide->save();
 
                 return $slide->fresh();
             });
         } catch (Throwable $e) {
-            if ($newPath !== null) {
-                Storage::disk('public')->delete($newPath);
+            if ($newDesktopPath !== null) {
+                Storage::disk('public')->delete($newDesktopPath);
+            }
+
+            if ($newMobilePath !== null) {
+                Storage::disk('public')->delete($newMobilePath);
             }
 
             throw $e;
         }
 
-        if ($newPath !== null && $oldPath !== $newPath) {
-            Storage::disk('public')->delete($oldPath);
+        // Borrar archivos antiguos solo si fueron reemplazados
+        if ($newDesktopPath !== null && $oldDesktopPath !== $newDesktopPath) {
+            Storage::disk('public')->delete($oldDesktopPath);
+        }
+
+        if ($newMobilePath !== null && $oldMobilePath !== null && $oldMobilePath !== $newMobilePath) {
+            Storage::disk('public')->delete($oldMobilePath);
         }
 
         return $updatedSlide;
@@ -122,7 +144,8 @@ class HomeHeroService
     public function deleteSlide(HomeHeroSlide $slide): void
     {
         $hero = $slide->homeHero()->firstOrFail();
-        $path = $slide->image_path;
+        $desktopPath = $slide->desktop_image_path;
+        $mobilePath = $slide->mobile_image_path;
 
         DB::transaction(function () use ($hero, $slide) {
             $orderedIds = $hero->slides()
@@ -134,13 +157,29 @@ class HomeHeroService
             $this->reindexSlidesByIds($hero, $orderedIds);
         });
 
-        Storage::disk('public')->delete($path);
+        Storage::disk('public')->delete($desktopPath);
+
+        if ($mobilePath !== null) {
+            Storage::disk('public')->delete($mobilePath);
+        }
+    }
+
+    public function reorderSlides(HomeHero $hero, array $orderedIds): void
+    {
+        $this->reindexSlidesByIds($hero, $orderedIds);
+    }
+
+    public function toggleSlideActive(HomeHeroSlide $slide): HomeHeroSlide
+    {
+        $slide->is_active = ! $slide->is_active;
+        $slide->save();
+
+        return $slide->fresh();
     }
 
     public function normalizePositions(HomeHero $hero): void
     {
         $orderedIds = $hero->slides()->pluck('id')->all();
-
         $this->reindexSlidesByIds($hero, $orderedIds);
     }
 
@@ -153,17 +192,8 @@ class HomeHeroService
         }
     }
 
-    private function normalizeTargetPosition(?int $requestedPosition, int $count): int
+    private function storeImageInDirectory(UploadedFile $image, string $directory): string
     {
-        if ($requestedPosition === null) {
-            return $count;
-        }
-
-        return max(0, min($requestedPosition, $count));
-    }
-
-    private function storeImage(UploadedFile $image): string
-    {
-        return $image->store(HomeHeroSlide::STORAGE_DIRECTORY, 'public');
+        return $image->store($directory, 'public');
     }
 }

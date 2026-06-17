@@ -1,5 +1,14 @@
 @extends('layouts.admin')
 
+@section('page_title', 'Detalle de Cliente')
+@section('breadcrumbs')
+    <a href="{{ route('admin.dashboard') }}" class="hover:text-gray-900 transition-colors">Resumen</a>
+    <span class="mx-2 text-gray-400">/</span>
+    <a href="{{ route('admin.clients.index') }}" class="hover:text-gray-900 transition-colors">Clientes</a>
+    <span class="mx-2 text-gray-400">/</span>
+    <span class="text-gray-900">{{ $client->name }}</span>
+@endsection
+
 @section('content')
 <div class="max-w-4xl mx-auto" x-data="orderQuickView()">
     <div class="flex justify-between items-center mb-6">
@@ -93,25 +102,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{{ $order->id }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $order->date->format('d/m/Y') }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                @php
-                                    $statusBadgeClasses = match ($order->status) {
-                                        \App\Models\Order::STATUS_PENDING => 'bg-gray-100 text-gray-800',
-                                        \App\Models\Order::STATUS_RESERVED => 'bg-yellow-100 text-yellow-800',
-                                        \App\Models\Order::STATUS_DELIVERED => 'bg-green-100 text-green-800',
-                                        \App\Models\Order::STATUS_CANCELLED => 'bg-red-100 text-red-800',
-                                        default => 'bg-gray-100 text-gray-800',
-                                    };
-                                    $statusLabel = match ($order->status) {
-                                        \App\Models\Order::STATUS_PENDING => 'Pendiente',
-                                        \App\Models\Order::STATUS_RESERVED => 'Reservado',
-                                        \App\Models\Order::STATUS_DELIVERED => 'Entregado',
-                                        \App\Models\Order::STATUS_CANCELLED => 'Cancelado',
-                                        default => ucfirst($order->status),
-                                    };
-                                @endphp
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusBadgeClasses }}">
-                                    {{ $statusLabel }}
-                                </span>
+                                <x-admin.status-badge :status="$order->status" />
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${{ number_format($order->total, 0, ',', '.') }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

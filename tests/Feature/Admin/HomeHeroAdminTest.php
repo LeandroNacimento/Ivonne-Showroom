@@ -28,7 +28,7 @@ class HomeHeroAdminTest extends TestCase
         $response = $this->actingAs($admin)->get(route('admin.home.hero.edit'));
 
         $response->assertOk();
-        $response->assertSee('Portada principal de la tienda');
+        $response->assertSee('Portada principal');
         $this->assertDatabaseHas('home_heroes', [
             'singleton_key' => HomeHero::SINGLETON_KEY,
         ]);
@@ -43,104 +43,100 @@ class HomeHeroAdminTest extends TestCase
         $response->assertRedirect(route('admin.login'));
     }
 
-    public function test_admin_can_update_home_hero_content(): void
-    {
-        $admin = User::factory()->admin()->create();
-
-        $response = $this->actingAs($admin)->put(route('admin.home.hero.update'), [
-            'eyebrow' => 'Nueva temporada',
-            'title' => 'Coleccion Otono',
-            'description' => 'Una portada principal simple y clara.',
-            'cta_label' => 'Ver catalogo',
-            'cta_url' => 'https://example.com/catalogo',
-        ]);
-
-        $response->assertRedirect(route('admin.home.hero.edit'));
-        $this->assertDatabaseHas('home_heroes', [
-            'singleton_key' => HomeHero::SINGLETON_KEY,
-            'title' => 'Coleccion Otono',
-            'cta_label' => 'Ver catalogo',
-        ]);
-    }
-
-    public function test_admin_can_clear_all_optional_home_hero_text_fields(): void
-    {
-        $admin = User::factory()->admin()->create();
-        HomeHero::singleton()->update([
-            'eyebrow' => 'Nueva temporada',
-            'title' => 'Coleccion Otono',
-            'description' => 'Una portada principal simple y clara.',
-            'cta_label' => 'Ver catalogo',
-            'cta_url' => 'https://example.com/catalogo',
-        ]);
-
-        $response = $this->actingAs($admin)->put(route('admin.home.hero.update'), [
-            'eyebrow' => '',
-            'title' => '',
-            'description' => '',
-            'cta_label' => '',
-            'cta_url' => '',
-        ]);
-
-        $response->assertRedirect(route('admin.home.hero.edit'));
-        $this->assertDatabaseHas('home_heroes', [
-            'singleton_key' => HomeHero::SINGLETON_KEY,
-            'eyebrow' => null,
-            'title' => null,
-            'description' => null,
-            'cta_label' => null,
-            'cta_url' => null,
-        ]);
-    }
-
-    public function test_admin_can_create_update_replace_and_delete_slides_from_admin(): void
+    public function test_admin_can_create_a_slide_with_both_images(): void
     {
         Storage::fake('public');
 
         $admin = User::factory()->admin()->create();
 
-        $createResponse = $this->actingAs($admin)->post(route('admin.home.hero.slides.store'), [
-            'image' => UploadedFile::fake()->image('hero-slide.jpg', 1600, 900),
+        $response = $this->actingAs($admin)->post(route('admin.home.hero.slides.store'), [
+            'desktop_image' => UploadedFile::fake()->image('hero-desktop.jpg', 1920, 1080),
+            'mobile_image' => UploadedFile::fake()->image('hero-mobile.jpg', 1080, 1350),
             'alt_text' => 'Portada principal',
-            'position' => 0,
+            'link_type' => 'none',
             'is_active' => '1',
         ]);
 
-        $createResponse->assertRedirect(route('admin.home.hero.edit'));
+        $response->assertRedirect(route('admin.home.hero.edit'));
 
         $slide = HomeHero::singleton()->slides()->firstOrFail();
-        $originalPath = $slide->image_path;
-        Storage::disk('public')->assertExists($originalPath);
 
-        $updateResponse = $this->actingAs($admin)->put(route('admin.home.hero.slides.update', $slide), [
-            'slide_id' => $slide->id,
-            'alt_text' => 'Portada principal actualizada',
-            'position' => 0,
-            'is_active' => '0',
-            'image' => UploadedFile::fake()->image('hero-slide-updated.jpg', 1600, 900),
-        ]);
-
-        $updateResponse->assertRedirect(route('admin.home.hero.edit'));
-
-        $updatedSlide = $slide->fresh();
-
-        $this->assertSame('Portada principal actualizada', $updatedSlide->alt_text);
-        $this->assertFalse($updatedSlide->is_active);
-        Storage::disk('public')->assertMissing($originalPath);
-        Storage::disk('public')->assertExists($updatedSlide->image_path);
-
-        $replacementPath = $updatedSlide->image_path;
-
-        $deleteResponse = $this->actingAs($admin)->delete(route('admin.home.hero.slides.destroy', $updatedSlide));
-
-        $deleteResponse->assertRedirect(route('admin.home.hero.edit'));
-        $this->assertDatabaseMissing('home_hero_slides', [
-            'id' => $updatedSlide->id,
-        ]);
-        Storage::disk('public')->assertMissing($replacementPath);
+        $this->assertSame('Portada principal', $slide->alt_text);
+        $this->assertNotNull($slide->desktop_image_path);
+        $this->assertNotNull($slide->mobile_image_path);
+        Storage::disk('public')->assertExists($slide->desktop_image_path);
+        Storage::disk('public')->assertExists($slide->mobile_image_path);
     }
 
-    public function test_admin_can_add_a_new_slide_without_position_and_it_is_appended_to_the_end(): void
+    public function test_admin_can_update_slide_and_replace_images(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::factory()->admin()->create();
+        $hero = HomeHero::singleton();
+
+        $slide = $hero->slides()->create([
+            'desktop_image_path' => 'home-hero/desktop/old.jpg',
+            'mobile_image_path' => 'home-hero/mobile/old.jpg',
+            'alt_text' => 'Original',
+            'link_type' => 'none',
+            'position' => 0,
+            'is_active' => true,
+        ]);
+
+        // Crear los archivos en storage falso para que puedan ser eliminados
+        Storage::disk('public')->put('home-hero/desktop/old.jpg', 'fake');
+        Storage::disk('public')->put('home-hero/mobile/old.jpg', 'fake');
+
+        $response = $this->actingAs($admin)->put(route('admin.home.hero.slides.update', $slide), [
+            'slide_id' => $slide->id,
+            'alt_text' => 'Portada actualizada',
+            'desktop_image' => UploadedFile::fake()->image('new-desktop.jpg', 1920, 1080),
+            'mobile_image' => UploadedFile::fake()->image('new-mobile.jpg', 1080, 1350),
+            'link_type' => 'none',
+            'is_active' => '0',
+        ]);
+
+        $response->assertRedirect(route('admin.home.hero.edit'));
+
+        $updated = $slide->fresh();
+
+        $this->assertSame('Portada actualizada', $updated->alt_text);
+        $this->assertFalse($updated->is_active);
+        Storage::disk('public')->assertMissing('home-hero/desktop/old.jpg');
+        Storage::disk('public')->assertMissing('home-hero/mobile/old.jpg');
+        Storage::disk('public')->assertExists($updated->desktop_image_path);
+        Storage::disk('public')->assertExists($updated->mobile_image_path);
+    }
+
+    public function test_admin_can_delete_a_slide_and_its_images_are_removed(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::factory()->admin()->create();
+        $hero = HomeHero::singleton();
+
+        Storage::disk('public')->put('home-hero/desktop/delete-me.jpg', 'fake');
+        Storage::disk('public')->put('home-hero/mobile/delete-me.jpg', 'fake');
+
+        $slide = $hero->slides()->create([
+            'desktop_image_path' => 'home-hero/desktop/delete-me.jpg',
+            'mobile_image_path' => 'home-hero/mobile/delete-me.jpg',
+            'alt_text' => 'To delete',
+            'link_type' => 'none',
+            'position' => 0,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($admin)->delete(route('admin.home.hero.slides.destroy', $slide));
+
+        $response->assertRedirect(route('admin.home.hero.edit'));
+        $this->assertDatabaseMissing('home_hero_slides', ['id' => $slide->id]);
+        Storage::disk('public')->assertMissing('home-hero/desktop/delete-me.jpg');
+        Storage::disk('public')->assertMissing('home-hero/mobile/delete-me.jpg');
+    }
+
+    public function test_admin_can_add_a_new_slide_without_name_and_it_is_appended(): void
     {
         Storage::fake('public');
 
@@ -148,92 +144,124 @@ class HomeHeroAdminTest extends TestCase
         $hero = HomeHero::singleton();
 
         $hero->slides()->create([
-            'image_path' => 'home-hero/existing-slide.jpg',
+            'desktop_image_path' => 'home-hero/desktop/existing.jpg',
             'alt_text' => 'Existing slide',
+            'link_type' => 'none',
             'position' => 0,
             'is_active' => true,
         ]);
 
         $response = $this->actingAs($admin)->post(route('admin.home.hero.slides.store'), [
-            'image' => UploadedFile::fake()->image('hero-slide-appended.jpg', 1600, 900),
+            'desktop_image' => UploadedFile::fake()->image('new-desktop.jpg', 1920, 1080),
+            'mobile_image' => UploadedFile::fake()->image('new-mobile.jpg', 1080, 1350),
             'alt_text' => 'Nueva slide al final',
-            'position' => '',
+            'link_type' => 'none',
             'is_active' => '1',
         ]);
 
         $response->assertRedirect(route('admin.home.hero.edit'));
         $response->assertSessionDoesntHaveErrors();
 
-        $appendedSlide = $hero->fresh()->slides()->where('alt_text', 'Nueva slide al final')->first();
+        $appended = $hero->fresh()->slides()->where('alt_text', 'Nueva slide al final')->first();
 
-        $this->assertNotNull($appendedSlide);
-        $this->assertSame(1, $appendedSlide->position);
-        Storage::disk('public')->assertExists($appendedSlide->image_path);
+        $this->assertNotNull($appended);
+        $this->assertSame(1, $appended->position);
     }
 
-    public function test_admin_requests_validate_home_hero_constraints(): void
+    public function test_create_requires_both_images_and_alt_text(): void
     {
         Storage::fake('public');
 
         $admin = User::factory()->admin()->create();
 
-        $contentResponse = $this->from(route('admin.home.hero.edit'))
-            ->actingAs($admin)
-            ->put(route('admin.home.hero.update'), [
-                'eyebrow' => '',
-                'title' => '',
-                'description' => '',
-                'cta_label' => 'Ver catalogo',
-                'cta_url' => '',
-            ]);
-
-        $contentResponse->assertRedirect(route('admin.home.hero.edit'));
-        $contentResponse->assertSessionHasErrors(['cta_url'], null, 'heroContent');
-
-        $slideResponse = $this->from(route('admin.home.hero.edit'))
+        $response = $this->from(route('admin.home.hero.edit'))
             ->actingAs($admin)
             ->post(route('admin.home.hero.slides.store'), [
-                'alt_text' => '',
-                'position' => -1,
+                'link_type' => 'none',
+                'is_active' => '1',
             ]);
 
-        $slideResponse->assertRedirect(route('admin.home.hero.edit'));
-        $slideResponse->assertSessionHasErrors(['image', 'alt_text', 'position', 'is_active'], null, 'createSlide');
-
-        $hero = HomeHero::singleton();
-        $slide = $hero->slides()->create([
-            'image_path' => 'home-hero/existing.jpg',
-            'alt_text' => 'Existing slide',
-            'position' => 0,
-            'is_active' => true,
-        ]);
-
-        $updateResponse = $this->from(route('admin.home.hero.edit'))
-            ->actingAs($admin)
-            ->put(route('admin.home.hero.slides.update', $slide), [
-                'slide_id' => $slide->id,
-                'alt_text' => '',
-                'position' => 0,
-            ]);
-
-        $updateResponse->assertRedirect(route('admin.home.hero.edit'));
-        $updateResponse->assertSessionHasErrors(['alt_text', 'is_active'], null, 'updateSlide');
-        $updateResponse->assertSessionHasInput('slide_id', (string) $slide->id);
+        $response->assertRedirect(route('admin.home.hero.edit'));
+        $response->assertSessionHasErrors(['desktop_image', 'mobile_image', 'alt_text'], null, 'createSlide');
     }
 
-    public function test_admin_can_deactivate_all_slides_and_service_keeps_safe_fallback_state(): void
+    public function test_create_with_external_link_requires_url(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::factory()->admin()->create();
+
+        $response = $this->from(route('admin.home.hero.edit'))
+            ->actingAs($admin)
+            ->post(route('admin.home.hero.slides.store'), [
+                'desktop_image' => UploadedFile::fake()->image('desktop.jpg'),
+                'mobile_image' => UploadedFile::fake()->image('mobile.jpg'),
+                'alt_text' => 'Banner con link',
+                'link_type' => 'external',
+                'link_url' => '',
+                'is_active' => '1',
+            ]);
+
+        $response->assertRedirect(route('admin.home.hero.edit'));
+        $response->assertSessionHasErrors(['link_url'], null, 'createSlide');
+    }
+
+    public function test_reorder_endpoint_updates_positions(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $hero = HomeHero::singleton();
+
+        $first = $hero->slides()->create([
+            'desktop_image_path' => 'home-hero/desktop/first.jpg',
+            'alt_text' => 'First', 'link_type' => 'none', 'position' => 0, 'is_active' => true,
+        ]);
+
+        $second = $hero->slides()->create([
+            'desktop_image_path' => 'home-hero/desktop/second.jpg',
+            'alt_text' => 'Second', 'link_type' => 'none', 'position' => 1, 'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->postJson(route('admin.home.hero.slides.reorder'), [
+                'ids' => [$second->id, $first->id],
+            ]);
+
+        $response->assertOk()->assertJson(['ok' => true]);
+
+        $this->assertSame(0, $second->fresh()->position);
+        $this->assertSame(1, $first->fresh()->position);
+    }
+
+    public function test_toggle_endpoint_inverts_slide_active_state(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $hero = HomeHero::singleton();
+
+        $slide = $hero->slides()->create([
+            'desktop_image_path' => 'home-hero/desktop/toggle.jpg',
+            'alt_text' => 'Toggle', 'link_type' => 'none', 'position' => 0, 'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->patchJson(route('admin.home.hero.slides.toggle', $slide));
+
+        $response->assertOk()
+            ->assertJson(['ok' => true, 'is_active' => false]);
+
+        $this->assertFalse($slide->fresh()->is_active);
+    }
+
+    public function test_admin_can_deactivate_all_slides_and_fallback_is_shown(): void
     {
         $admin = User::factory()->admin()->create();
         $service = app(HomeHeroService::class);
 
-        $hero = $service->updateContent([
-            'title' => 'Coleccion Otono',
-            'description' => 'Portada principal simple y clara.',
-        ]);
+        $hero = $service->singleton();
 
         $slide = $hero->slides()->create([
-            'image_path' => 'home-hero/admin-fallback.jpg',
+            'desktop_image_path' => 'home-hero/desktop/fallback.jpg',
             'alt_text' => 'Fallback check',
+            'link_type' => 'none',
             'position' => 0,
             'is_active' => true,
         ]);
@@ -241,7 +269,7 @@ class HomeHeroAdminTest extends TestCase
         $response = $this->actingAs($admin)->put(route('admin.home.hero.slides.update', $slide), [
             'slide_id' => $slide->id,
             'alt_text' => 'Fallback check',
-            'position' => 0,
+            'link_type' => 'none',
             'is_active' => '0',
         ]);
 

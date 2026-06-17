@@ -59,7 +59,10 @@
         </div>
     </div>
 
-    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
+    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl relative" wire:loading.class="opacity-50 pointer-events-none">
+        <div wire:loading.flex class="absolute inset-0 z-10 items-center justify-center bg-white/50 backdrop-blur-sm rounded-xl">
+            <span class="text-sm font-medium text-gray-600">Actualizando...</span>
+        </div>
         @if ($feedbackMessage)
             <div
                 class="border-b px-4 py-4 sm:px-6 {{ $feedbackType === 'error' ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50' }}">
@@ -106,7 +109,8 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="relative">
+            <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead>
                     <tr class="bg-gray-50/50">
@@ -124,13 +128,6 @@
                 <tbody class="divide-y divide-gray-200 bg-white">
                     @forelse($orders as $order)
                         @php
-                            $statusClasses = match ($order->status) {
-                                \App\Models\Order::STATUS_PENDING => 'text-gray-600',
-                                \App\Models\Order::STATUS_RESERVED => 'text-yellow-600',
-                                \App\Models\Order::STATUS_DELIVERED => 'text-green-600',
-                                \App\Models\Order::STATUS_CANCELLED => 'text-red-600',
-                                default => 'text-gray-600',
-                            };
                             $statusOptions = $this->statusOptionsFor($order);
                         @endphp
                         <tr class="hover:bg-gray-50 transition-colors group"
@@ -222,9 +219,7 @@
                             </td>
                             <td class="px-3 py-4 text-sm">
                                 @if ($order->isTerminal())
-                                    <span class="inline-flex items-center font-semibold {{ $statusClasses }}">
-                                        {{ \App\Models\Order::statusLabel($order->status) }}
-                                    </span>
+                                    <x-admin.status-badge :status="$order->status" />
                                 @else
                                     <div class="flex flex-col items-start gap-2">
                                         <select x-model="selectedStatus" @change="submitStatusChange()"
@@ -248,7 +243,7 @@
                             <td
                                 class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                 <div
-                                    class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    class="flex items-center justify-end gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                                     <a href="{{ route('admin.orders.show', $order) }}"
                                         class="text-gray-500 hover:text-brand-pink p-1" title="Ver">
                                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -269,7 +264,7 @@
                                     </a>
                                     <form action="{{ route('admin.orders.destroy', $order) }}" method="POST"
                                         class="inline-block"
-                                        onsubmit="return confirm('¿Estás seguro de eliminar este pedido?')">
+                                        @submit.prevent="$dispatch('open-confirm', { form: $el, title: 'Eliminar pedido', message: '¿Estás seguro de eliminar este pedido?' })">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="text-gray-500 hover:text-red-600 p-1"
@@ -287,13 +282,15 @@
                     @empty
                         <tr>
                             <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                                No se encontraron pedidos con estos filtros.
+                                No hay pedidos todavía.
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
-        </div>
+            </div><!-- /overflow-x-auto -->
+            <div class="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-white to-transparent"></div>
+        </div><!-- /relative -->
         <div class="border-t border-gray-200 px-4 py-3 sm:px-6">
             {{ $orders->links() }}
         </div>

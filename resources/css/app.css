@@ -115,6 +115,18 @@
         @apply text-[11px] uppercase tracking-[0.2em] font-extrabold text-gray-600 mb-6;
     }
 
+    /* Product card — hover solo en dispositivos que soportan hover real */
+    .product-card-hover {
+        transition: transform 300ms ease, box-shadow 300ms ease;
+    }
+
+    @media (hover: hover) {
+        .product-card-hover:hover {
+            transform: scale(1.02);
+            box-shadow: 0 20px 40px -15px rgba(233, 79, 155, 0.12), 0 8px 24px -8px rgba(0, 0, 0, 0.10);
+        }
+    }
+
     /* Mobile Drawer */
     .drawer-backdrop {
         background-color: rgba(255, 255, 255, 0.6);
@@ -128,5 +140,22 @@
 
     #filter-drawer.pointer-events-auto .drawer-backdrop {
         opacity: 1;
+    }
+
+    /* SortableJS — estados de drag & drop para el reordenamiento de banners */
+    .sortable-ghost {
+        opacity: 0.35;
+        border: 2px dashed rgb(209 213 219); /* border-gray-300 */
+        border-radius: 0.75rem;
+    }
+
+    .sortable-chosen {
+        box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
+    }
+
+    .sortable-drag {
+        opacity: 1 !important;
+        box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+        border-radius: 0.75rem;
     }
 }

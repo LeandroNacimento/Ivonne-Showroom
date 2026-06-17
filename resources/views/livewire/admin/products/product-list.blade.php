@@ -7,21 +7,46 @@
         </a>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden relative" wire:loading.class="opacity-50 pointer-events-none">
+        <div wire:loading.flex class="absolute inset-0 z-10 items-center justify-center bg-white/50 backdrop-blur-sm">
+            <span class="text-sm font-medium text-gray-600">Actualizando...</span>
+        </div>
         <!-- Search Bar -->
         <div class="p-4 border-b border-gray-200">
-            <div class="relative max-w-md w-full">
-                <input wire:model.live="search" type="text"
-                    class="block w-full rounded-md border-0 py-1.5 pl-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-pink sm:text-sm sm:leading-6"
-                    placeholder="Buscar productos...">
-                <div wire:loading.class.remove="hidden" wire:target="search"
-                    class="hidden absolute inset-y-0 right-0 flex items-center pr-3">
-                    <span class="text-sm text-gray-500 font-medium">Buscando...</span>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <div class="relative w-full sm:w-1/3">
+                    <input wire:model.live="search" type="text"
+                        class="block w-full rounded-md border-0 py-1.5 pl-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-pink sm:text-sm sm:leading-6"
+                        placeholder="Buscar productos...">
+                    <div wire:loading.class.remove="hidden" wire:target="search"
+                        class="hidden absolute inset-y-0 right-0 flex items-center pr-3">
+                        <span class="text-sm text-gray-500 font-medium">Buscando...</span>
+                    </div>
+                </div>
+                <div class="w-full sm:w-1/3">
+                    <select wire:model.live="categoryFilter"
+                        class="block w-full rounded-md border-0 py-1.5 pl-3 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-brand-pink sm:text-sm sm:leading-6">
+                        <option value="">Todas las categorías</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="w-full sm:w-1/3">
+                    <select wire:model.live="stockFilter"
+                        class="block w-full rounded-md border-0 py-1.5 pl-3 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-brand-pink sm:text-sm sm:leading-6">
+                        <option value="">Todos (Stock)</option>
+                        <option value="in_stock">Con stock</option>
+                        <option value="low_stock">Stock bajo</option>
+                        <option value="out_of_stock">Sin stock</option>
+                    </select>
                 </div>
             </div>
         </div>
 
-        <table class="min-w-full divide-y divide-gray-200">
+        <div class="relative">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Imagen
@@ -40,7 +65,7 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($products as $product)
-                    <tr wire:key="product-{{ $product->id }}">
+                    <tr wire:key="product-{{ $product->id }}" class="hover:bg-gray-50 transition-colors group">
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if ($product->images->first())
                                 <img src="{{ \Illuminate\Support\Facades\Storage::url($product->images->first()->path) }}"
@@ -58,25 +83,30 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ $product->variations->sum('stock') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="{{ route('admin.products.edit', $product) }}"
-                                class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</a>
-                            <form action="{{ route('admin.products.destroy', $product) }}" method="POST"
-                                class="inline-block" onsubmit="return confirm('¿Estás seguro?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-red-600 hover:text-red-900">Eliminar</button>
-                            </form>
+                            <div class="flex items-center justify-end gap-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                                <a href="{{ route('admin.products.edit', $product) }}"
+                                    class="text-indigo-600 hover:text-indigo-900">Editar</a>
+                                <form action="{{ route('admin.products.destroy', $product) }}" method="POST"
+                                    class="inline-block" x-data @submit.prevent="$dispatch('open-confirm', { form: $el, title: 'Eliminar producto', message: '¿Estás seguro de eliminar este producto?' })">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-600 hover:text-red-900">Eliminar</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
                         <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                            No se encontraron productos para esta búsqueda.
+                            No se encontraron productos.
                         </td>
                     </tr>
                 @endforelse
             </tbody>
-        </table>
+                </table>
+            </div><!-- /overflow-x-auto -->
+            <div class="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-white to-transparent"></div>
+        </div><!-- /relative -->
 
         <!-- Pagination -->
         <div class="px-6 py-4 border-t border-gray-200">

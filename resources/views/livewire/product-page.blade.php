@@ -14,9 +14,9 @@
 
             <div class="relative flex flex-col-reverse">
                 <div class="relative aspect-[4/5] w-full overflow-hidden rounded-lg bg-gray-200">
-                    <div class="hide-scroll absolute inset-0 flex h-full w-full snap-x snap-mandatory overflow-x-auto scroll-smooth"
+                    <div x-ref="galleryScroll" @scroll.passive="updateIndexFromScroll" class="hide-scroll absolute inset-0 flex h-full w-full snap-x snap-mandatory overflow-x-auto scroll-smooth"
                         style="scrollbar-width: none; -ms-overflow-style: none;">
-                        <template x-for="(imgUrl, idx) in activeImages" :key="imgUrl">
+                        <template x-for="(imgUrl, idx) in activeImages" :key="imgUrl + '-' + idx">
                             <div class="flex h-full w-full flex-shrink-0 snap-center items-center justify-center">
                                 <img :src="imgUrl" :alt="'{{ $product->name }}'" x-data="{ shown: false }"
                                     x-init="setTimeout(() => shown = true, 10)" x-show="shown"
@@ -28,18 +28,39 @@
                         </template>
                     </div>
 
-                    <div x-show="activeImages.length > 1"
-                        class="pointer-events-none absolute bottom-4 right-4 rounded-md bg-black/50 px-2 py-1 text-xs text-white backdrop-blur-sm">
-                        Desliza para ver más
+                    <div class="pointer-events-none absolute inset-0 flex items-center justify-between p-2 hidden md:flex" x-show="activeImages.length > 1">
+                        <button type="button" @click="prev()"
+                            class="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-gray-800 shadow-sm opacity-40 hover:opacity-100 disabled:opacity-0 disabled:cursor-not-allowed transition-all duration-200"
+                            :disabled="currentImageIndex === 0" aria-label="Anterior">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <button type="button" @click="next()"
+                            class="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-gray-800 shadow-sm opacity-40 hover:opacity-100 disabled:opacity-0 disabled:cursor-not-allowed transition-all duration-200"
+                            :disabled="currentImageIndex === activeImages.length - 1" aria-label="Siguiente">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
                     </div>
+
                 </div>
+            </div>
+
+            <!-- Gallery position dots — mobile only -->
+            <div x-show="activeImages.length > 1" class="mt-3 flex justify-center gap-1.5 lg:hidden">
+                <template x-for="(_, dotIdx) in activeImages" :key="dotIdx">
+                    <button type="button"
+                        @click="goTo(dotIdx)"
+                        class="h-1.5 rounded-full transition-all duration-300"
+                        :class="currentImageIndex === dotIdx ? 'w-5 bg-brand-pink' : 'w-1.5 bg-gray-300'"
+                        :aria-label="'Imagen ' + (dotIdx + 1)">
+                    </button>
+                </template>
             </div>
 
             <div class="mt-10 px-4 sm:mt-16 sm:px-0 lg:mt-0">
                 <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">{{ $product->name }}</h1>
 
                 <div class="mt-3 space-y-2">
-                    <h2 class="sr-only">Información del producto</h2>
+                    <h2 class="sr-only">Información del artículo</h2>
                     <span x-show="displayPricing?.hasActiveOffer"
                         class="inline-flex rounded bg-brand-pink px-2 py-1 text-xs font-bold uppercase tracking-wide text-white"
                         style="display:none;">
@@ -55,10 +76,19 @@
                     </div>
                 </div>
 
-                <div class="mt-4">
+                <div class="mt-4" x-data="{ expanded: false }">
                     <h3 class="sr-only">Descripción</h3>
-                    <div class="space-y-6 text-base text-gray-700">
-                        <p>{{ $product->description }}</p>
+                    <div class="space-y-2 text-base text-gray-700">
+                        <p :class="expanded ? '' : 'line-clamp-4'">{{ $product->description }}</p>
+                        @if(strlen($product->description) > 200)
+                            <button
+                                type="button"
+                                class="mt-1 text-sm font-medium text-brand-pink hover:text-brand-heart transition-colors"
+                                @click="expanded = !expanded"
+                            >
+                                <span x-text="expanded ? 'Ver menos' : 'Ver más'">Ver más</span>
+                            </button>
+                        @endif
                     </div>
                 </div>
 
@@ -79,7 +109,7 @@
 
                 <div class="mt-6">
                     <template x-if="activeVariations.length > 0">
-                        <form x-data="{ qty: 1 }" @submit.prevent="$wire.addToCart(selectedVariation, qty)">
+                        <form @submit.prevent="$wire.addToCart(selectedVariation, qty)">
                             @if ($product->has_sizes)
                                 <div class="mb-5">
                                     <h3 class="mb-2 text-sm font-medium text-gray-900">Seleccioná tu talle:</h3>
@@ -108,19 +138,19 @@
                                 <label for="quantity" class="mb-2 text-sm font-medium text-gray-700">Cantidad:</label>
                                 <div class="flex w-fit items-center gap-3 rounded-lg border border-gray-300 px-3 py-2">
                                     <button type="button" @click="qty > 1 ? qty-- : null"
-                                        class="flex h-6 w-6 items-center justify-center text-gray-600 transition-colors hover:text-black focus:outline-none"
+                                        class="flex h-10 w-10 items-center justify-center text-gray-600 transition-colors hover:text-black focus:outline-none"
                                         :class="qty <= 1 && 'opacity-30 cursor-not-allowed'">
-                                        <span class="mb-1 text-lg font-medium leading-none">-</span>
+                                        <span class="text-lg font-medium leading-none">-</span>
                                     </button>
                                     <input type="number" name="quantity" id="quantity" x-model="qty" min="1"
                                         :max="selectedStock || 99" readonly
                                         class="w-8 border-0 bg-transparent p-0 text-center text-base font-semibold text-gray-900 focus:ring-0">
                                     <button type="button"
                                         @click="(selectedStock === null || qty < selectedStock) ? qty++ : null"
-                                        class="flex h-6 w-6 items-center justify-center text-gray-600 transition-colors hover:text-black focus:outline-none"
+                                        class="flex h-10 w-10 items-center justify-center text-gray-600 transition-colors hover:text-black focus:outline-none"
                                         :class="selectedStock !== null && qty >= selectedStock &&
                                             'opacity-30 cursor-not-allowed'">
-                                        <span class="mb-1 text-lg font-medium leading-none">+</span>
+                                        <span class="text-lg font-medium leading-none">+</span>
                                     </button>
                                 </div>
                                 <span x-show="selectedStock !== null && qty >= selectedStock"
@@ -159,18 +189,20 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        @if ($relatedProducts->count() > 0)
-            <div class="mt-16 border-t border-gray-200 pt-10">
-                <h2 class="mb-6 font-script text-2xl font-bold tracking-tight text-brand-pink text-gray-900">
+    @if ($relatedProducts->count() > 0)
+        <div class="bg-brand-blush/30 py-12 mt-4 sm:mt-8">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <h2 class="mb-6 font-script text-2xl font-bold tracking-tight text-brand-pink text-center">
                     También te puede interesar
                 </h2>
-                <div class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
+                <div class="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 lg:grid-cols-4 xl:gap-x-6">
                     @foreach ($relatedProducts as $related)
-                        <x-product-card :product="$related" />
+                        <x-product-card :product="$related" :compact="true" />
                     @endforeach
                 </div>
             </div>
-        @endif
-    </div>
+        </div>
+    @endif
 </div>

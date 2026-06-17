@@ -127,7 +127,7 @@
         </div>
 
         <div class="mt-6 flex items-center justify-end gap-x-6 pt-6 border-t border-gray-200">
-            <button type="button" class="text-sm font-semibold leading-6 text-gray-900 hover:text-gray-700">Cancelar</button>
+            <a href="{{ route('admin.dashboard') }}" class="text-sm font-semibold leading-6 text-gray-900 hover:text-gray-700">Cancelar</a>
             <button type="submit" class="rounded-lg bg-brand-pink px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-heart focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-pink transition-colors">
                 Guardar Cambios
             </button>

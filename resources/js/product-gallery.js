@@ -5,6 +5,7 @@ export default (allImages, allVariations, initialColor, initialPricing) => ({
     selectedVariation: null,
     currentSlide: 0,
     initialPricing,
+    qty: 1,
 
     get colorNames() {
         return [...new Set(this.allVariations.map((variation) => variation.color))];
@@ -56,10 +57,44 @@ export default (allImages, allVariations, initialColor, initialPricing) => ({
         return this.selectedVariationData ? this.selectedVariationData.stock : null;
     },
 
+    currentImageIndex: 0,
+
     selectColor(color) {
         this.activeColor = color;
         this.selectedVariation = null;
         this.currentSlide = 0;
+        this.currentImageIndex = 0;
+        if (this.$refs && this.$refs.galleryScroll) {
+            this.$refs.galleryScroll.scrollTo({ left: 0, behavior: 'instant' });
+        }
+    },
+
+    next() {
+        if (this.currentImageIndex < this.activeImages.length - 1) {
+            this.goTo(this.currentImageIndex + 1);
+        }
+    },
+
+    prev() {
+        if (this.currentImageIndex > 0) {
+            this.goTo(this.currentImageIndex - 1);
+        }
+    },
+
+    goTo(index) {
+        this.currentImageIndex = index;
+        if (this.$refs && this.$refs.galleryScroll) {
+            const container = this.$refs.galleryScroll;
+            container.scrollTo({
+                left: container.clientWidth * index,
+                behavior: 'smooth'
+            });
+        }
+    },
+
+    updateIndexFromScroll(event) {
+        const container = event.target;
+        this.currentImageIndex = Math.round(container.scrollLeft / container.clientWidth);
     },
 
     formatPrice(price) {
