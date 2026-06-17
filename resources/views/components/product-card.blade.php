@@ -1,4 +1,4 @@
-@props(['product', 'offerOnly' => false, 'eager' => false, 'compact' => false])
+@props(['product', 'offerOnly' => false, 'eager' => false, 'priority' => false, 'compact' => false])
 
 @php
     // Aseguramos reindexación limpia desde el inicio
@@ -165,6 +165,7 @@
                  x-transition:leave-end="opacity-0"
                  class="absolute inset-0 h-full w-full object-cover object-center"
                  loading="{{ $eager ? 'eager' : 'lazy' }}"
+                 @if($priority) fetchpriority="high" @endif
                  decoding="async">
         </template>
     </div>
