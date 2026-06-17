@@ -94,6 +94,7 @@
                             <img src="{{ $product->public_primary_image_url }}" alt="{{ $product->name }}"
                                 class="absolute inset-0 w-full h-full object-center object-cover"
                                 loading="{{ $loop->index < 4 ? 'eager' : 'lazy' }}"
+                                @if($loop->index === 0) fetchpriority="high" @endif
                                 decoding="async">
                         </div>
                         <div class="flex justify-between items-start px-3 py-3">
