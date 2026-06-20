@@ -56,6 +56,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Trusted Proxies
+    |--------------------------------------------------------------------------
+    |
+    | When running behind a reverse proxy (e.g. Nginx on the host VM with
+    | Docker), this value lists the IPs allowed to set X-Forwarded-* headers.
+    | This MUST live in a config file so that config:cache preserves it;
+    | env() calls outside config files return null after caching.
+    |
+    */
+
+    'trusted_proxies' => env('TRUSTED_PROXIES', '127.0.0.1'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
