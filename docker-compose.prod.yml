@@ -6,11 +6,10 @@ services:
       - public_storage:/var/www/storage/app/public
 
   web:
-    ports:
-      # Bind exclusivamente al loopback del host.
-      # El Nginx del host hace proxy_pass a 127.0.0.1:80.
-      # Ningún cliente externo puede alcanzar este puerto directamente.
-      - "127.0.0.1:80:80"
+    ports: !reset
+      # El host Nginx usa el puerto 80 público.
+      # Mapeamos el contenedor al 8080 interno para evitar colisión.
+      - "127.0.0.1:8080:80"
     volumes:
       - public_storage:/var/www/public/storage:ro
 
