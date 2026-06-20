@@ -58,7 +58,7 @@ COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl --fail http://localhost/up || exit 1
+    CMD php-fpm -t || exit 1
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php-fpm"]

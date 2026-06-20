@@ -89,3 +89,41 @@ For code-quality-sensitive changes:
 - identify whether formatter or linter checks are affected
 - keep imports, spacing, and file structure aligned with project conventions
 - do not leave style-only CI failures for later cleanup
+
+## Production Environment Variables (VM Only)
+
+These variables must exist in the `.env` file on the Azure VM.
+They are not committed to the repository.
+The VM `.env` is mounted read-only via `docker-compose.prod.yml`.
+
+```
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://tudominio.com
+TRUSTED_PROXIES=127.0.0.1
+
+LOG_LEVEL=error
+
+SESSION_SECURE_COOKIE=true
+SESSION_DOMAIN=tudominio.com
+```
+
+Key constraints:
+
+- `TRUSTED_PROXIES=127.0.0.1` declara confianza explícita sobre un proxy conocido
+  en una topología cerrada. El valor no se elige por resolución de red Docker ni
+  por la IP real del gateway bridge. Se elige porque el único punto de entrada
+  externo es el Nginx del host, controlado a nivel de SO, y el puerto del contenedor
+  `web` está enlazado a `127.0.0.1:80` exclusivamente.
+- El Nginx del contenedor (`web`) no manipula ni interpreta los X-Forwarded-*
+  headers. Su única responsabilidad es pasar la request a PHP-FPM. Los HTTP
+  headers del request llegan a PHP-FPM como variables `HTTP_*` de forma nativa
+  por el protocolo FastCGI. Laravel los lee exclusivamente a través de TrustProxies.
+- `SESSION_SECURE_COOKIE=true` requires HTTPS to be active end-to-end before enabling.
+- HSTS (`Strict-Transport-Security`) es responsabilidad del Nginx del host, no PHP.
+  El host termina TLS; PHP no tiene visibilidad sobre si la conexión al cliente
+  fue TLS o no. Do not add HSTS back to `SecurityHeadersMiddleware`.
+- `proxy_set_header X-Forwarded-Proto https;` — valor fijo en el host Nginx.
+  TLS termina allí, el valor es siempre `https`. No usar `$scheme`.
+- OPcache `validate_timestamps=0` is correct for immutable Docker images.
+  Do not revert it unless PHP files are mounted via volume in production.
