@@ -62,7 +62,7 @@
                 <!-- Google Map -->
                 <div class="rounded-lg overflow-hidden shadow-lg h-full min-h-[300px]">
                     <iframe class="w-full h-full" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"
-                        src="https://maps.google.com/maps?q=Napole%C3%B3n+Uriburu+1366%2C+Formosa&t=&z=16&ie=UTF8&iwloc=&output=embed">
+                        src="https://maps.google.com/maps?q=Ivonne+Showroom+Napole%C3%B3n+Uriburu+1366+Formosa&t=&z=17&ie=UTF8&iwloc=B&output=embed">
                     </iframe>
                 </div>
             </div>
