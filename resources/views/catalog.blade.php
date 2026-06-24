@@ -1,5 +1,7 @@
 <x-layouts.app>
-    @section('title', 'Catálogo - Ivonne Showroom')
+    @section('title', 'Catálogo de Ropa Femenina - Ivonne Showroom Formosa')
+    @section('meta_description', 'Explora nuestro catálogo exclusivo de indumentaria para mujer en Formosa. Vestidos, camisas, abrigos y más, con los mejores precios.')
+    @section('og_type', 'website')
 
     {{-- Editorial Header Section --}}
     <div class="bg-white border-b border-gray-100">
