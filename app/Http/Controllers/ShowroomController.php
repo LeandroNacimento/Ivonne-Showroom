@@ -65,6 +65,15 @@ class ShowroomController extends Controller
         return view('contact');
     }
 
+    public function sitemap()
+    {
+        $products = Product::whereNull('deleted_at')->get();
+        $categories = Category::all();
+
+        return response()->view('sitemap', compact('products', 'categories'))
+            ->header('Content-Type', 'text/xml');
+    }
+
     private function resolveHomeHeroMode(Collection $slides): string
     {
         return match (true) {

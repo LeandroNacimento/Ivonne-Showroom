@@ -2,8 +2,27 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1RR3JGWWZ1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-1RR3JGWWZ1');
+    </script>
+
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="@yield('meta_description', 'Ivonne Showroom - Tu tienda de ropa y accesorios para mujer en Formosa. Descubre vestidos, remeras, abrigos y más.')">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="@yield('title', 'Ivonne Showroom - Formosa')">
+    <meta property="og:description" content="@yield('meta_description', 'Ivonne Showroom - Tu tienda de ropa y accesorios para mujer en Formosa.')">
+    <meta property="og:image" content="@yield('og_image', asset('img/showroom-logo.png'))">
+
     <title>@yield('title', 'Ivonne Showroom - Formosa')</title>
     <link rel="icon" href="{{ asset('img/showroom-logo.png') }}" type="image/png">
 

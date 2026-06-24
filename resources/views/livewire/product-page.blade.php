@@ -1,3 +1,29 @@
+@section('title', $product->name . ' - Ivonne Showroom Formosa')
+@section('meta_description', \Illuminate\Support\Str::limit(strip_tags($product->description), 150))
+@section('og_type', 'product')
+@section('og_image', $product->cover_url)
+@section('og_title', $product->name . ' - Ivonne Showroom Formosa')
+
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org/",
+  "@@type": "Product",
+  "name": "{{ $product->name }}",
+  "image": [
+    "{{ $product->cover_url }}"
+  ],
+  "description": "{{ strip_tags($product->description) }}",
+  "offers": {
+    "@@type": "Offer",
+    "url": "{{ url()->current() }}",
+    "priceCurrency": "ARS",
+    "price": "{{ $product->display_price ?? $product->min_price }}",
+    "itemCondition": "https://schema.org/NewCondition",
+    "availability": "{{ $product->total_stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock' }}"
+  }
+}
+</script>
+
 <div class="bg-white">
     <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div class="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-8"

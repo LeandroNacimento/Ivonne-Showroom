@@ -1,5 +1,7 @@
 <x-layouts.app>
-    @section('title', 'Inicio - Ivonne Showroom')
+    @section('title', 'Ivonne Showroom - Tu tienda de ropa y accesorios para mujer en Formosa')
+    @section('meta_description', 'Descubre lo último en moda femenina en Ivonne Showroom Formosa. Vestidos, remeras, abrigos, pantalones, mochilas y accesorios para mujer. Compra online.')
+    @section('og_type', 'website')
 
     @include('partials.home.hero', [
         'homeHero' => $homeHero,
