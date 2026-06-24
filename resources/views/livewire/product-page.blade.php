@@ -6,15 +6,15 @@
 
 <script type="application/ld+json">
 {
-  "@context": "https://schema.org/",
-  "@type": "Product",
+  "@@context": "https://schema.org/",
+  "@@type": "Product",
   "name": "{{ $product->name }}",
   "image": [
     "{{ $product->cover_url }}"
   ],
   "description": "{{ strip_tags($product->description) }}",
   "offers": {
-    "@type": "Offer",
+    "@@type": "Offer",
     "url": "{{ url()->current() }}",
     "priceCurrency": "ARS",
     "price": "{{ $product->display_price ?? $product->min_price }}",
