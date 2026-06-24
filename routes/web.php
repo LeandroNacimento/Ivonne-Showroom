@@ -16,6 +16,7 @@ Route::get('/carrito', [ShowroomController::class, 'cart'])->name('cart');
 Route::middleware(['throttle:60,1'])->group(function () {
     Route::post('/carrito/agregar', [ShowroomController::class, 'addToCart'])->name('cart.add');
 });
+Route::get('/sitemap.xml', [ShowroomController::class, 'sitemap'])->name('sitemap');
 Route::get('/contacto', [ShowroomController::class, 'contact'])->name('contact');
 
 /*
